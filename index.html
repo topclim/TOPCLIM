@@ -1,135 +1,172 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>TopClim – تنظيف المكيفات</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>تنظيف مكيفات – TopClim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- CSS أساسي -->
   <style>
-    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
-    input, select, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
-    img { max-width: 100%; margin: 10px 0; }
+    body { font-family: 'Cairo', sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
+    header, footer { background: #007BFF; color: white; text-align: center; padding: 1em; }
+    section { padding: 20px; }
+    .before-after img { width: 48%; margin: 1%; border-radius: 8px; }
+    form input, form select, form button {
+      display: block; width: 100%; padding: 10px; margin: 10px 0;
+      border: 1px solid #ccc; border-radius: 6px;
+    }
+    #map { height: 300px; margin-top: 15px; border-radius: 10px; }
+    .note { color: green; margin-top: 10px; }
   </style>
+
+  <!-- Leaflet.js للخريطة -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
+  <!-- ✅ الهيدر -->
   <header>
-    <h1>🌬️ TopClim – تنظيف مكيفات احترافي</h1>
-    <p>نخدمك في بيتك – اطلب الآن!</p>
+    <h1>🌬️ TopClim</h1>
+    <p>خدمة تنظيف مكيفات احترافية وسريعة في بيتك</p>
   </header>
 
+  <!-- ✅ صورة طويلة (إشهارية) -->
+  <section>
+    <img src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1719999999/TOPCLIMasset/header-image.jpg" alt="إعلان" width="100%" />
+  </section>
+
+  <!-- ✅ صور قبل وبعد -->
+  <section>
+    <h2>📸 نتائج أعمالنا</h2>
+    <div class="before-after">
+      <img src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1719999999/TOPCLIMasset/before.jpg" alt="قبل التنظيف" />
+      <img src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1719999999/TOPCLIMasset/after.jpg" alt="بعد التنظيف" />
+    </div>
+  </section>
+
+  <!-- ✅ نموذج الطلب -->
   <section id="order">
-    <h2>📦 قدم طلبك الآن</h2>
+    <h2>📝 قدم طلبك الآن</h2>
     <form id="orderForm">
       <input type="text" id="name" placeholder="الاسم الكامل" required />
       <input type="tel" id="phone" placeholder="رقم الهاتف" required />
       <input type="text" id="address" placeholder="العنوان" required />
       <select id="type" required>
-        <option disabled selected>اختر نوع المكيف</option>
-        <option value="split">سبليت</option>
-        <option value="window">شباك</option>
+        <option disabled selected>نوع المكيف</option>
+        <option value="سبليت">سبليت</option>
+        <option value="شباك">شباك</option>
       </select>
 
-      <input type="file" accept="image/*" capture="environment" id="acImage" />
-      <p id="imageStatus">لم يتم اختيار صورة بعد</p>
+      <!-- ✅ زر رفع صورة -->
+      <label>📸 صورة المكيف (اختياري):</label>
+      <input type="file" id="image" accept="image/*" capture="environment" />
 
-      <button type="button" onclick="getLocation()">📍 تحديد موقعي الحالي</button>
-      <p id="locationStatus">الموقع لم يُحدد بعد</p>
+      <!-- ✅ زر تحديد الموقع -->
+      <button type="button" onclick="getLocation()">📍 تحديد موقعي</button>
+      <p id="locationStatus" class="note"></p>
+      <div id="map"></div>
 
-      <button type="submit">🛠️ إرسال الطلب</button>
+      <!-- ✅ زر الإرسال -->
+      <button type="submit">إرسال الطلب</button>
     </form>
   </section>
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  <!-- ✅ صورة ختامية -->
+  <section>
+    <img src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1719999999/TOPCLIMasset/footer-image.jpg" alt="تنظيف احترافي" width="100%" />
+  </section>
 
+  <!-- ✅ الفوتر -->
+  <footer>
+    <p>جميع الحقوق محفوظة © TopClim 2025</p>
+  </footer>
+
+  <!-- ✅ Firebase و Cloudinary -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // 🛠️ إعدادات Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa",
-      storageBucket: "topclim-3edfa.appspot.com",
-      messagingSenderId: "1013389465521",
-      appId: "1:1013389465521:web:f758b41503a39dcc9e4f90",
-      measurementId: "G-LVYCFLDT14"
+      apiKey: "XXX",
+      authDomain: "XXX",
+      projectId: "XXX",
+      storageBucket: "XXX",
+      messagingSenderId: "XXX",
+      appId: "XXX"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    const form = document.getElementById('orderForm');
+    const imageInput = document.getElementById('image');
+
     let userLocation = null;
 
-    document.getElementById("acImage").addEventListener("change", () => {
-      document.getElementById("imageStatus").textContent = "✅ تم اختيار صورة.";
-    });
-
-    async function getLocation() {
-      const locStatus = document.getElementById("locationStatus");
-      if (!navigator.geolocation) {
-        locStatus.textContent = "📵 المتصفح لا يدعم تحديد الموقع.";
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          userLocation = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-          };
-          locStatus.textContent = `✅ تم تحديد الموقع: ${userLocation.lat.toFixed(5)}, ${userLocation.lng.toFixed(5)}`;
-        },
-        err => {
-          locStatus.textContent = "⚠️ تعذر تحديد الموقع، أعد المحاولة.";
-        }
-      );
-    }
-
-    document.getElementById("orderForm").addEventListener("submit", async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = document.getElementById("name").value;
-      const phone = document.getElementById("phone").value;
-      const address = document.getElementById("address").value;
-      const type = document.getElementById("type").value;
-      const imageFile = document.getElementById("acImage").files[0];
+
+      const name = document.getElementById('name').value;
+      const phone = document.getElementById('phone').value;
+      const address = document.getElementById('address').value;
+      const type = document.getElementById('type').value;
 
       let imageUrl = "";
-
+      const imageFile = imageInput.files[0];
       if (imageFile) {
         const formData = new FormData();
         formData.append("file", imageFile);
         formData.append("upload_preset", "topclim_upload");
+        formData.append("folder", "TOPCLIMasset");
 
-        try {
-          const res = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/image/upload", {
-            method: "POST",
-            body: formData
-          });
-          const data = await res.json();
-          imageUrl = data.secure_url;
-        } catch (err) {
-          alert("❌ فشل رفع الصورة");
-          return;
-        }
-      }
-
-      try {
-        const docRef = await addDoc(collection(db, "requests"), {
-          name,
-          phone,
-          address,
-          type,
-          image: imageUrl,
-          location: userLocation || null,
-          status: "مبدئي",
-          createdAt: new Date()
+        const res = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/upload", {
+          method: "POST",
+          body: formData
         });
 
-        window.location.href = `track.html?id=${docRef.id}`;
-      } catch (err) {
-        alert("❌ حدث خطأ أثناء إرسال الطلب.");
-        console.error(err);
+        const data = await res.json();
+        imageUrl = data.secure_url;
       }
+
+      const docRef = await addDoc(collection(db, "requests"), {
+        name, phone, address, type,
+        location: userLocation,
+        imageUrl,
+        status: "مبدئي",
+        createdAt: serverTimestamp()
+      });
+
+      // ✅ الانتقال لصفحة التتبع
+      window.location.href = `track.html?id=${docRef.id}`;
     });
+
+    // ✅ تحديد الموقع
+    function getLocation() {
+      const status = document.getElementById("locationStatus");
+      if (!navigator.geolocation) {
+        status.textContent = "المتصفح لا يدعم تحديد الموقع.";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        userLocation = { lat, lng };
+        status.textContent = `تم تحديد موقعك بنجاح.`;
+
+        const map = L.map('map').setView([lat, lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        L.marker([lat, lng]).addTo(map).bindPopup("📍 موقعك").openPopup();
+      }, () => {
+        status.textContent = "فشل في تحديد الموقع.";
+      });
+    }
+
+    window.getLocation = getLocation; // لتفعيل الزر
   </script>
 
 </body>
