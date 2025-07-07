@@ -1,23 +1,40 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>طلب تنظيف مكيف</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/index.js"></script>
 </head>
 <body>
-  <h1>طلب تنظيف مكيف</h1>
-  <form id="requestForm">
-    <input type="text" id="name" placeholder="الاسم" required><br>
-    <input type="text" id="phone" placeholder="الهاتف" required><br>
-    <input type="text" id="address" placeholder="العنوان" required><br>
-    <input type="text" id="type" placeholder="نوع المكيف" required><br>
-    <button type="submit">إرسال الطلب</button>
-  </form>
+  <div class="container">
+    <h1>طلب تنظيف المكيف 💨</h1>
+    <p class="subtitle">املأ البيانات التالية وسيتم التواصل معك في أقرب وقت</p>
+
+    <form id="requestForm">
+      <label for="name">الاسم الكامل</label>
+      <input type="text" id="name" placeholder="مثلاً: نور الدين" required />
+
+      <label for="phone">رقم الهاتف</label>
+      <input type="text" id="phone" placeholder="06xxxxxxxx" required />
+
+      <label for="address">العنوان الكامل</label>
+      <input type="text" id="address" placeholder="مثلاً: غرداية، بني يزقن" required />
+
+      <label for="type">نوع المكيف</label>
+      <input type="text" id="type" placeholder="مثلاً: مكيف سامسونغ 18000BTU" required />
+
+      <button type="submit">📤 إرسال الطلب</button>
+    </form>
+
+    <footer>
+      <p>TopClim © 2025 - جميع الحقوق محفوظة</p>
+    </footer>
+  </div>
 </body>
 </html>
