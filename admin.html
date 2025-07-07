@@ -1,77 +1,55 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لوحة التحكم - TopClim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>لوحة التحكم – TopClim</title>
   <style>
-    body { font-family: Arial; margin: 20px; background: #f7f7f7; }
-    h1, footer { padding: 10px; background: #e0e0e0; border-radius: 8px; margin-bottom: 10px; }
-    [contenteditable="true"] { outline: 2px dashed #aaa; padding: 10px; }
-    button { padding: 10px 20px; margin-top: 10px; background: #4caf50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    button:hover { background: #45a049; }
+    body { font-family: Arial; padding: 20px; background: #fff0f0; text-align: right; direction: rtl; }
+    input, textarea, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+    img { max-width: 100px; margin-top: 10px; }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
+  <h1>🛠️ لوحة التحكم - تعديل محتوى الهبوط</h1>
+  <label>العنوان</label>
+  <input id="headerTitle" type="text" />
+  <label>الوصف</label>
+  <textarea id="headerDesc"></textarea>
+  <label>رابط صورة علوية</label>
+  <input id="bannerTop" type="text" />
+  <label>رابط صورة قبل</label>
+  <input id="beforeImage" type="text" />
+  <label>رابط صورة بعد</label>
+  <input id="afterImage" type="text" />
+  <label>رابط صورة سفلية</label>
+  <input id="bannerBottom" type="text" />
+  <button onclick="saveContent()">💾 حفظ</button>
 
-  <h1>🛠️ لوحة التحكم في صفحة الهبوط</h1>
-
-  <h2>الهيدر:</h2>
-  <div id="editableHeader" contenteditable="true">🌬️ TopClim – تنظيف مكيفات احترافي</div>
-
-  <h2>الفوتر:</h2>
-  <div id="editableFooter" contenteditable="true">جميع الحقوق محفوظة © 2025</div>
-
-  <button onclick="saveContent()">💾 حفظ التغييرات</button>
-
-  <script type="module">
-    // Firebase config
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+  <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      apiKey: "AIzaSy...",
       authDomain: "topclim-3edfa.firebaseapp.com",
       projectId: "topclim-3edfa",
-      storageBucket: "topclim-3edfa.appspot.com",
-      messagingSenderId: "1013389465521",
-      appId: "1:1013389465521:web:f758b41503a39dcc9e4f90",
-      measurementId: "G-LVYCFLDT14"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // تحميل المحتوى الحالي من Firestore
-    async function loadContent() {
-      const docRef = doc(db, "siteContent", "landingPage");
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        document.getElementById("editableHeader").innerHTML = data.header || "";
-        document.getElementById("editableFooter").innerHTML = data.footer || "";
-      } else {
-        console.log("⚠️ لا يوجد محتوى محفوظ مسبقًا.");
-      }
-    }
-
-    // حفظ التعديلات في Firestore
     async function saveContent() {
-      const headerContent = document.getElementById("editableHeader").innerHTML;
-      const footerContent = document.getElementById("editableFooter").innerHTML;
-
-      await setDoc(doc(db, "siteContent", "landingPage"), {
-        header: headerContent,
-        footer: footerContent
-      });
-
-      alert("✅ تم حفظ التعديلات بنجاح!");
+      const data = {
+        headerTitle: document.getElementById("headerTitle").value,
+        headerDesc: document.getElementById("headerDesc").value,
+        bannerTop: document.getElementById("bannerTop").value,
+        beforeImage: document.getElementById("beforeImage").value,
+        afterImage: document.getElementById("afterImage").value,
+        bannerBottom: document.getElementById("bannerBottom").value,
+      };
+      await db.collection("landing").doc("landingContent").set(data, { merge: true });
+      alert("✅ تم الحفظ بنجاح");
     }
-
-    // تحميل البيانات عند فتح الصفحة
-    loadContent();
-    window.saveContent = saveContent; // لكي يعمل الزر
   </script>
 </body>
 </html>
