@@ -5,10 +5,14 @@ document.getElementById("requestForm").addEventListener("submit", async (e) => {
   const address = document.getElementById("address").value;
   const type = document.getElementById("type").value;
 
-  await db.collection("requests").add({
-    name, phone, address, type,
-    status: "مبدئي",
-    createdAt: new Date()
-  });
-  alert("تم إرسال الطلب بنجاح");
+  try {
+    await db.collection("requests").add({
+      name, phone, address, type,
+      status: "مبدئي",
+      createdAt: new Date()
+    });
+    alert("✅ تم إرسال الطلب بنجاح");
+  } catch (error) {
+    alert("❌ حدث خطأ: " + error.message);
+  }
 });

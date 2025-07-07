@@ -1,13 +1,25 @@
+function loginAdmin() {
+  const email = document.getElementById("adminEmail").value;
+  const password = document.getElementById("adminPassword").value;
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => {
+      document.getElementById("authSection").style.display = "none";
+      document.getElementById("adminSection").style.display = "block";
+      loadRequests();
+    })
+    .catch(error => alert("خطأ في تسجيل الدخول: " + error.message));
+}
+
 async function uploadImageToCloudinary(file) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", "topclim_upload");
 
-  const response = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/image/upload", {
+  const res = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/image/upload", {
     method: "POST",
     body: formData
   });
-  const data = await response.json();
+  const data = await res.json();
   return data.secure_url;
 }
 
@@ -17,7 +29,7 @@ async function loadRequests() {
   snapshot.forEach(doc => {
     const data = doc.data();
     const div = document.createElement("div");
-    div.innerHTML = `<strong>${data.name}</strong> - ${data.phone} - الحالة: ${data.status}`;
+    div.innerHTML = `<strong>${data.name}</strong> - ${data.phone} - ${data.status}`;
     container.appendChild(div);
   });
 }
@@ -25,7 +37,5 @@ async function loadRequests() {
 document.getElementById("imageUpload").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   const imageUrl = await uploadImageToCloudinary(file);
-  alert("تم رفع الصورة إلى Cloudinary: " + imageUrl);
+  alert("✔️ تم رفع الصورة: " + imageUrl);
 });
-
-window.onload = loadRequests;
