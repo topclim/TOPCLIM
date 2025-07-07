@@ -1,154 +1,177 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TopClim | تنظيف مكيفات</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>تنظيف مكيفات TopClim</title>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f7f9fc;
       margin: 0;
       padding: 0;
-      line-height: 1.6;
-    }
-    header {
-      background-color: #2b7bff;
-      color: white;
-      padding: 20px;
+      background: #f8f8f8;
       text-align: center;
     }
+
+    header, footer {
+      background-color: #004d7a;
+      color: white;
+      padding: 20px;
+    }
+
     section {
       padding: 20px;
-      max-width: 600px;
+    }
+
+    .hero-image, .end-image {
+      width: 100%;
+      max-height: 350px;
+      object-fit: cover;
+    }
+
+    .before-after img {
+      width: 48%;
+      margin: 1%;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 320px;
       margin: auto;
     }
-    .before-after { display: flex; gap: 10px; }
-    .before-after img { width: 48%; border-radius: 8px; }
+
     form input, form select, form button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 8px;
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 6px;
       border: 1px solid #ccc;
-      font-size: 16px;
     }
+
     form button {
-      background-color: #2b7bff;
+      background-color: #007BFF;
       color: white;
       border: none;
-      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>🌬️ TopClim – تنظيف مكيفات احترافي</h1>
-  <p>خدمة تنظيف المكيفات داخل بيتك</p>
-</header>
+  <!-- 1️⃣ صورة غلاف -->
+  <img class="hero-image" src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1710000000/TOPCLIMasset/hero.jpg" alt="صورة الغلاف">
 
-<section id="about">
-  <h2>لماذا تختارنا؟</h2>
-  <ul>
-    <li>نظافة داخلية وخارجية كاملة</li>
-    <li>تحسين كفاءة التبريد وتقليل استهلاك الكهرباء</li>
-    <li>خدمة سريعة واحترافية</li>
-  </ul>
-</section>
+  <!-- 2️⃣ الهيدر -->
+  <header>
+    <h1>🌬️ TopClim – تنظيف مكيفات احترافي</h1>
+    <p>نقدم لك خدمة تنظيف مكيفك داخل بيتك باحترافية وسرعة</p>
+  </header>
 
-<section id="gallery">
-  <h2>📸 صور من أعمالنا</h2>
-  <div class="before-after">
-    <img src="images/before.jpg" alt="قبل التنظيف" />
-    <img src="images/after.jpg" alt="بعد التنظيف" />
-  </div>
-</section>
+  <!-- 3️⃣ صور قبل وبعد من Cloudinary -->
+  <section>
+    <h2>📸 قبل وبعد التنظيف</h2>
+    <div class="before-after">
+      <img src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1710000000/TOPCLIMasset/before.jpg" alt="قبل التنظيف">
+      <img src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1710000000/TOPCLIMasset/after.jpg" alt="بعد التنظيف">
+    </div>
+  </section>
 
-<section id="order">
-  <h2>📦 قدم طلبك الآن</h2>
-  <form id="orderForm">
-    <input type="text" id="name" placeholder="الاسم الكامل" required />
-    <input type="tel" id="phone" placeholder="رقم الهاتف" required />
-    <input type="text" id="address" placeholder="العنوان الكامل" required />
-    <select id="type" required>
-      <option disabled selected>اختر نوع المكيف</option>
-      <option value="Split">سبليت</option>
-      <option value="شباك">شباك</option>
-    </select>
-    <label>📷 صورة المكيف (اختياري):</label>
-    <input type="file" id="acImage" accept="image/*" capture="environment" />
-    <button type="submit">🛠️ إرسال الطلب</button>
-  </form>
-</section>
+  <!-- 4️⃣ نموذج الطلب -->
+  <section>
+    <h2>📝 قدم طلبك</h2>
+    <form id="orderForm">
+      <input type="text" id="name" placeholder="الاسم الكامل" required>
+      <input type="tel" id="phone" placeholder="رقم الهاتف" required>
+      <input type="text" id="address" placeholder="العنوان" required>
+      <select id="acType" required>
+        <option value="" disabled selected>اختر نوع المكيف</option>
+        <option value="سبليت">سبليت</option>
+        <option value="شباك">شباك</option>
+      </select>
+      <input type="file" id="acImage" accept="image/*" capture="environment" required>
+      <button type="submit">📤 إرسال الطلب</button>
+    </form>
+  </section>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  <!-- 5️⃣ صورة ختامية -->
+  <img class="end-image" src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1710000000/TOPCLIMasset/end.jpg" alt="نتيجة التنظيف">
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-    authDomain: "topclim-3edfa.firebaseapp.com",
-    projectId: "topclim-3edfa",
-    storageBucket: "topclim-3edfa.appspot.com",
-    messagingSenderId: "1013389465521",
-    appId: "1:1013389465521:web:f758b41503a39dcc9e4f90",
-    measurementId: "G-LVYCFLDT14"
-  };
+  <!-- 6️⃣ الفوتر -->
+  <footer>
+    <p>📞 0555-123-456 | 📧 info@topclim.dz</p>
+    <p>جميع الحقوق محفوظة © TopClim 2025</p>
+  </footer>
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  <!-- 7️⃣ سكريبت Firebase + Cloudinary -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  const cloudName = "dtrmfg2om";
-  const uploadPreset = "topclim_upload";
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa",
+      storageBucket: "topclim-3edfa.appspot.com",
+      messagingSenderId: "1013389465521",
+      appId: "1:1013389465521:web:f758b41503a39dcc9e4f90",
+      measurementId: "G-LVYCFLDT14"
+    };
 
-  async function uploadToCloudinary(file) {
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
-    formData.append("folder", "TOPCLIMasset");
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    const res = await fetch(url, { method: "POST", body: formData });
-    const data = await res.json();
-    return data.secure_url; // رابط الصورة
-  }
+    document.getElementById("orderForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-  document.getElementById("orderForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+      const name = document.getElementById("name").value;
+      const phone = document.getElementById("phone").value;
+      const address = document.getElementById("address").value;
+      const acType = document.getElementById("acType").value;
+      const imageFile = document.getElementById("acImage").files[0];
 
-    const name = document.getElementById("name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const address = document.getElementById("address").value.trim();
-    const type = document.getElementById("type").value;
-    const imageFile = document.getElementById("acImage").files[0];
-
-    let imageUrl = "";
-    if (imageFile) {
-      try {
-        imageUrl = await uploadToCloudinary(imageFile);
-      } catch (err) {
-        alert("فشل رفع صورة المكيف.");
-        console.error(err);
+      if (!imageFile) {
+        alert("يرجى تصوير مكيفك.");
         return;
       }
-    }
 
-    try {
-      const docRef = await addDoc(collection(db, "requests"), {
-        name, phone, address, type,
-        image: imageUrl,
-        status: "مبدئي",
-        createdAt: serverTimestamp()
-      });
-      window.location.href = `track.html?id=${docRef.id}`;
-    } catch (error) {
-      alert("حدث خطأ أثناء إرسال الطلب");
-      console.error("Firebase Error:", error);
-    }
-  });
-</script>
+      // رفع الصورة إلى Cloudinary
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      formData.append("upload_preset", "topclim_upload");
+      formData.append("folder", "TOPCLIMasset");
+
+      let imageUrl = "";
+      try {
+        const response = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/image/upload", {
+          method: "POST",
+          body: formData
+        });
+        const data = await response.json();
+        imageUrl = data.secure_url;
+      } catch (error) {
+        alert("خطأ في تحميل الصورة. تأكد من الاتصال.");
+        return;
+      }
+
+      try {
+        const docRef = await addDoc(collection(db, "requests"), {
+          name,
+          phone,
+          address,
+          acType,
+          status: "مبدئي",
+          userImage: imageUrl,
+          createdAt: serverTimestamp()
+        });
+
+        window.location.href = `track.html?id=${docRef.id}`;
+      } catch (error) {
+        alert("حدث خطأ أثناء إرسال الطلب.");
+      }
+    });
+  </script>
 
 </body>
 </html>
