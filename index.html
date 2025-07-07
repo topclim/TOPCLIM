@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>طلب تنظيف مكيف</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/index.js"></script>
+</head>
+<body>
+  <h1>طلب تنظيف مكيف</h1>
+  <form id="requestForm">
+    <input type="text" id="name" placeholder="الاسم" required><br>
+    <input type="text" id="phone" placeholder="الهاتف" required><br>
+    <input type="text" id="address" placeholder="العنوان" required><br>
+    <input type="text" id="type" placeholder="نوع المكيف" required><br>
+    <button type="submit">إرسال الطلب</button>
+  </form>
+</body>
+</html>
