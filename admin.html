@@ -6,12 +6,20 @@
   <link rel="stylesheet" href="css/styles.css">
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/admin.js"></script>
 </head>
 <body>
-  <h1>طلبات التنظيف</h1>
-  <input type="file" id="imageUpload">
-  <div id="requestsContainer"></div>
+  <h1>لوحة التحكم (المدير)</h1>
+  <div id="authSection">
+    <input type="email" id="adminEmail" placeholder="البريد">
+    <input type="password" id="adminPassword" placeholder="كلمة السر">
+    <button onclick="loginAdmin()">تسجيل الدخول</button>
+  </div>
+  <div id="adminSection" style="display:none;">
+    <input type="file" id="imageUpload">
+    <div id="requestsContainer"></div>
+  </div>
 </body>
 </html>
