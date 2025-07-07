@@ -48,19 +48,49 @@
       <input type="text" id="name" placeholder="الاسم الكامل" required />
       <input type="tel" id="phone" placeholder="رقم الهاتف" required />
       <input type="text" id="address" placeholder="العنوان" required />
-      <select id="type" required>
-        <option disabled selected>نوع المكيف</option>
-        <option value="سبليت">سبليت</option>
-        <option value="شباك">شباك</option>
+
+      <!-- ✅ عدد المكيفات -->
+      <label>عدد المكيفات:</label>
+      <select id="acCount" onchange="updateACFields()" required>
+        <option disabled selected>كم عدد المكيفات؟</option>
+        <option value="1">مكيف واحد</option>
+        <option value="2">مكيفين</option>
       </select>
 
+      <!-- ✅ مكيف 1 -->
+      <div id="ac1" style="display: none;">
+        <label>🌀 نوع المكيف 1</label>
+        <select id="type1">
+          <option disabled selected>اختر النوع</option>
+          <option value="سبليت">سبليت</option>
+          <option value="شباك">شباك</option>
+        </select>
+        <label>📏 حجم المكيف 1</label>
+        <input type="text" id="size1" placeholder="مثال: 1.5 حصان أو 12000 وحدة" />
+      </div>
+
+      <!-- ✅ مكيف 2 -->
+      <div id="ac2" style="display: none;">
+        <label>🌀 نوع المكيف 2</label>
+        <select id="type2">
+          <option disabled selected>اختر النوع</option>
+          <option value="سبليت">سبليت</option>
+          <option value="شباك">شباك</option>
+        </select>
+        <label>📏 حجم المكيف 2</label>
+        <input type="text" id="size2" placeholder="مثال: 2 حصان أو 18000 وحدة" />
+      </div>
+
+      <!-- ✅ صورة المكيف -->
       <label>📸 صورة المكيف (اختياري):</label>
       <input type="file" id="image" accept="image/*" capture="environment" />
 
+      <!-- ✅ تحديد الموقع -->
       <button type="button" onclick="getLocation()">📍 تحديد موقعي</button>
       <p id="locationStatus" class="note"></p>
       <div id="map"></div>
 
+      <!-- ✅ زر الإرسال -->
       <button type="submit">إرسال الطلب</button>
     </form>
   </section>
@@ -89,7 +119,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // ✅ جلب الصور الديناميكية من قاعدة البيانات
+    // ✅ تحميل الصور من قاعدة البيانات
     async function loadLandingContent() {
       const docRef = doc(db, "landing", "landingContent");
       const snap = await getDoc(docRef);
@@ -103,17 +133,26 @@
     }
     loadLandingContent();
 
-    // ✅ معالجة إرسال الطلب
+    // ✅ معالجة إرسال النموذج
     const form = document.getElementById('orderForm');
     const imageInput = document.getElementById('image');
     let userLocation = null;
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const name = document.getElementById('name').value;
       const phone = document.getElementById('phone').value;
       const address = document.getElementById('address').value;
-      const type = document.getElementById('type').value;
+
+      const acCount = document.getElementById('acCount').value;
+      const type1 = document.getElementById('type1').value;
+      const size1 = document.getElementById('size1').value;
+      let type2 = "", size2 = "";
+      if (acCount === "2") {
+        type2 = document.getElementById('type2').value;
+        size2 = document.getElementById('size2').value;
+      }
 
       let imageUrl = "";
       const imageFile = imageInput.files[0];
@@ -127,12 +166,16 @@
           method: "POST",
           body: formData
         });
+
         const data = await res.json();
         imageUrl = data.secure_url;
       }
 
       const docRef = await addDoc(collection(db, "requests"), {
-        name, phone, address, type,
+        name, phone, address,
+        acCount,
+        ac1: { type: type1, size: size1 },
+        ac2: acCount === "2" ? { type: type2, size: size2 } : null,
         location: userLocation,
         imageUrl,
         status: "مبدئي",
@@ -168,6 +211,13 @@
     }
 
     window.getLocation = getLocation;
+
+    // ✅ عرض وإخفاء حقول المكيفات حسب العدد
+    window.updateACFields = function () {
+      const count = document.getElementById("acCount").value;
+      document.getElementById("ac1").style.display = "block";
+      document.getElementById("ac2").style.display = count === "2" ? "block" : "none";
+    };
   </script>
 
 </body>
