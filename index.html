@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>تنظيف مكيفات – TopClim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- CSS أساسي -->
   <style>
     body { font-family: 'Cairo', sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
     header, footer { background: #007BFF; color: white; text-align: center; padding: 1em; }
@@ -17,8 +16,6 @@
     #map { height: 300px; margin-top: 15px; border-radius: 10px; }
     .note { color: green; margin-top: 10px; }
   </style>
-
-  <!-- Leaflet.js للخريطة -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
@@ -30,17 +27,17 @@
     <p>خدمة تنظيف مكيفات احترافية وسريعة في بيتك</p>
   </header>
 
-  <!-- ✅ صورة طويلة (إشهارية) -->
+  <!-- ✅ صورة علوية من قاعدة البيانات -->
   <section>
-    <img src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1719999999/TOPCLIMasset/header-image.jpg" alt="إعلان" width="100%" />
+    <img id="headerImage" alt="إعلان" width="100%" />
   </section>
 
   <!-- ✅ صور قبل وبعد -->
   <section>
     <h2>📸 نتائج أعمالنا</h2>
     <div class="before-after">
-      <img src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1719999999/TOPCLIMasset/before.jpg" alt="قبل التنظيف" />
-      <img src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1719999999/TOPCLIMasset/after.jpg" alt="بعد التنظيف" />
+      <img id="beforeImage" alt="قبل التنظيف" />
+      <img id="afterImage" alt="بعد التنظيف" />
     </div>
   </section>
 
@@ -57,23 +54,20 @@
         <option value="شباك">شباك</option>
       </select>
 
-      <!-- ✅ زر رفع صورة -->
       <label>📸 صورة المكيف (اختياري):</label>
       <input type="file" id="image" accept="image/*" capture="environment" />
 
-      <!-- ✅ زر تحديد الموقع -->
       <button type="button" onclick="getLocation()">📍 تحديد موقعي</button>
       <p id="locationStatus" class="note"></p>
       <div id="map"></div>
 
-      <!-- ✅ زر الإرسال -->
       <button type="submit">إرسال الطلب</button>
     </form>
   </section>
 
-  <!-- ✅ صورة ختامية -->
+  <!-- ✅ صورة سفلية -->
   <section>
-    <img src="https://res.cloudinary.com/dtrmfg2om/image/upload/v1719999999/TOPCLIMasset/footer-image.jpg" alt="تنظيف احترافي" width="100%" />
+    <img id="footerImage" alt="تنظيف احترافي" width="100%" />
   </section>
 
   <!-- ✅ الفوتر -->
@@ -81,33 +75,41 @@
     <p>جميع الحقوق محفوظة © TopClim 2025</p>
   </footer>
 
-  <!-- ✅ Firebase و Cloudinary -->
+  <!-- ✅ Firebase لجلب الصور + حفظ الطلب -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // 🛠️ إعدادات Firebase
     const firebaseConfig = {
-  apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-  authDomain: "topclim-3edfa.firebaseapp.com",
-  projectId: "topclim-3edfa",
-  storageBucket: "topclim-3edfa.appspot.com",
-  messagingSenderId: "1013389465521",
-  appId: "1:1013389465521:web:f758b41503a39dcc9e4f90",
-  measurementId: "G-LVYCFLDT14"
-};
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // ✅ جلب الصور الديناميكية من قاعدة البيانات
+    async function loadLandingContent() {
+      const docRef = doc(db, "landing", "landingContent");
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        document.getElementById("headerImage").src = data.bannerTop || "";
+        document.getElementById("beforeImage").src = data.beforeImage || "";
+        document.getElementById("afterImage").src = data.afterImage || "";
+        document.getElementById("footerImage").src = data.bannerBottom || "";
+      }
+    }
+    loadLandingContent();
+
+    // ✅ معالجة إرسال الطلب
     const form = document.getElementById('orderForm');
     const imageInput = document.getElementById('image');
-
     let userLocation = null;
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const name = document.getElementById('name').value;
       const phone = document.getElementById('phone').value;
       const address = document.getElementById('address').value;
@@ -125,7 +127,6 @@
           method: "POST",
           body: formData
         });
-
         const data = await res.json();
         imageUrl = data.secure_url;
       }
@@ -138,7 +139,6 @@
         createdAt: serverTimestamp()
       });
 
-      // ✅ الانتقال لصفحة التتبع
       window.location.href = `track.html?id=${docRef.id}`;
     });
 
@@ -167,7 +167,7 @@
       });
     }
 
-    window.getLocation = getLocation; // لتفعيل الزر
+    window.getLocation = getLocation;
   </script>
 
 </body>
