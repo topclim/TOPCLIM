@@ -1,80 +1,136 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>TopClim – تنظيف مكيفات الهواء</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <title>TopClim – تنظيف المكيفات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: sans-serif; background: #f8f9fa; margin: 0; text-align: center; }
-    header, footer { background: #007b8a; color: white; padding: 20px; }
-    img { width: 100%; max-width: 500px; margin: 10px 0; border-radius: 8px; }
-    section { padding: 20px; }
-    form input, form select, form button {
-      width: 90%; max-width: 400px;
-      padding: 10px; margin: 8px 0;
-      font-size: 16px;
-    }
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    input, select, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+    img { max-width: 100%; margin: 10px 0; }
   </style>
-
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
+
   <header>
-    <h1 id="headerTitle">🌬️ TopClim</h1>
-    <p id="headerDesc">تنظيف مكيفات احترافي</p>
+    <h1>🌬️ TopClim – تنظيف مكيفات احترافي</h1>
+    <p>نخدمك في بيتك – اطلب الآن!</p>
   </header>
 
-  <img id="bannerTop" src="" alt="صورة إشهارية علوية" />
-
-  <section>
-    <h2>📸 قبل / بعد التنظيف</h2>
-    <img id="beforeImage" src="" alt="قبل التنظيف" />
-    <img id="afterImage" src="" alt="بعد التنظيف" />
-  </section>
-
-  <section>
+  <section id="order">
     <h2>📦 قدم طلبك الآن</h2>
     <form id="orderForm">
-      <input type="text" placeholder="الاسم الكامل" required />
-      <input type="tel" placeholder="رقم الهاتف" required />
-      <input type="text" placeholder="العنوان" required />
-      <select required>
+      <input type="text" id="name" placeholder="الاسم الكامل" required />
+      <input type="tel" id="phone" placeholder="رقم الهاتف" required />
+      <input type="text" id="address" placeholder="العنوان" required />
+      <select id="type" required>
         <option disabled selected>اختر نوع المكيف</option>
         <option value="split">سبليت</option>
         <option value="window">شباك</option>
       </select>
+
+      <input type="file" accept="image/*" capture="environment" id="acImage" />
+      <p id="imageStatus">لم يتم اختيار صورة بعد</p>
+
+      <button type="button" onclick="getLocation()">📍 تحديد موقعي الحالي</button>
+      <p id="locationStatus">الموقع لم يُحدد بعد</p>
+
       <button type="submit">🛠️ إرسال الطلب</button>
     </form>
   </section>
 
-  <img id="bannerBottom" src="" alt="صورة إشهارية سفلية" />
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <footer>
-    <p>جميع الحقوق محفوظة © TopClim</p>
-  </footer>
-
-  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
       authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
+      projectId: "topclim-3edfa",
+      storageBucket: "topclim-3edfa.appspot.com",
+      messagingSenderId: "1013389465521",
+      appId: "1:1013389465521:web:f758b41503a39dcc9e4f90",
+      measurementId: "G-LVYCFLDT14"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    db.collection("landing").doc("landingContent").get().then(doc => {
-      if (doc.exists) {
-        const data = doc.data();
-        document.getElementById("headerTitle").textContent = data.headerTitle || "TopClim";
-        document.getElementById("headerDesc").textContent = data.headerDesc || "";
-        document.getElementById("bannerTop").src = data.bannerTop || "";
-        document.getElementById("beforeImage").src = data.beforeImage || "";
-        document.getElementById("afterImage").src = data.afterImage || "";
-        document.getElementById("bannerBottom").src = data.bannerBottom || "";
+    let userLocation = null;
+
+    document.getElementById("acImage").addEventListener("change", () => {
+      document.getElementById("imageStatus").textContent = "✅ تم اختيار صورة.";
+    });
+
+    async function getLocation() {
+      const locStatus = document.getElementById("locationStatus");
+      if (!navigator.geolocation) {
+        locStatus.textContent = "📵 المتصفح لا يدعم تحديد الموقع.";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          userLocation = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          };
+          locStatus.textContent = `✅ تم تحديد الموقع: ${userLocation.lat.toFixed(5)}, ${userLocation.lng.toFixed(5)}`;
+        },
+        err => {
+          locStatus.textContent = "⚠️ تعذر تحديد الموقع، أعد المحاولة.";
+        }
+      );
+    }
+
+    document.getElementById("orderForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const phone = document.getElementById("phone").value;
+      const address = document.getElementById("address").value;
+      const type = document.getElementById("type").value;
+      const imageFile = document.getElementById("acImage").files[0];
+
+      let imageUrl = "";
+
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+        formData.append("upload_preset", "topclim_upload");
+
+        try {
+          const res = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/image/upload", {
+            method: "POST",
+            body: formData
+          });
+          const data = await res.json();
+          imageUrl = data.secure_url;
+        } catch (err) {
+          alert("❌ فشل رفع الصورة");
+          return;
+        }
+      }
+
+      try {
+        const docRef = await addDoc(collection(db, "requests"), {
+          name,
+          phone,
+          address,
+          type,
+          image: imageUrl,
+          location: userLocation || null,
+          status: "مبدئي",
+          createdAt: new Date()
+        });
+
+        window.location.href = `track.html?id=${docRef.id}`;
+      } catch (err) {
+        alert("❌ حدث خطأ أثناء إرسال الطلب.");
+        console.error(err);
       }
     });
   </script>
+
 </body>
 </html>
