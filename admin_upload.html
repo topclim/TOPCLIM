@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -9,12 +8,14 @@
     body { font-family: Arial; padding: 20px; background: #fff0f0; text-align: right; direction: rtl; }
     input, textarea, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
     img { max-width: 100px; margin-top: 10px; display: block; }
+    .uploading { color: red; font-weight: bold; }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <h1>🛠️ لوحة التحكم - تعديل محتوى الهبوط</h1>
+
   <label>العنوان</label>
   <input id="headerTitle" type="text" />
   <label>الوصف</label>
@@ -22,37 +23,51 @@
 
   <label>🔼 صورة علوية</label>
   <input type="file" onchange="uploadImage(this, 'bannerTop')" />
+  <span id="status_bannerTop" class="uploading"></span>
   <img id="preview_bannerTop" />
   <input id="bannerTop" type="hidden" />
 
   <label>🔼 صورة قبل التنظيف</label>
   <input type="file" onchange="uploadImage(this, 'beforeImage')" />
+  <span id="status_beforeImage" class="uploading"></span>
   <img id="preview_beforeImage" />
   <input id="beforeImage" type="hidden" />
 
   <label>🔼 صورة بعد التنظيف</label>
   <input type="file" onchange="uploadImage(this, 'afterImage')" />
+  <span id="status_afterImage" class="uploading"></span>
   <img id="preview_afterImage" />
   <input id="afterImage" type="hidden" />
 
   <label>🔼 صورة سفلية</label>
   <input type="file" onchange="uploadImage(this, 'bannerBottom')" />
+  <span id="status_bannerBottom" class="uploading"></span>
   <img id="preview_bannerBottom" />
   <input id="bannerBottom" type="hidden" />
 
-  <button onclick="saveContent()">💾 حفظ</button>
+  <button id="saveBtn" onclick="saveContent()">💾 حفظ</button>
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSy...",
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
       authDomain: "topclim-3edfa.firebaseapp.com",
       projectId: "topclim-3edfa",
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    let uploadInProgress = 0;
+
     async function uploadImage(input, fieldId) {
       const file = input.files[0];
+      if (!file) return;
+
+      const statusSpan = document.getElementById("status_" + fieldId);
+      statusSpan.textContent = "⬆️ جاري رفع الصورة...";
+
+      uploadInProgress++;
+      document.getElementById("saveBtn").disabled = true;
+
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", "topclim_upload");
@@ -64,24 +79,56 @@
           body: formData
         });
         const data = await res.json();
-        document.getElementById(fieldId).value = data.secure_url;
-        document.getElementById("preview_" + fieldId).src = data.secure_url;
+
+        if (data.secure_url) {
+          document.getElementById(fieldId).value = data.secure_url;
+          document.getElementById("preview_" + fieldId).src = data.secure_url;
+          statusSpan.textContent = "✅ تم الرفع بنجاح";
+        } else {
+          statusSpan.textContent = "❌ فشل في رفع الصورة";
+        }
+
       } catch (e) {
-        alert("❌ خطأ في رفع الصورة. تحقق من الاتصال.");
+        statusSpan.textContent = "❌ خطأ في الرفع: " + e.message;
+      } finally {
+        uploadInProgress--;
+        if (uploadInProgress === 0) {
+          document.getElementById("saveBtn").disabled = false;
+        }
       }
     }
 
     async function saveContent() {
+      if (uploadInProgress > 0) {
+        alert("⏳ يرجى الانتظار حتى انتهاء رفع الصور");
+        return;
+      }
+
+      const bannerTop = document.getElementById("bannerTop").value;
+      const beforeImage = document.getElementById("beforeImage").value;
+      const afterImage = document.getElementById("afterImage").value;
+      const bannerBottom = document.getElementById("bannerBottom").value;
+
+      if (!bannerTop || !beforeImage || !afterImage || !bannerBottom) {
+        alert("❗ تأكد من رفع جميع الصور");
+        return;
+      }
+
       const data = {
         headerTitle: document.getElementById("headerTitle").value,
         headerDesc: document.getElementById("headerDesc").value,
-        bannerTop: document.getElementById("bannerTop").value,
-        beforeImage: document.getElementById("beforeImage").value,
-        afterImage: document.getElementById("afterImage").value,
-        bannerBottom: document.getElementById("bannerBottom").value,
+        bannerTop,
+        beforeImage,
+        afterImage,
+        bannerBottom
       };
-      await db.collection("landing").doc("landingContent").set(data, { merge: true });
-      alert("✅ تم الحفظ بنجاح");
+
+      try {
+        await db.collection("landing").doc("landingContent").set(data, { merge: true });
+        alert("✅ تم حفظ البيانات بنجاح");
+      } catch (e) {
+        alert("❌ خطأ أثناء حفظ البيانات: " + e.message);
+      }
     }
   </script>
 </body>
