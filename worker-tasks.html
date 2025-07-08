@@ -113,7 +113,12 @@
   <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
-    getFirestore, collection, query, where, getDocs
+    getFirestore,
+    collection,
+    query,
+    where,
+    getDocs,
+    Timestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   // إعداد Firebase
@@ -125,12 +130,13 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // جلب معرف العامل من localStorage
+  // التحقق من العامل
   const workerId = localStorage.getItem("workerId");
   if (!workerId) {
     window.location.href = "worker-login.html";
   }
 
+  // عناصر الصفحة
   const tasksList = document.getElementById("tasksList");
   const todayInput = document.getElementById("customDate");
   const boxes = {
@@ -139,27 +145,32 @@
     tomorrow: document.getElementById("tomorrowBox")
   };
 
-  // دالة لحساب تواريخ اليوم، البارحة، والغد بصيغة YYYY-MM-DD
+  // حساب التاريخ بصيغة YYYY-MM-DD
   function dateString(offsetDays = 0) {
     const d = new Date();
     d.setDate(d.getDate() + offsetDays);
     return d.toISOString().split("T")[0];
   }
 
-  let selectedDate = dateString(); // الافتراضي: اليوم
+  // تاريخ مبدئي (اليوم)
+  let selectedDate = dateString();
 
   function setActive(key) {
     Object.values(boxes).forEach(b => b.classList.remove("active"));
     boxes[key].classList.add("active");
+
     selectedDate = dateString(key === "yesterday" ? -1 : key === "tomorrow" ? 1 : 0);
     todayInput.value = selectedDate;
+
     loadTasks();
   }
 
+  // تفعيل أزرار الفلاتر
   boxes.yesterday.onclick = () => setActive("yesterday");
   boxes.today.onclick = () => setActive("today");
   boxes.tomorrow.onclick = () => setActive("tomorrow");
 
+  // عند اختيار تاريخ مخصص
   todayInput.value = selectedDate;
   todayInput.onchange = e => {
     Object.values(boxes).forEach(b => b.classList.remove("active"));
@@ -167,21 +178,23 @@
     loadTasks();
   };
 
-  // تحميل المهام
+  // تحميل المهام من Firestore
   async function loadTasks() {
     tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
+
     try {
-      const start = `${selectedDate}T00:00:00`;
-      const end = `${selectedDate}T23:59:59`;
+      const startDate = new Date(`${selectedDate}T00:00:00`);
+      const endDate = new Date(`${selectedDate}T23:59:59`);
 
       const q = query(
         collection(db, "requests"),
         where("assignedTo", "==", workerId),
-        where("executionSchedule", ">=", start),
-        where("executionSchedule", "<=", end)
+        where("executionSchedule", ">=", Timestamp.fromDate(startDate)),
+        where("executionSchedule", "<=", Timestamp.fromDate(endDate))
       );
 
       const snap = await getDocs(q);
+
       if (snap.empty) {
         tasksList.innerHTML = "<p>🚫 لا توجد أعمال في هذا التاريخ.</p>";
         return;
@@ -190,26 +203,31 @@
       tasksList.innerHTML = "";
       snap.forEach(docSnap => {
         const d = docSnap.data();
-        const dateDisplay = d.executionSchedule?.split("T")[0] || "";
+        const execDate = d.executionSchedule?.toDate?.();
+        const dateStr = execDate?.toLocaleDateString("ar-DZ") || "";
+        const timeStr = execDate?.toLocaleTimeString("ar-DZ", { hour: "2-digit", minute: "2-digit" }) || "";
+
         const el = document.createElement("div");
         el.className = "task";
         el.innerHTML = `
           <h3>👤 ${d.name || "زبون"}</h3>
-          <p>📍 ${d.address || "غير محدد"}</p>
-          <p>🕒 ${dateDisplay} – ${d.executionSchedule?.split("T")[1]?.slice(0,5) || ""}</p>
+          <p>📍 العنوان: ${d.address || "غير محدد"}</p>
+          <p>🕒 ${dateStr} – ${timeStr}</p>
           <a href="worker-task-details.html?id=${docSnap.id}">📄 تنفيذ</a>
         `;
         tasksList.appendChild(el);
       });
 
-    } catch (err) {
-      console.error(err);
-      tasksList.innerHTML = "<p>❌ خطأ أثناء التحميل.</p>";
+    } catch (error) {
+      console.error(error);
+      tasksList.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
     }
   }
 
+  // تشغيل تحميل مبدئي
   loadTasks();
 </script>
+
 
 
 </body>
