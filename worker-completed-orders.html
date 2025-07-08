@@ -31,9 +31,11 @@
       background-color: #007BFF;
       color: white;
     }
-    input[type="number"] {
-      width: 80px;
+    input[type="number"],
+    input[type="date"] {
+      width: 100px;
       padding: 4px;
+      text-align: center;
     }
     .price-header {
       background: #f1f1f1;
@@ -54,15 +56,15 @@
       <th rowspan="3">💰 الربح الكلي</th>
     </tr>
     <tr class="price-header">
-      <th colspan="1">سعر داخلي</th>
-      <th colspan="1">سعر خارجي</th>
-      <th colspan="1">سعر صيانة</th>
+      <th>سعر داخلي</th>
+      <th>سعر خارجي</th>
+      <th>سعر صيانة</th>
       <th colspan="3" rowspan="2">بيانات الطلبات</th>
     </tr>
     <tr>
-      <th><input type="number" id="priceIndoor" value="500" /></th>
-      <th><input type="number" id="priceOutdoor" value="400" /></th>
-      <th><input type="number" id="priceMaintenance" value="300" /></th>
+      <th><input type="number" id="priceIndoor" /></th>
+      <th><input type="number" id="priceOutdoor" /></th>
+      <th><input type="number" id="priceMaintenance" /></th>
     </tr>
     <tr>
       <th>📄 رقم الطلب</th>
@@ -82,7 +84,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
-    getFirestore, collection, getDocs
+    getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -101,14 +103,39 @@
     maintenance: document.getElementById("priceMaintenance")
   };
 
-  Object.values(priceInputs).forEach(input => {
-    input.addEventListener("input", () => {
-      loadData(); // Recalculate on price change
+  // 🔄 تحميل الأسعار من قاعدة البيانات
+  async function loadPrices() {
+    const priceRef = doc(db, "settings", "prices");
+    const snap = await getDoc(priceRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      priceInputs.indoor.value = data.indoor || 0;
+      priceInputs.outdoor.value = data.outdoor || 0;
+      priceInputs.maintenance.value = data.maintenance || 0;
+    } else {
+      await setDoc(priceRef, { indoor: 500, outdoor: 400, maintenance: 300 });
+      loadPrices(); // إعادة التحميل
+    }
+  }
+
+  // حفظ الأسعار عند التغيير
+  Object.entries(priceInputs).forEach(([key, input]) => {
+    input.addEventListener("input", async () => {
+      await setDoc(doc(db, "settings", "prices"), {
+        indoor: parseInt(priceInputs.indoor.value),
+        outdoor: parseInt(priceInputs.outdoor.value),
+        maintenance: parseInt(priceInputs.maintenance.value)
+      });
+      loadData(); // تحديث الجدول
     });
   });
 
+  // تحميل وإنشاء صفوف الجدول
   async function loadData() {
     const snap = await getDocs(collection(db, "requests"));
+    const priceSnap = await getDoc(doc(db, "settings", "prices"));
+    const prices = priceSnap.data();
+
     tbody.innerHTML = "";
 
     snap.forEach(docSnap => {
@@ -116,35 +143,57 @@
       const id = docSnap.id;
 
       if (d.status === "تم الإنجاز" && d.workDone) {
-        const start = d.executionSchedule?.seconds ? new Date(d.executionSchedule.seconds * 1000).toISOString().split("T")[0] : "—";
-        const end = d.workDone.finishedAt?.seconds ? new Date(d.workDone.finishedAt.seconds * 1000).toISOString().split("T")[0] : "—";
+        const start = d.executionSchedule?.seconds ? new Date(d.executionSchedule.seconds * 1000) : null;
+        const end = d.workDone.finishedAt?.seconds ? new Date(d.workDone.finishedAt.seconds * 1000) : null;
 
         const indoor = d.workDone.indoor || 0;
         const outdoor = d.workDone.outdoor || 0;
         const maintenance = d.workDone.maintenance || 0;
 
-        const priceIn = parseInt(priceInputs.indoor.value);
-        const priceOut = parseInt(priceInputs.outdoor.value);
-        const priceMain = parseInt(priceInputs.maintenance.value);
-
-        const total = (indoor * priceIn) + (outdoor * priceOut) + (maintenance * priceMain);
+        const total = (indoor * prices.indoor) + (outdoor * prices.outdoor) + (maintenance * prices.maintenance);
 
         const row = document.createElement("tr");
+
         row.innerHTML = `
           <td>${id}</td>
-          <td>${start}</td>
-          <td>${end}</td>
+          <td><input type="date" value="${start ? start.toISOString().split('T')[0] : ''}" onchange="updateStartDate('${id}', this.value)" /></td>
+          <td><input type="date" value="${end ? end.toISOString().split('T')[0] : ''}" onchange="updateEndDate('${id}', this.value)" /></td>
           <td>${indoor}</td>
           <td>${outdoor}</td>
           <td>${maintenance}</td>
           <td><strong>${total} دج</strong></td>
         `;
+
         tbody.appendChild(row);
       }
     });
   }
 
-  loadData();
+  // ✅ تحديث تاريخ البداية
+  window.updateStartDate = async (id, date) => {
+    const timestamp = new Date(date);
+    await updateDoc(doc(db, "requests", id), {
+      executionSchedule: timestamp
+    });
+    alert("✅ تم تحديث تاريخ البداية");
+  };
+
+  // ✅ تحديث تاريخ الإنجاز
+  window.updateEndDate = async (id, date) => {
+    const timestamp = new Date(date);
+    const currentData = await getDoc(doc(db, "requests", id));
+    const workDone = currentData.data().workDone || {};
+    workDone.finishedAt = timestamp;
+
+    await updateDoc(doc(db, "requests", id), {
+      workDone: workDone
+    });
+    alert("✅ تم تحديث تاريخ الإنجاز");
+  };
+
+  await loadPrices();
+  await loadData();
+
 </script>
 
 </body>
