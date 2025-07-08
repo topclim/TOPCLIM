@@ -2,115 +2,69 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>تنظيف مكيفات – TopClim</title>
+  <title>🌬️ تنظيف مكيفات – TopClim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
-    header, footer { background: #007BFF; color: white; text-align: center; padding: 1em; }
-    section { padding: 20px; }
-    .before-after img { width: 48%; margin: 1%; border-radius: 8px; }
-    form input, form select, form button {
-      display: block; width: 100%; padding: 10px; margin: 10px 0;
-      border: 1px solid #ccc; border-radius: 6px;
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0; padding: 0;
+      background-color: #f2f2f2;
+      color: #333;
+      text-align: center;
     }
-    #map { height: 300px; margin-top: 15px; border-radius: 10px; }
-    .note { color: green; margin-top: 10px; }
+    header, footer {
+      padding: 20px;
+      color: white;
+    }
+    section { padding: 20px; }
+    .before-after {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .before-after img {
+      width: 45%;
+      border-radius: 10px;
+    }
+    img.full-width {
+      width: 100%;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
   </style>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
-  <!-- ✅ الهيدر -->
-  <header>
-    <div style="padding: 20px 10px; text-align: center;">
-    <h2 id="landingTitle" style="color: #007BFF; font-size: 24px;"></h2>
-    <p id="landingDesc" style="color: #444;"></p>
-  </div>
+  <header id="headerSection">
+    <h1 id="headerTitle">TopClim</h1>
+    <p id="headerDesc">خدمة تنظيف مكيفات احترافية وسريعة في بيتك</p>
   </header>
 
-  <!-- ✅ صورة علوية من قاعدة البيانات -->
   <section>
-    <img id="headerImage" alt="إعلان" width="100%" />
+    <img id="bannerTop" class="full-width" alt="إعلان علوي" />
   </section>
 
-  <!-- ✅ صور قبل وبعد -->
   <section>
-    <h2>📸 نتائج أعمالنا</h2>
+    <h2>📸 نتائج قبل وبعد</h2>
     <div class="before-after">
       <img id="beforeImage" alt="قبل التنظيف" />
       <img id="afterImage" alt="بعد التنظيف" />
     </div>
   </section>
 
-  <!-- ✅ نموذج الطلب -->
-  <section id="order">
-    <h2>📝 قدم طلبك الآن</h2>
-    <form id="orderForm">
-      <input type="text" id="name" placeholder="الاسم الكامل" required />
-      <input type="tel" id="phone" placeholder="رقم الهاتف" required />
-      <input type="text" id="address" placeholder="العنوان" required />
-
-      <!-- ✅ عدد المكيفات -->
-      <label>عدد المكيفات:</label>
-      <select id="acCount" onchange="updateACFields()" required>
-        <option disabled selected>كم عدد المكيفات؟</option>
-        <option value="1">مكيف واحد</option>
-        <option value="2">مكيفين</option>
-      </select>
-
-      <!-- ✅ مكيف 1 -->
-      <div id="ac1" style="display: none;">
-        <label>🌀 نوع المكيف 1</label>
-        <select id="type1">
-          <option disabled selected>اختر النوع</option>
-          <option value="سبليت">سبليت</option>
-          <option value="شباك">شباك</option>
-        </select>
-        <label>📏 حجم المكيف 1</label>
-        <input type="text" id="size1" placeholder="مثال: 1.5 حصان أو 12000 وحدة" />
-      </div>
-
-      <!-- ✅ مكيف 2 -->
-      <div id="ac2" style="display: none;">
-        <label>🌀 نوع المكيف 2</label>
-        <select id="type2">
-          <option disabled selected>اختر النوع</option>
-          <option value="سبليت">سبليت</option>
-          <option value="شباك">شباك</option>
-        </select>
-        <label>📏 حجم المكيف 2</label>
-        <input type="text" id="size2" placeholder="مثال: 2 حصان أو 18000 وحدة" />
-      </div>
-
-      <!-- ✅ صورة المكيف -->
-      <label>📸 صورة المكيف (اختياري):</label>
-      <input type="file" id="image" accept="image/*" capture="environment" />
-
-      <!-- ✅ تحديد الموقع -->
-      <button type="button" onclick="getLocation()">📍 تحديد موقعي</button>
-      <p id="locationStatus" class="note"></p>
-      <div id="map"></div>
-
-      <!-- ✅ زر الإرسال -->
-      <button type="submit">إرسال الطلب</button>
-    </form>
-  </section>
-
-  <!-- ✅ صورة سفلية -->
   <section>
-    <img id="footerImage" alt="تنظيف احترافي" width="100%" />
+    <img id="bannerBottom" class="full-width" alt="صورة سفلية" />
   </section>
 
-  <!-- ✅ الفوتر -->
-  <footer>
-    <p>جميع الحقوق محفوظة © TopClim 2025</p>
+  <footer id="footerSection">
+    <p id="footerText">© جميع الحقوق محفوظة لـ TopClim</p>
   </footer>
 
-  <!-- ✅ Firebase لجلب الصور + حفظ الطلب -->
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
@@ -121,111 +75,31 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // ✅ تحميل الصور من قاعدة البيانات
-    async function loadLandingContent() {
+    async function loadContent() {
       const docRef = doc(db, "landing", "landingContent");
       const snap = await getDoc(docRef);
       if (snap.exists()) {
         const data = snap.data();
-        document.getElementById("headerImage").src = data.bannerTop || "";
+
+        // محتوى النصوص
+        document.getElementById("headerTitle").textContent = data.headerTitle || "TopClim";
+        document.getElementById("headerDesc").textContent = data.headerDesc || "خدمة تنظيف مكيفات احترافية وسريعة في بيتك";
+        document.getElementById("footerText").textContent = data.footerText || "© جميع الحقوق محفوظة لـ TopClim";
+
+        // الصور
+        document.getElementById("bannerTop").src = data.bannerTop || "";
         document.getElementById("beforeImage").src = data.beforeImage || "";
         document.getElementById("afterImage").src = data.afterImage || "";
-        document.getElementById("footerImage").src = data.bannerBottom || "";
-     
-         // ✅ تحميل العنوان والوصف
-    document.getElementById("landingTitle").textContent = data.headerTitle || "";
-    document.getElementById("landingDesc").textContent = data.headerDesc || "";
-     
+        document.getElementById("bannerBottom").src = data.bannerBottom || "";
+
+        // الألوان
+        document.body.style.backgroundColor = data.bgColor || "#f2f2f2";
+        document.getElementById("headerSection").style.backgroundColor = data.headerColor || "#007bff";
+        document.getElementById("footerSection").style.backgroundColor = data.footerColor || "#007bff";
       }
     }
-    loadLandingContent();
 
-    // ✅ معالجة إرسال النموذج
-    const form = document.getElementById('orderForm');
-    const imageInput = document.getElementById('image');
-    let userLocation = null;
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const name = document.getElementById('name').value;
-      const phone = document.getElementById('phone').value;
-      const address = document.getElementById('address').value;
-
-      const acCount = document.getElementById('acCount').value;
-      const type1 = document.getElementById('type1').value;
-      const size1 = document.getElementById('size1').value;
-      let type2 = "", size2 = "";
-      if (acCount === "2") {
-        type2 = document.getElementById('type2').value;
-        size2 = document.getElementById('size2').value;
-      }
-
-      let imageUrl = "";
-      const imageFile = imageInput.files[0];
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append("file", imageFile);
-        formData.append("upload_preset", "topclim_upload");
-        formData.append("folder", "TOPCLIMasset");
-
-        const res = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/upload", {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await res.json();
-        imageUrl = data.secure_url;
-      }
-
-      const docRef = await addDoc(collection(db, "requests"), {
-        name, phone, address,
-        acCount,
-        ac1: { type: type1, size: size1 },
-        ac2: acCount === "2" ? { type: type2, size: size2 } : null,
-        location: userLocation,
-        imageUrl,
-        status: "مبدئي",
-        createdAt: serverTimestamp()
-      });
-
-      window.location.href = `track.html?id=${docRef.id}`;
-    });
-
-    // ✅ تحديد الموقع
-    function getLocation() {
-      const status = document.getElementById("locationStatus");
-      if (!navigator.geolocation) {
-        status.textContent = "المتصفح لا يدعم تحديد الموقع.";
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        userLocation = { lat, lng };
-        status.textContent = `تم تحديد موقعك بنجاح.`;
-
-        const map = L.map('map').setView([lat, lng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        L.marker([lat, lng]).addTo(map).bindPopup("📍 موقعك").openPopup();
-      }, () => {
-        status.textContent = "فشل في تحديد الموقع.";
-      });
-    }
-
-    window.getLocation = getLocation;
-
-    // ✅ عرض وإخفاء حقول المكيفات حسب العدد
-    window.updateACFields = function () {
-      const count = document.getElementById("acCount").value;
-      document.getElementById("ac1").style.display = "block";
-      document.getElementById("ac2").style.display = count === "2" ? "block" : "none";
-    };
+    loadContent();
   </script>
-
 </body>
 </html>
