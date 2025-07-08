@@ -2,11 +2,80 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تتبع الطلب</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تتبع الطلب – TopClim</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f8f9fa;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      color: #007BFF;
+    }
+    .status-box {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+    .status-box h2 {
+      margin-top: 0;
+    }
+    .note {
+      color: green;
+    }
+  </style>
 </head>
 <body>
-  <h1>تتبع حالة طلبك</h1>
-  <p>قريباً...</p>
+  <h1>📦 تتبع حالة الطلب</h1>
+  <div class="status-box" id="statusBox">
+    <p>⏳ جاري تحميل حالة الطلب...</p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const requestId = params.get("id");
+
+    async function loadStatus() {
+      if (!requestId) {
+        document.getElementById("statusBox").innerHTML = '<p class="note">❌ لم يتم العثور على رقم الطلب.</p>';
+        return;
+      }
+      const docRef = doc(db, "requests", requestId);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        document.getElementById("statusBox").innerHTML = `
+          <h2>👤 الاسم: ${data.name}</h2>
+          <p>📞 رقم الهاتف: ${data.phone}</p>
+          <p>📍 العنوان: ${data.address}</p>
+          <p>🧊 عدد المكيفات: ${data.acCount}</p>
+          <p>🌀 النوع والحجم 1: ${data.ac1?.type || '-'} – ${data.ac1?.size || '-'}</p>
+          ${data.ac2 ? `<p>🌀 النوع والحجم 2: ${data.ac2.type} – ${data.ac2.size}</p>` : ''}
+          <p>📅 تاريخ الطلب: ${data.createdAt?.toDate().toLocaleString('ar-EG') || 'غير متوفر'}</p>
+          <p>📦 حالة الطلب: <strong>${data.status}</strong></p>
+        `;
+      } else {
+        document.getElementById("statusBox").innerHTML = '<p class="note">❌ لم يتم العثور على الطلب.</p>';
+      }
+    }
+
+    loadStatus();
+  </script>
 </body>
 </html>
