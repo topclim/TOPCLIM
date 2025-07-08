@@ -111,99 +111,109 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      where,
-      getDocs,
-      Timestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    authDomain: "topclim-3edfa.firebaseapp.com",
+    projectId: "topclim-3edfa"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const workerId = localStorage.getItem("workerId");
-    if (!workerId) {
-      window.location.href = "worker-login.html";
-    }
+  const workerId = localStorage.getItem("workerId");
+  if (!workerId) {
+    window.location.href = "worker-login.html";
+  }
 
-    const tasksList = document.getElementById("tasksList");
-    const today = new Date().toISOString().split("T")[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
-    let selectedDate = today;
+  const tasksList = document.getElementById("tasksList");
 
-    async function loadTasks() {
-  tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
+  function formatDateInput(date) {
+    return date.toISOString().split("T")[0];
+  }
 
-  try {
+  // 🗓️ حساب تواريخ اليوم / البارحة / الغد
+  const today = new Date();
+  const yesterday = new Date(Date.now() - 86400000);
+  const tomorrow = new Date(Date.now() + 86400000);
+
+  let selectedDate = formatDateInput(today);
+
+  async function loadTasks() {
+    tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
+
+    // بداية ونهاية التاريخ المطلوب
     const start = new Date(selectedDate + "T00:00:00");
     const end = new Date(selectedDate + "T23:59:59");
 
-    const q = query(
-      collection(db, "requests"),
-      where("assignedTo", "==", workerId),
-      where("executionSchedule", ">=", Timestamp.fromDate(start)),
-      where("executionSchedule", "<=", Timestamp.fromDate(end))
-    );
+    try {
+      const q = query(
+        collection(db, "requests"),
+        where("assignedTo", "==", workerId),
+        where("executionSchedule", ">=", start),
+        where("executionSchedule", "<=", end)
+      );
 
-    const snap = await getDocs(q);
-    if (snap.empty) {
-      tasksList.innerHTML = "<p>🚫 لا توجد أعمال في هذا التاريخ.</p>";
-      return;
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        tasksList.innerHTML = "<p>🚫 لا توجد أعمال في هذا التاريخ.</p>";
+        return;
+      }
+
+      tasksList.innerHTML = "";
+      snap.forEach(doc => {
+        const data = doc.data();
+        const execDate = data.executionSchedule?.toDate?.().toLocaleString("ar-DZ") || "غير متوفر";
+
+        const el = document.createElement("div");
+        el.className = "task";
+        el.innerHTML = `
+          <h3>👤 ${data.name || "زبون"}</h3>
+          <p>📍 العنوان: ${data.address || "غير محدد"}</p>
+          <p>🗓️ التاريخ: ${execDate}</p>
+          <a href="worker-task-details.html?id=${doc.id}">📄 تنفيذ العمل</a>
+        `;
+        tasksList.appendChild(el);
+      });
+
+    } catch (err) {
+      console.error(err);
+      tasksList.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
     }
-
-    tasksList.innerHTML = "";
-    snap.forEach(doc => {
-      const data = doc.data();
-      const execDate = data.executionSchedule?.toDate();
-
-      const el = document.createElement("div");
-      el.className = "task";
-      el.innerHTML = `
-        <h3>👤 ${data.name || "زبون"}</h3>
-        <p>📍 العنوان: ${data.address || "غير محدد"}</p>
-        <p>🗓️ التاريخ: ${execDate ? execDate.toLocaleDateString("ar-EG") : "غير متوفر"}</p>
-        <p>⏰ الوقت: ${execDate ? execDate.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }) : ""}</p>
-        <a href="worker-task-details.html?id=${doc.id}">📄 تنفيذ العمل</a>
-      `;
-      tasksList.appendChild(el);
-    });
-
-  } catch (err) {
-    tasksList.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
-    console.error(err);
   }
-}
 
-    function setActive(boxId, date) {
-      document.querySelectorAll(".filter-box").forEach(box => box.classList.remove("active"));
-      document.getElementById(boxId).classList.add("active");
-      selectedDate = date;
-      document.getElementById("customDate").value = date;
-      loadTasks();
-    }
-
-    document.getElementById("yesterdayBox").onclick = () => setActive("yesterdayBox", yesterday);
-    document.getElementById("todayBox").onclick = () => setActive("todayBox", today);
-    document.getElementById("tomorrowBox").onclick = () => setActive("tomorrowBox", tomorrow);
-    document.getElementById("customDate").onchange = (e) => {
-      document.querySelectorAll(".filter-box").forEach(box => box.classList.remove("active"));
-      selectedDate = e.target.value;
-      loadTasks();
-    };
-
-    // أول تحميل
-    document.getElementById("customDate").value = today;
+  // 🎛️ تغيير التاريخ بحسب الاختيار
+  function setActive(boxId, dateObj) {
+    document.querySelectorAll(".filter-box").forEach(box => box.classList.remove("active"));
+    document.getElementById(boxId).classList.add("active");
+    selectedDate = formatDateInput(dateObj);
+    document.getElementById("customDate").value = selectedDate;
     loadTasks();
-  </script>
+  }
+
+  // ✅ ربط الأزرار
+  document.getElementById("yesterdayBox").onclick = () => setActive("yesterdayBox", yesterday);
+  document.getElementById("todayBox").onclick = () => setActive("todayBox", today);
+  document.getElementById("tomorrowBox").onclick = () => setActive("tomorrowBox", tomorrow);
+
+  document.getElementById("customDate").onchange = (e) => {
+    document.querySelectorAll(".filter-box").forEach(box => box.classList.remove("active"));
+    selectedDate = e.target.value;
+    loadTasks();
+  };
+
+  // بدء تحميل المهام لأول مرة
+  document.getElementById("customDate").value = formatDateInput(today);
+  loadTasks();
+</script>
+
 </body>
 </html>
