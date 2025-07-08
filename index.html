@@ -24,8 +24,8 @@
   <!-- ✅ الهيدر -->
   <header id="pageHeader">
     <div style="padding: 20px 10px; text-align: center;">
-      <h2 id="landingTitle" style="font-size: 28px;">🧼 تنظيف وصيانة مكيفات الهواء</h2>
-      <p id="landingDesc" style="color: #eee; font-size: 18px;">خدمة احترافية للمنازل والشركات - بأفضل الأسعار!</p>
+      <h2 id="landingTitle" style="font-size: 28px;"></h2>
+      <p id="landingDesc" style="color: #eee; font-size: 18px;"></p>
     </div>
   </header>
 
@@ -102,6 +102,8 @@
         document.getElementById("beforeImage").src = data.beforeImage || "";
         document.getElementById("afterImage").src = data.afterImage || "";
         document.getElementById("footerImage").src = data.bannerBottom || "";
+        document.getElementById("landingTitle").textContent = data.headerTitle || "";
+        document.getElementById("landingDesc").textContent = data.headerDesc || "";
         document.getElementById("footerText").textContent = data.footerText || "";
         if (data.headerColor) document.getElementById("pageHeader").style.backgroundColor = data.headerColor;
         if (data.footerColor) document.getElementById("pageFooter").style.backgroundColor = data.footerColor;
@@ -110,8 +112,8 @@
       const typesSnap = await getDocs(collection(db, "acTypes"));
       const sizesSnap = await getDocs(collection(db, "acSizes"));
 
-      typeOptions = typesSnap.docs.map(doc => `<option value="${doc.id}">${doc.data().name}</option>`);
-      sizeOptions = sizesSnap.docs.map(doc => `<option value="${doc.id}">${doc.data().label}</option>`);
+      typeOptions = typesSnap.docs.map(doc => `<option value="${doc.data().name}">${doc.data().name}</option>`);
+      sizeOptions = sizesSnap.docs.map(doc => `<option value="${doc.data().label}">${doc.data().label}</option>`);
 
       generateACFields();
     }
