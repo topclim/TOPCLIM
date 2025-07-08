@@ -301,7 +301,8 @@ async function saveSchedule() {
   try {
     await updateDoc(selectedOrderRef, {
       executionSchedule: Timestamp.fromDate(execDateTime),
-      assistantName
+      assistantName,
+      assignedTo: workerId // ✅ إضافة هذا السطر لربط الطلب بالعامل
     });
     alert("✅ تم حفظ الجدولة بنجاح");
     closeModal();
