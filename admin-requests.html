@@ -10,7 +10,6 @@
       background: #f0f0f0;
       margin: 0;
       padding: 20px;
-      direction: rtl;
     }
 
     h2 {
@@ -18,25 +17,33 @@
       color: #007BFF;
     }
 
-    .order-card {
+    table {
+      width: 100%;
+      border-collapse: collapse;
       background: #fff;
-      border: 1px solid #ddd;
+      margin-top: 20px;
       border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
-    label {
-      font-weight: bold;
-      display: block;
-      margin-top: 10px;
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #007BFF;
+      color: #fff;
+    }
+
+    tr:nth-child(even) {
+      background: #f9f9f9;
     }
 
     select, input[type="datetime-local"] {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
+      padding: 5px;
       border-radius: 5px;
       border: 1px solid #ccc;
       font-size: 1rem;
@@ -46,8 +53,7 @@
       background-color: #28a745;
       color: white;
       border: none;
-      padding: 10px 20px;
-      margin-top: 15px;
+      padding: 6px 12px;
       border-radius: 5px;
       cursor: pointer;
     }
@@ -59,9 +65,7 @@
 </head>
 <body>
   <h2>📋 إدارة الطلبات الجديدة</h2>
-  <div id="orders">
-    ⏳ جاري تحميل الطلبات...
-  </div>
+  <div id="orders">⏳ جاري تحميل الطلبات...</div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -81,44 +85,55 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
     const ordersContainer = document.getElementById("orders");
 
     async function loadOrders() {
       const querySnapshot = await getDocs(collection(db, "requests"));
-      ordersContainer.innerHTML = "";
+      const workersSnap = await getDocs(collection(db, "workers"));
 
-      for (const docSnap of querySnapshot.docs) {
+      let workerOptions = "";
+      workersSnap.forEach(w => {
+        const wData = w.data();
+        workerOptions += `<option value="${w.id}">${wData.name || w.id}</option>`;
+      });
+
+      let tableHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>🔢 رقم الطلب</th>
+              <th>👤 الاسم</th>
+              <th>📍 العنوان</th>
+              <th>📞 الهاتف</th>
+              <th>👷 العامل</th>
+              <th>🕒 الموعد</th>
+              <th>⚙️ إجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      querySnapshot.forEach(docSnap => {
         const data = docSnap.data();
         const id = docSnap.id;
 
         if (data.status === "مبدئي") {
-          const workersSnap = await getDocs(collection(db, "workers"));
-          let workerOptions = "";
-          workersSnap.forEach(w => {
-            const wData = w.data();
-            workerOptions += `<option value="${w.id}">${wData.name || w.id}</option>`;
-          });
-
-          const card = document.createElement("div");
-          card.className = "order-card";
-          card.innerHTML = `
-            <h3>طلب رقم: ${id}</h3>
-            <p>👤 الاسم: ${data.name}</p>
-            <p>📍 العنوان: ${data.address}</p>
-            <p>📞 الهاتف: ${data.phone}</p>
-
-            <label>👷 اختر العامل:</label>
-            <select id="worker-${id}">${workerOptions}</select>
-
-            <label>🕒 وقت التنفيذ:</label>
-            <input type="datetime-local" id="schedule-${id}" />
-
-            <button onclick="confirmTask('${id}')">✅ تأكيد الطلب</button>
+          tableHTML += `
+            <tr>
+              <td>${id}</td>
+              <td>${data.name}</td>
+              <td>${data.address}</td>
+              <td>${data.phone}</td>
+              <td><select id="worker-${id}">${workerOptions}</select></td>
+              <td><input type="datetime-local" id="schedule-${id}" /></td>
+              <td><button onclick="confirmTask('${id}')">تأكيد ✅</button></td>
+            </tr>
           `;
-          ordersContainer.appendChild(card);
         }
-      }
+      });
+
+      tableHTML += `</tbody></table>`;
+      ordersContainer.innerHTML = tableHTML;
     }
 
     window.confirmTask = async function (id) {
