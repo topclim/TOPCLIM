@@ -14,7 +14,7 @@
     }
 
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
       background: #fff;
       padding: 20px;
@@ -26,6 +26,34 @@
       text-align: center;
       color: #007BFF;
       margin-bottom: 20px;
+    }
+
+    .date-filter {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .date-box {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 8px;
+      background-color: #e9ecef;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: 0.2s;
+    }
+
+    .date-box:hover {
+      background-color: #dfe4ea;
+    }
+
+    .date-box.active {
+      border-color: #007BFF;
+      background-color: #d0e8ff;
     }
 
     .task {
@@ -54,14 +82,34 @@
     .task a:hover {
       background-color: #0056b3;
     }
+
+    .custom-date {
+      margin-top: 10px;
+      text-align: center;
+    }
+    .custom-date input {
+      padding: 6px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>🛠️ الأعمال الخاصة بك</h2>
-    <div id="tasksList">
-      <p>🔄 جاري تحميل الأعمال...</p>
+
+    <div class="date-filter">
+      <div class="date-box" onclick="filterByDay('yesterday')">📅 البارحة</div>
+      <div class="date-box active" onclick="filterByDay('today')">📅 اليوم</div>
+      <div class="date-box" onclick="filterByDay('tomorrow')">📅 الغد</div>
     </div>
+
+    <div class="custom-date">
+      <label>📌 اختر تاريخ آخر: </label>
+      <input type="date" id="customDate" onchange="filterByCustomDate()">
+    </div>
+
+    <div id="tasksList"><p>🔄 جاري تحميل الأعمال...</p></div>
   </div>
 
   <script type="module">
@@ -71,12 +119,9 @@
       collection,
       query,
       where,
-      getDocs,
-      doc,
-      getDoc
+      getDocs
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
       authDomain: "topclim-3edfa.firebaseapp.com",
@@ -86,37 +131,44 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // التحقق من تسجيل الدخول
     const workerId = localStorage.getItem("workerId");
     if (!workerId) {
       window.location.href = "worker-login.html";
     }
 
-    const tasksContainer = document.getElementById("tasksList");
+    const tasksList = document.getElementById("tasksList");
+    const dateBoxes = document.querySelectorAll(".date-box");
 
-    async function loadTasks() {
-      tasksContainer.innerHTML = "⏳ جاري التحميل...";
+    function setActive(boxName) {
+      dateBoxes.forEach(b => b.classList.remove("active"));
+      document.querySelector(`.date-box[onclick*="${boxName}"]`)?.classList.add("active");
+    }
 
+    function formatDate(date) {
+      return date.toISOString().split('T')[0];
+    }
+
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    async function loadTasksByDate(dateStr) {
+      tasksList.innerHTML = "🔄 جاري التحميل...";
       try {
-        // 📌 جلب بيانات العامل (الاسم)
-        const workerDoc = await getDoc(doc(db, "workers", workerId));
-        if (!workerDoc.exists()) {
-          tasksContainer.innerHTML = "<p>⚠️ لم يتم العثور على بيانات هذا العامل.</p>";
-          return;
-        }
-
-        const workerName = workerDoc.data().name;
-
-        // 🔍 البحث عن الطلبات التي تحتوي على assistantName = اسم العامل
-        const q = query(collection(db, "requests"), where("assistantName", "==", workerName));
+        const q = query(collection(db, "requests"),
+          where("assignedTo", "==", workerId),
+          where("date", "==", dateStr)
+        );
         const snap = await getDocs(q);
 
         if (snap.empty) {
-          tasksContainer.innerHTML = "<p>🚫 لا توجد أعمال حالياً.</p>";
+          tasksList.innerHTML = "<p>🚫 لا توجد أعمال في هذا التاريخ.</p>";
           return;
         }
 
-        tasksContainer.innerHTML = "";
+        tasksList.innerHTML = "";
         snap.forEach(doc => {
           const data = doc.data();
           const el = document.createElement("div");
@@ -124,19 +176,41 @@
           el.innerHTML = `
             <h3>👤 ${data.name || "زبون"}</h3>
             <p>📍 العنوان: ${data.address || "غير محدد"}</p>
-            <p>🗓️ التاريخ: ${data.executionSchedule?.split('T')[0] || "غير محدد"}</p>
+            <p>🕒 الوقت: ${data.executionSchedule?.split('T')[1] || "غير محدد"}</p>
             <a href="worker-task-details.html?id=${doc.id}">📄 تنفيذ العمل</a>
           `;
-          tasksContainer.appendChild(el);
+          tasksList.appendChild(el);
         });
 
       } catch (err) {
         console.error(err);
-        tasksContainer.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
+        tasksList.innerHTML = "<p>❌ فشل في تحميل البيانات.</p>";
       }
     }
 
-    loadTasks();
+    function filterByDay(day) {
+      if (day === "today") {
+        loadTasksByDate(formatDate(today));
+        setActive("today");
+      } else if (day === "yesterday") {
+        loadTasksByDate(formatDate(yesterday));
+        setActive("yesterday");
+      } else if (day === "tomorrow") {
+        loadTasksByDate(formatDate(tomorrow));
+        setActive("tomorrow");
+      }
+    }
+
+    function filterByCustomDate() {
+      const date = document.getElementById("customDate").value;
+      if (date) {
+        loadTasksByDate(date);
+        dateBoxes.forEach(b => b.classList.remove("active"));
+      }
+    }
+
+    // تحميل مهام اليوم بشكل افتراضي
+    loadTasksByDate(formatDate(today));
   </script>
 </body>
 </html>
