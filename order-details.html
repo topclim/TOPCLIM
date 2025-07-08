@@ -211,7 +211,7 @@
       // روابط الاتصال والخريطة
       if (d.phone) {
         let buttons = `
-          <a class="call" href="tel:${d.phone}">📞 اتصال</a>
+          <a class="call" href="tel:${d.phone}" onclick="localStorage.setItem('openModalAfterCall', 'yes')">📞 اتصال</a>
           <a class="whatsapp" href="https://wa.me/213${d.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
         `;
 
@@ -233,6 +233,14 @@
         actionBox.appendChild(scheduleBtn);
 
         actionBox.style.display = "block";
+      }
+
+      // ✅ فتح النافذة تلقائيًا بعد العودة من الاتصال
+      if (localStorage.getItem('openModalAfterCall') === 'yes') {
+        setTimeout(() => {
+          openModal();
+          localStorage.removeItem('openModalAfterCall');
+        }, 1000);
       }
     }
 
