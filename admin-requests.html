@@ -28,9 +28,10 @@
     }
 
     th, td {
-      padding: 12px 15px;
+      padding: 12px 10px;
       text-align: center;
       border-bottom: 1px solid #eee;
+      font-size: 0.95rem;
     }
 
     th {
@@ -46,20 +47,30 @@
       padding: 5px;
       border-radius: 5px;
       border: 1px solid #ccc;
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
 
     button {
       background-color: #28a745;
       color: white;
       border: none;
-      padding: 6px 12px;
+      padding: 6px 10px;
+      margin: 2px;
       border-radius: 5px;
       cursor: pointer;
+      font-size: 0.85rem;
     }
 
     button:hover {
       background-color: #218838;
+    }
+
+    .details-btn {
+      background-color: #007BFF;
+    }
+
+    .details-btn:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
@@ -126,7 +137,10 @@
               <td>${data.phone}</td>
               <td><select id="worker-${id}">${workerOptions}</select></td>
               <td><input type="datetime-local" id="schedule-${id}" /></td>
-              <td><button onclick="confirmTask('${id}')">تأكيد ✅</button></td>
+              <td>
+                <button onclick="confirmTask('${id}')">تأكيد ✅</button>
+                <button class="details-btn" onclick="openDetails('${id}')">📄 التفاصيل</button>
+              </td>
             </tr>
           `;
         }
@@ -153,6 +167,10 @@
 
       alert("✅ تم تأكيد الطلب وإرساله للعامل");
       loadOrders();
+    };
+
+    window.openDetails = function(id) {
+      window.open(`tracking.html?id=${id}`, '_blank');
     };
 
     loadOrders();
