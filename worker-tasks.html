@@ -97,7 +97,7 @@
 
     <div class="filters">
       <div class="filter-box" id="yesterdayBox">📅 البارحة</div>
-      <div class="filter-box" id="todayBox">📆 اليوم</div>
+      <div class="filter-box active" id="todayBox">📆 اليوم</div>
       <div class="filter-box" id="tomorrowBox">📅 الغد</div>
     </div>
 
@@ -113,7 +113,12 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, query, where, getDocs
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      Timestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -121,6 +126,7 @@
       authDomain: "topclim-3edfa.firebaseapp.com",
       projectId: "topclim-3edfa"
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -130,28 +136,23 @@
     }
 
     const tasksList = document.getElementById("tasksList");
-
-    const getDateString = (offsetDays = 0) => {
-      const d = new Date();
-      d.setDate(d.getDate() + offsetDays);
-      return d.toISOString().split("T")[0];
-    };
-
-    const today = getDateString(0);
-    const yesterday = getDateString(-1);
-    const tomorrow = getDateString(1);
-
+    const today = new Date().toISOString().split("T")[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
     let selectedDate = today;
 
     async function loadTasks() {
       tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
 
       try {
+        const start = new Date(selectedDate + "T00:00:00");
+        const end = new Date(selectedDate + "T23:59:59");
+
         const q = query(
           collection(db, "requests"),
           where("assignedTo", "==", workerId),
-          where("executionSchedule", ">=", selectedDate),
-          where("executionSchedule", "<", selectedDate + "T23:59:59")
+          where("executionSchedule", ">=", Timestamp.fromDate(start)),
+          where("executionSchedule", "<=", Timestamp.fromDate(end))
         );
 
         const snap = await getDocs(q);
@@ -163,12 +164,15 @@
         tasksList.innerHTML = "";
         snap.forEach(doc => {
           const data = doc.data();
+          const execDate = data.executionSchedule?.toDate();
+
           const el = document.createElement("div");
           el.className = "task";
           el.innerHTML = `
             <h3>👤 ${data.name || "زبون"}</h3>
             <p>📍 العنوان: ${data.address || "غير محدد"}</p>
-            <p>🗓️ التاريخ: ${data.executionSchedule?.split("T")[0] || "غير متوفر"}</p>
+            <p>🗓️ التاريخ: ${execDate ? execDate.toLocaleDateString("ar-EG") : "غير متوفر"}</p>
+            <p>⏰ الوقت: ${execDate ? execDate.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }) : ""}</p>
             <a href="worker-task-details.html?id=${doc.id}">📄 تنفيذ العمل</a>
           `;
           tasksList.appendChild(el);
@@ -197,11 +201,9 @@
       loadTasks();
     };
 
-    // 🟢 اختيار تلقائي حسب تاريخ اليوم
-    window.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("customDate").value = today;
-      setActive("todayBox", today);
-    });
+    // أول تحميل
+    document.getElementById("customDate").value = today;
+    loadTasks();
   </script>
 </body>
 </html>
