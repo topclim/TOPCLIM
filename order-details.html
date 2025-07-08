@@ -157,6 +157,18 @@
           <a class="whatsapp" href="https://wa.me/213${d.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
         `;
         actionBox.style.display = "block";
+
+        const googleMapLink = d.location
+    ? `<a class="whatsapp" href="https://www.google.com/maps?q=${d.location.lat},${d.location.lng}" target="_blank">🗺️ عرض على الخريطة</a>`
+    : '';
+
+  actionBox.innerHTML = `
+    <a class="call" href="tel:${d.phone}">📞 اتصال</a>
+    <a class="whatsapp" href="https://wa.me/213${d.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
+    ${googleMapLink}
+  `;
+  actionBox.style.display = "block";
+
       }
 
       // الخريطة
