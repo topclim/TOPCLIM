@@ -79,6 +79,30 @@
       background-color: #6c757d;
       color: white;
     }
+
+    /* النافذة المنبثقة */
+    .modal {
+      position: fixed;
+      top: 0; right: 0; bottom: 0; left: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px 25px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .modal-content input {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+    }
   </style>
 </head>
 <body>
@@ -87,6 +111,23 @@
     <div id="orderDetails">⏳ جاري تحميل البيانات...</div>
     <div id="map"></div>
     <div class="actions" id="actionLinks" style="display:none;"></div>
+  </div>
+
+  <!-- نافذة الجدولة -->
+  <div id="scheduleModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>📅 جدولة تنفيذ الطلب</h3>
+      <label>📆 التاريخ:</label>
+      <input type="date" id="execDate">
+      <label>⏰ الوقت:</label>
+      <input type="time" id="execTime">
+      <label>👷‍♂️ اسم المساعد (اختياري):</label>
+      <input type="text" id="assistantName" placeholder="اسم المساعد">
+      <div style="margin-top: 10px; text-align: right;">
+        <button onclick="closeModal()">❌ إلغاء</button>
+        <button onclick="saveSchedule()">💾 حفظ</button>
+      </div>
+    </div>
   </div>
 
   <script type="module">
@@ -138,8 +179,8 @@
         });
       }
 
-      if (d.publicNotes) {
-        html += `<div class="note-box"><strong>📝 ملاحظات الزبون:</strong><br>${d.publicNotes}</div>`;
+      if (d.notes) {
+        html += `<div class="note-box"><strong>📝 ملاحظات الزبون:</strong><br>${d.notes}</div>`;
       }
 
       if (d.opportunityNote) {
@@ -152,30 +193,33 @@
       }
 
       if (d.imageUrl) {
-        html += `<img src="${d.imageUrl}" alt="📷 صورة قبل التنظيف">`;
-      }
-
-      if (d.afterImageUrl) {
-        html += `<img src="${d.afterImageUrl}" alt="📷 صورة بعد التنظيف">`;
+        html += `<img src="${d.imageUrl}" alt="📷 صورة المكيف">`;
       }
 
       orderBox.innerHTML = html;
 
-      // روابط الاتصال + زر الخريطة
+      // روابط الاتصال
       if (d.phone) {
-        const mapBtn = d.location
-          ? `<a class="map-btn" href="https://www.google.com/maps?q=${d.location.lat},${d.location.lng}" target="_blank">🗺️ عرض على الخريطة</a>`
-          : "";
-
         actionBox.innerHTML = `
-          <a class="call" href="tel:${d.phone}">📞 اتصال</a>
+          <a class="call" href="#" id="callBtn">📞 اتصال</a>
           <a class="whatsapp" href="https://wa.me/213${d.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
-          ${mapBtn}
+          <a class="map-btn" href="https://www.google.com/maps?q=${d.location?.lat},${d.location?.lng}" target="_blank">🌍 فتح في Google Maps</a>
+          <a class="map-btn" href="#" id="scheduleBtn">🗓️ جدولة التنفيذ</a>
         `;
         actionBox.style.display = "block";
+
+        document.getElementById("scheduleBtn").onclick = (e) => {
+          e.preventDefault();
+          openModal();
+        };
+
+        document.getElementById("callBtn").onclick = (e) => {
+          e.preventDefault();
+          openModal();
+        };
       }
 
-      // خريطة Leaflet
+      // خريطة
       if (d.location) {
         document.getElementById("map").style.display = "block";
         const script = document.createElement("script");
@@ -188,7 +232,6 @@
           L.marker([d.location.lat, d.location.lng]).addTo(map).bindPopup("📍 موقع العميل").openPopup();
         };
         document.body.appendChild(script);
-
         const link = document.createElement("link");
         link.rel = "stylesheet";
         link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
@@ -197,6 +240,37 @@
     }
 
     loadOrder();
+
+    // التحكم في النافذة
+    window.openModal = function () {
+      document.getElementById("scheduleModal").style.display = "flex";
+    };
+
+    window.closeModal = function () {
+      document.getElementById("scheduleModal").style.display = "none";
+    };
+
+    window.saveSchedule = function () {
+      const date = document.getElementById("execDate").value;
+      const time = document.getElementById("execTime").value;
+      const assistant = document.getElementById("assistantName").value;
+
+      if (!date || !time) {
+        alert("❌ يرجى إدخال التاريخ والوقت.");
+        return;
+      }
+
+      console.log("📅 جدولة العمل:", { date, time, assistant });
+      alert("✅ تم حفظ الجدولة.");
+      closeModal();
+    };
+
+    window.addEventListener("click", function (event) {
+      const modal = document.getElementById("scheduleModal");
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    });
   </script>
 </body>
 </html>
