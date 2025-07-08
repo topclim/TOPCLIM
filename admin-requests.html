@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📋 إدارة الطلبات – TopClim</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+    }
+
+    h2 {
+      text-align: center;
+      color: #007BFF;
+    }
+
+    .order-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+
+    select, input[type="datetime-local"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 إدارة الطلبات الجديدة</h2>
+  <div id="orders">
+    ⏳ جاري تحميل الطلبات...
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      updateDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const ordersContainer = document.getElementById("orders");
+
+    async function loadOrders() {
+      const querySnapshot = await getDocs(collection(db, "requests"));
+      ordersContainer.innerHTML = "";
+
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data();
+        const id = docSnap.id;
+
+        if (data.status === "مبدئي") {
+          const workersSnap = await getDocs(collection(db, "workers"));
+          let workerOptions = "";
+          workersSnap.forEach(w => {
+            const wData = w.data();
+            workerOptions += `<option value="${w.id}">${wData.name || w.id}</option>`;
+          });
+
+          const card = document.createElement("div");
+          card.className = "order-card";
+          card.innerHTML = `
+            <h3>طلب رقم: ${id}</h3>
+            <p>👤 الاسم: ${data.name}</p>
+            <p>📍 العنوان: ${data.address}</p>
+            <p>📞 الهاتف: ${data.phone}</p>
+
+            <label>👷 اختر العامل:</label>
+            <select id="worker-${id}">${workerOptions}</select>
+
+            <label>🕒 وقت التنفيذ:</label>
+            <input type="datetime-local" id="schedule-${id}" />
+
+            <button onclick="confirmTask('${id}')">✅ تأكيد الطلب</button>
+          `;
+          ordersContainer.appendChild(card);
+        }
+      }
+    }
+
+    window.confirmTask = async function (id) {
+      const workerId = document.getElementById(`worker-${id}`).value;
+      const schedule = document.getElementById(`schedule-${id}`).value;
+
+      if (!workerId || !schedule) {
+        alert("❗ الرجاء اختيار العامل وتحديد وقت التنفيذ.");
+        return;
+      }
+
+      await updateDoc(doc(db, "requests", id), {
+        status: "قيد المعالجة",
+        assignedTo: workerId,
+        schedule: schedule
+      });
+
+      alert("✅ تم تأكيد الطلب وإرساله للعامل");
+      loadOrders();
+    };
+
+    loadOrders();
+  </script>
+</body>
+</html>
