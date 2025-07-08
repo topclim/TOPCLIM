@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📋 تفاصيل الطلب</title>
   <style>
     body {
@@ -115,35 +115,28 @@
       }
 
       const d = snap.data();
+
       let html = `
         <div class="info"><strong>📄 رقم الطلب:</strong> ${orderId}</div>
         <div class="info"><strong>👤 الاسم:</strong> ${d.name || 'غير معروف'}</div>
         <div class="info"><strong>📞 الهاتف:</strong> ${d.phone || 'غير متوفر'}</div>
         <div class="info"><strong>📍 العنوان:</strong> ${d.address || 'غير متوفر'}</div>
-        <div class="info"><strong>🕒 التوقيت المفضل:</strong> ${d.schedule || 'غير محدد'}</div>
+        <div class="info"><strong>🕒 التوقيت المفضل:</strong> ${d.preferredTime || 'غير محدد'}</div>
         <div class="info"><strong>📌 الحالة:</strong> ${d.status || 'غير معروفة'}</div>
         <div class="info"><strong>❄️ عدد المكيفات:</strong> ${d.acCount || '0'}</div>
       `;
 
-      if (d.ac1) {
-        html += `
-          <div class="info"><strong>🔧 نوع مكيف 1:</strong> ${d.ac1.type || 'غير محدد'}</div>
-          <div class="info"><strong>📏 حجم 1:</strong> ${d.ac1.size || 'غير محدد'}</div>
-        `;
-      }
-      if (d.ac2) {
-        html += `
-          <div class="info"><strong>🔧 نوع مكيف 2:</strong> ${d.ac2.type || 'غير محدد'}</div>
-          <div class="info"><strong>📏 حجم 2:</strong> ${d.ac2.size || 'غير محدد'}</div>
-        `;
+      if (Array.isArray(d.acUnits)) {
+        d.acUnits.forEach((unit, i) => {
+          html += `
+            <div class="info"><strong>🔧 نوع مكيف ${i+1}:</strong> ${unit.type || 'غير محدد'}</div>
+            <div class="info"><strong>📏 حجم مكيف ${i+1}:</strong> ${unit.size || 'غير محدد'}</div>
+          `;
+        });
       }
 
-      if (d.publicNotes) {
-        html += `<div class="note-box"><strong>📝 ملاحظات الزبون:</strong><br>${d.publicNotes}</div>`;
-      }
-
-      if (d.opportunityNote) {
-        html += `<div class="note-box"><strong>💡 فرصة:</strong><br>${d.opportunityNote}</div>`;
+      if (d.notes) {
+        html += `<div class="note-box"><strong>📝 ملاحظات الزبون:</strong><br>${d.notes}</div>`;
       }
 
       if (d.feedback) {
@@ -151,8 +144,8 @@
         html += `<div class="feedback-box"><strong>⭐ تقييم الزبون:</strong> ${stars}<br><em>${d.feedback.comment || ""}</em></div>`;
       }
 
-      if (d.afterImageUrl) {
-        html += `<img src="${d.afterImageUrl}" alt="📷 صورة بعد التنظيف">`;
+      if (d.imageUrl) {
+        html += `<img src="${d.imageUrl}" alt="📷 صورة المكيف">`;
       }
 
       orderBox.innerHTML = html;
