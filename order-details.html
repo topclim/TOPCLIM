@@ -12,63 +12,75 @@
       direction: rtl;
     }
     .container {
-      max-width: 700px;
+      max-width: 800px;
       margin: auto;
       background: #fff;
-      padding: 25px;
+      padding: 30px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     h2 {
       color: #007BFF;
       text-align: center;
+      margin-bottom: 20px;
     }
     .info {
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .info strong {
       display: inline-block;
-      width: 130px;
-      color: #555;
+      width: 150px;
+      color: #444;
+    }
+    .note-box, .feedback-box {
+      background: #f1f9f5;
+      padding: 12px;
+      border: 1px solid #cbe3d3;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+    .feedback-box span {
+      color: #ffb400;
+      font-size: 1.5em;
     }
     img {
       max-width: 100%;
       border-radius: 8px;
-      margin-top: 15px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
     }
     #map {
       height: 250px;
-      margin-top: 15px;
-      border-radius: 8px;
+      margin-top: 20px;
+      border-radius: 10px;
       display: none;
     }
     .actions {
-      margin-top: 20px;
+      margin-top: 25px;
       text-align: center;
     }
     .actions a {
-      margin: 0 10px;
-      padding: 10px 20px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
       display: inline-block;
+      margin: 5px 10px;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      text-decoration: none;
     }
-    .whatsapp { background: #25D366; color: #fff; }
-    .call { background: #007BFF; color: #fff; }
-    .note-box {
-      background: #eafaf1;
-      padding: 10px;
-      border: 1px solid #cce5d0;
-      border-radius: 8px;
-      margin-top: 15px;
+    .whatsapp {
+      background-color: #25D366;
+      color: white;
+    }
+    .call {
+      background-color: #007BFF;
+      color: white;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>📋 تفاصيل الطلب</h2>
-    <div id="orderDetails">⏳ جاري التحميل...</div>
+    <div id="orderDetails">⏳ جاري تحميل البيانات...</div>
     <div id="map"></div>
     <div class="actions" id="actionLinks" style="display:none;"></div>
   </div>
@@ -86,9 +98,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const params = new URLSearchParams(window.location.search);
-    const orderId = params.get("id");
-
+    const orderId = new URLSearchParams(window.location.search).get("id");
     const orderBox = document.getElementById("orderDetails");
     const actionBox = document.getElementById("actionLinks");
 
@@ -98,52 +108,75 @@
         return;
       }
 
-      const docRef = doc(db, "requests", orderId);
-      const snap = await getDoc(docRef);
-
+      const snap = await getDoc(doc(db, "requests", orderId));
       if (!snap.exists()) {
         orderBox.innerHTML = "❌ الطلب غير موجود.";
         return;
       }
 
-      const data = snap.data();
-
-      orderBox.innerHTML = `
+      const d = snap.data();
+      let html = `
         <div class="info"><strong>📄 رقم الطلب:</strong> ${orderId}</div>
-        <div class="info"><strong>👤 الاسم:</strong> ${data.name}</div>
-        <div class="info"><strong>📞 الهاتف:</strong> ${data.phone}</div>
-        <div class="info"><strong>📍 العنوان:</strong> ${data.address}</div>
-        <div class="info"><strong>❄️ عدد المكيفات:</strong> ${data.acCount}</div>
-        ${data.ac1 ? `<div class="info"><strong>🔧 نوع 1:</strong> ${data.ac1.type || "غير محدد"}</div>` : ""}
-        ${data.ac1 ? `<div class="info"><strong>📏 حجم 1:</strong> ${data.ac1.size || "غير محدد"}</div>` : ""}
-        ${data.ac2 ? `<div class="info"><strong>🔧 نوع 2:</strong> ${data.ac2.type || "غير محدد"}</div>` : ""}
-        ${data.ac2 ? `<div class="info"><strong>📏 حجم 2:</strong> ${data.ac2.size || "غير محدد"}</div>` : ""}
-        <div class="info"><strong>🕒 الحالة:</strong> ${data.status || "غير محددة"}</div>
-        ${data.opportunityNote ? `<div class="note-box"><strong>💡 فرصة:</strong> ${data.opportunityNote}</div>` : ""}
-        ${data.publicNotes ? `<div class="note-box"><strong>📝 ملاحظة:</strong> ${data.publicNotes}</div>` : ""}
-        ${data.afterImageUrl ? `<img src="${data.afterImageUrl}" alt="صورة بعد التنظيف">` : ""}
+        <div class="info"><strong>👤 الاسم:</strong> ${d.name || 'غير معروف'}</div>
+        <div class="info"><strong>📞 الهاتف:</strong> ${d.phone || 'غير متوفر'}</div>
+        <div class="info"><strong>📍 العنوان:</strong> ${d.address || 'غير متوفر'}</div>
+        <div class="info"><strong>🕒 التوقيت المفضل:</strong> ${d.schedule || 'غير محدد'}</div>
+        <div class="info"><strong>📌 الحالة:</strong> ${d.status || 'غير معروفة'}</div>
+        <div class="info"><strong>❄️ عدد المكيفات:</strong> ${d.acCount || '0'}</div>
       `;
 
+      if (d.ac1) {
+        html += `
+          <div class="info"><strong>🔧 نوع مكيف 1:</strong> ${d.ac1.type || 'غير محدد'}</div>
+          <div class="info"><strong>📏 حجم 1:</strong> ${d.ac1.size || 'غير محدد'}</div>
+        `;
+      }
+      if (d.ac2) {
+        html += `
+          <div class="info"><strong>🔧 نوع مكيف 2:</strong> ${d.ac2.type || 'غير محدد'}</div>
+          <div class="info"><strong>📏 حجم 2:</strong> ${d.ac2.size || 'غير محدد'}</div>
+        `;
+      }
+
+      if (d.publicNotes) {
+        html += `<div class="note-box"><strong>📝 ملاحظات الزبون:</strong><br>${d.publicNotes}</div>`;
+      }
+
+      if (d.opportunityNote) {
+        html += `<div class="note-box"><strong>💡 فرصة:</strong><br>${d.opportunityNote}</div>`;
+      }
+
+      if (d.feedback) {
+        const stars = "⭐".repeat(d.feedback.rating) + "☆".repeat(5 - d.feedback.rating);
+        html += `<div class="feedback-box"><strong>⭐ تقييم الزبون:</strong> ${stars}<br><em>${d.feedback.comment || ""}</em></div>`;
+      }
+
+      if (d.afterImageUrl) {
+        html += `<img src="${d.afterImageUrl}" alt="📷 صورة بعد التنظيف">`;
+      }
+
+      orderBox.innerHTML = html;
+
       // روابط الاتصال
-      if (data.phone) {
+      if (d.phone) {
         actionBox.innerHTML = `
-          <a class="call" href="tel:${data.phone}">📞 اتصال</a>
-          <a class="whatsapp" href="https://wa.me/213${data.phone.replace(/^0/, '')}?text=السلام عليكم، أستفسر عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
+          <a class="call" href="tel:${d.phone}">📞 اتصال</a>
+          <a class="whatsapp" href="https://wa.me/213${d.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
         `;
         actionBox.style.display = "block";
       }
 
-      // خريطة
-      if (data.location) {
+      // الخريطة
+      if (d.location) {
         document.getElementById("map").style.display = "block";
         const script = document.createElement("script");
         script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
         script.onload = () => {
-          const map = L.map("map").setView([data.location.lat, data.location.lng], 15);
+          const map = L.map("map").setView([d.location.lat, d.location.lng], 15);
           L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: "© OpenStreetMap contributors"
           }).addTo(map);
-          L.marker([data.location.lat, data.location.lng]).addTo(map).bindPopup("📍 العنوان").openPopup();
+          L.marker([d.location.lat, d.location.lng]).addTo(map).bindPopup("📍 موقع العميل").openPopup();
         };
         document.body.appendChild(script);
         const link = document.createElement("link");
