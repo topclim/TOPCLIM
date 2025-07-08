@@ -1,95 +1,87 @@
-/* خطوط وتنسيق عام */
+/* إعداد عام */
 body {
-  margin: 0;
   font-family: 'Cairo', sans-serif;
-  background-color: #f0f2f5;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
   direction: rtl;
+  text-align: right;
 }
 
-h2 {
-  color: #333;
-  margin-bottom: 20px;
+/* العناوين */
+h1, h2 {
+  margin: 0 0 1rem;
+  color: #343a40;
 }
 
-/* الحاوية الرئيسية */
-.container {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* ✅ قسم لوحة التحكم */
-.control-panel {
-  width: 40%;
-  background: #fff0f0;
-  padding: 30px 20px;
-  overflow-y: auto;
-  border-left: 2px solid #eee;
-}
-
-.control-panel label {
-  font-weight: bold;
-  margin-top: 15px;
-  display: block;
-  color: #444;
-}
-
-.control-panel input[type="text"],
-.control-panel input[type="color"],
-.control-panel textarea,
-.control-panel input[type="file"] {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-sizing: border-box;
-  font-size: 14px;
-}
-
-textarea {
-  resize: vertical;
-}
-
-.control-panel img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-
-.uploading {
-  font-size: 12px;
-  color: #d33;
-}
-
-/* زر الحفظ */
-#saveBtn {
-  background-color: #28a745;
+/* الهيدر */
+header {
+  background-color: #007bff;
   color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 20px;
-  transition: background-color 0.3s ease;
+  text-align: center;
+  padding: 2rem 1rem;
 }
 
-#saveBtn:disabled {
-  background-color: #aaa;
-  cursor: wait;
+header h1 {
+  font-size: 2rem;
 }
 
-#saveBtn:hover:not(:disabled) {
-  background-color: #218838;
+header p {
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
 }
 
-/* ✅ قسم المعاينة */
-.preview-panel {
-  width: 60%;
-  height: 100%;
-  border: none;
-  background: white;
+/* الأقسام */
+section {
+  padding: 2rem 1rem;
+}
+
+/* صور الهبوط */
+section img {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+/* صور قبل/بعد */
+.before-after {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2%;
+  justify-content: space-between;
+}
+
+.before-after img {
+  width: 48%;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* الفوتر */
+footer {
+  background-color: #343a40;
+  color: white;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* استجابة للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .before-after img {
+    width: 100%;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+  }
+
+  header p {
+    font-size: 1rem;
+  }
+
+  footer {
+    font-size: 0.8rem;
+  }
 }
