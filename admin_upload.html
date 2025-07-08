@@ -2,61 +2,158 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة التحكم – TopClim</title>
   <style>
-    body { font-family: Arial; padding: 20px; background: #fff0f0; text-align: right; direction: rtl; }
-    input, textarea, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
-    img { max-width: 100px; margin-top: 10px; display: block; }
-    .uploading { color: red; font-weight: bold; }
+    body {
+      margin: 0;
+      font-family: 'Cairo', sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+    .control-panel {
+      width: 40%;
+      background: #fff0f0;
+      padding: 20px;
+      overflow-y: auto;
+      border-left: 2px solid #ccc;
+    }
+    .preview-panel {
+      width: 60%;
+      border: none;
+      height: 100%;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      display: block;
+    }
+    img {
+      max-width: 100px;
+      margin: 10px 0;
+    }
+    .uploading {
+      color: red;
+      font-weight: bold;
+    }
   </style>
+
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <h1>🛠️ لوحة التحكم - تعديل محتوى الهبوط</h1>
 
-  <label>العنوان</label>
-  <input id="headerTitle" type="text" />
-  <label>الوصف</label>
-  <textarea id="headerDesc"></textarea>
+  <!-- ✅ لوحة التحكم -->
+  <div class="control-panel">
+    <h2>🛠️ لوحة التحكم - TopClim</h2>
 
-  <label>🔼 صورة علوية</label>
-  <input type="file" onchange="uploadImage(this, 'bannerTop')" />
-  <span id="status_bannerTop" class="uploading"></span>
-  <img id="preview_bannerTop" />
-  <input id="bannerTop" type="hidden" />
+    <label>🎯 العنوان الرئيسي</label>
+    <input id="headerTitle" type="text" oninput="updatePreview()" />
 
-  <label>🔼 صورة قبل التنظيف</label>
-  <input type="file" onchange="uploadImage(this, 'beforeImage')" />
-  <span id="status_beforeImage" class="uploading"></span>
-  <img id="preview_beforeImage" />
-  <input id="beforeImage" type="hidden" />
+    <label>📝 الوصف</label>
+    <textarea id="headerDesc" oninput="updatePreview()"></textarea>
 
-  <label>🔼 صورة بعد التنظيف</label>
-  <input type="file" onchange="uploadImage(this, 'afterImage')" />
-  <span id="status_afterImage" class="uploading"></span>
-  <img id="preview_afterImage" />
-  <input id="afterImage" type="hidden" />
+    <label>🔼 صورة علوية</label>
+    <input type="file" onchange="uploadImage(this, 'bannerTop')" />
+    <span id="status_bannerTop" class="uploading"></span>
+    <img id="preview_bannerTop" />
+    <input type="hidden" id="bannerTop" />
 
-  <label>🔼 صورة سفلية</label>
-  <input type="file" onchange="uploadImage(this, 'bannerBottom')" />
-  <span id="status_bannerBottom" class="uploading"></span>
-  <img id="preview_bannerBottom" />
-  <input id="bannerBottom" type="hidden" />
+    <label>📸 صورة قبل التنظيف</label>
+    <input type="file" onchange="uploadImage(this, 'beforeImage')" />
+    <span id="status_beforeImage" class="uploading"></span>
+    <img id="preview_beforeImage" />
+    <input type="hidden" id="beforeImage" />
 
-  <button id="saveBtn" onclick="saveContent()">💾 حفظ</button>
+    <label>📸 صورة بعد التنظيف</label>
+    <input type="file" onchange="uploadImage(this, 'afterImage')" />
+    <span id="status_afterImage" class="uploading"></span>
+    <img id="preview_afterImage" />
+    <input type="hidden" id="afterImage" />
 
+    <label>🔽 صورة سفلية</label>
+    <input type="file" onchange="uploadImage(this, 'bannerBottom')" />
+    <span id="status_bannerBottom" class="uploading"></span>
+    <img id="preview_bannerBottom" />
+    <input type="hidden" id="bannerBottom" />
+
+    <label>🧾 نص الفوتر</label>
+    <input id="footerText" type="text" oninput="updatePreview()" />
+
+    <label>🎨 لون الخلفية</label>
+    <input type="color" id="bgColor" value="#f8f9fa" oninput="updatePreview()" />
+
+    <label>🎨 لون الهيدر</label>
+    <input type="color" id="headerColor" value="#007BFF" oninput="updatePreview()" />
+
+    <label>🎨 لون الفوتر</label>
+    <input type="color" id="footerColor" value="#007BFF" oninput="updatePreview()" />
+
+    <button id="saveBtn" onclick="saveContent()">💾 حفظ التغييرات</button>
+  </div>
+
+  <!-- ✅ المعاينة -->
+  <iframe id="previewPanel" class="preview-panel" srcdoc="
+    <!DOCTYPE html>
+    <html lang='ar' dir='rtl'>
+    <head>
+      <meta charset='UTF-8'>
+      <title>معاينة</title>
+      <style>
+        body { margin: 0; font-family: 'Cairo', sans-serif; background: var(--bg, #f8f9fa); }
+        header, footer { background: var(--header, #007BFF); color: white; text-align: center; padding: 1em; }
+        footer { background: var(--footer, #007BFF); }
+        section { padding: 20px; }
+        .before-after img { width: 48%; margin: 1%; border-radius: 8px; }
+      </style>
+    </head>
+    <body>
+      <header><h1>🌬️ TopClim</h1><p id='desc'></p></header>
+      <section>
+        <img id='bannerTop' width='100%' />
+        <h2 id='title'></h2>
+        <p id='text'></p>
+      </section>
+      <section class='before-after'>
+        <img id='beforeImage' />
+        <img id='afterImage' />
+      </section>
+      <section>
+        <img id='bannerBottom' width='100%' />
+      </section>
+      <footer><p id='footerText'></p></footer>
+    </body>
+    </html>
+  "></iframe>
+
+  <!-- ✅ السكربت -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
       authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa",
+      projectId: "topclim-3edfa"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     let uploadInProgress = 0;
+
+    function updatePreview() {
+      const iframe = document.getElementById('previewPanel').contentWindow.document;
+      iframe.body.style.setProperty('--bg', document.getElementById("bgColor").value);
+      iframe.body.style.setProperty('--header', document.getElementById("headerColor").value);
+      iframe.body.style.setProperty('--footer', document.getElementById("footerColor").value);
+
+      iframe.getElementById('title').textContent = document.getElementById("headerTitle").value;
+      iframe.getElementById('desc').textContent = document.getElementById("headerDesc").value;
+      iframe.getElementById('footerText').textContent = document.getElementById("footerText").value;
+
+      iframe.getElementById('bannerTop').src = document.getElementById("bannerTop").value;
+      iframe.getElementById('beforeImage').src = document.getElementById("beforeImage").value;
+      iframe.getElementById('afterImage').src = document.getElementById("afterImage").value;
+      iframe.getElementById('bannerBottom').src = document.getElementById("bannerBottom").value;
+    }
 
     async function uploadImage(input, fieldId) {
       const file = input.files[0];
@@ -64,7 +161,6 @@
 
       const statusSpan = document.getElementById("status_" + fieldId);
       statusSpan.textContent = "⬆️ جاري رفع الصورة...";
-
       uploadInProgress++;
       document.getElementById("saveBtn").disabled = true;
 
@@ -84,50 +180,45 @@
           document.getElementById(fieldId).value = data.secure_url;
           document.getElementById("preview_" + fieldId).src = data.secure_url;
           statusSpan.textContent = "✅ تم الرفع بنجاح";
+          updatePreview();
         } else {
           statusSpan.textContent = "❌ فشل في رفع الصورة";
         }
 
       } catch (e) {
-        statusSpan.textContent = "❌ خطأ في الرفع: " + e.message;
+        statusSpan.textContent = "❌ خطأ: " + e.message;
       } finally {
         uploadInProgress--;
-        if (uploadInProgress === 0) {
-          document.getElementById("saveBtn").disabled = false;
-        }
+        if (uploadInProgress === 0) document.getElementById("saveBtn").disabled = false;
       }
     }
 
     async function saveContent() {
       if (uploadInProgress > 0) {
-        alert("⏳ يرجى الانتظار حتى انتهاء رفع الصور");
-        return;
-      }
-
-      const bannerTop = document.getElementById("bannerTop").value;
-      const beforeImage = document.getElementById("beforeImage").value;
-      const afterImage = document.getElementById("afterImage").value;
-      const bannerBottom = document.getElementById("bannerBottom").value;
-
-      if (!bannerTop || !beforeImage || !afterImage || !bannerBottom) {
-        alert("❗ تأكد من رفع جميع الصور");
+        alert("⏳ انتظر اكتمال رفع الصور");
         return;
       }
 
       const data = {
         headerTitle: document.getElementById("headerTitle").value,
         headerDesc: document.getElementById("headerDesc").value,
-        bannerTop,
-        beforeImage,
-        afterImage,
-        bannerBottom
+        bannerTop: document.getElementById("bannerTop").value,
+        beforeImage: document.getElementById("beforeImage").value,
+        afterImage: document.getElementById("afterImage").value,
+        bannerBottom: document.getElementById("bannerBottom").value,
+        footerText: document.getElementById("footerText").value,
+        colors: {
+          bg: document.getElementById("bgColor").value,
+          header: document.getElementById("headerColor").value,
+          footer: document.getElementById("footerColor").value
+        }
       };
 
       try {
         await db.collection("landing").doc("landingContent").set(data, { merge: true });
-        alert("✅ تم حفظ البيانات بنجاح");
+        alert("✅ تم الحفظ بنجاح");
       } catch (e) {
-        alert("❌ خطأ أثناء حفظ البيانات: " + e.message);
+        alert("❌ خطأ في الحفظ: " + e.message);
       }
     }
   </script>
