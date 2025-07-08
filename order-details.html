@@ -313,6 +313,14 @@
 
     window.closeModal = closeModal;
     window.saveSchedule = saveSchedule;
+
+    import { Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const execDateTime = new Date(`${date}T${time}`);
+await updateDoc(selectedOrderRef, {
+  executionSchedule: Timestamp.fromDate(execDateTime),
+  assistantName
+});
+
   </script>
 </body>
 </html>
