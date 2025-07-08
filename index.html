@@ -50,6 +50,15 @@
       <input type="text" id="name" placeholder="الاسم الكامل" required />
       <input type="tel" id="phone" placeholder="رقم الهاتف" required />
       <input type="text" id="address" placeholder="العنوان" required />
+      <label>🕐 الوقت المناسب للزيارة:</label>
+<select id="preferredTime" required>
+  <option disabled selected>اختر الوقت المناسب</option>
+  <option value="صباحًا">صباحًا</option>
+  <option value="مساءً">مساءً</option>
+</select>
+
+<label>🗒️ ملاحظات إضافية:</label>
+<textarea id="notes" placeholder="اكتب أي ملاحظات تريدها..." rows="3" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;"></textarea>
 
       <label>عدد المكيفات:</label>
       <input type="number" id="acCount" min="1" value="1" onchange="generateACFields()" required />
@@ -153,6 +162,8 @@
       const phone = document.getElementById('phone').value;
       const address = document.getElementById('address').value;
       const acCount = parseInt(document.getElementById('acCount').value);
+      const preferredTime = document.getElementById('preferredTime').value;
+const notes = document.getElementById('notes').value;
 
       const acUnits = [];
       for (let i = 1; i <= acCount; i++) {
