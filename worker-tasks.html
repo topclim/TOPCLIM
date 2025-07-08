@@ -1,11 +1,94 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>📋 قائمة الأعمال – TopClim</title>
   <style>
-    /* (تنسيقات الصفحة كما في الكود السابق) */
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f1f1f1;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #007BFF;
+      margin-bottom: 20px;
+    }
+
+    .filters {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-box {
+      flex: 1;
+      text-align: center;
+      background: #e9ecef;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .filter-box.active {
+      background: #007BFF;
+      color: white;
+      border-color: #0056b3;
+    }
+
+    .task {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      background-color: #fafafa;
+    }
+
+    .task h3 {
+      margin: 0 0 10px;
+    }
+
+    .task a {
+      background-color: #007BFF;
+      color: white;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 10px;
+      transition: background-color 0.3s;
+    }
+
+    .task a:hover {
+      background-color: #0056b3;
+    }
+
+    .date-picker {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .date-picker input {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
@@ -17,111 +100,135 @@
       <div class="filter-box active" id="todayBox">📆 اليوم</div>
       <div class="filter-box" id="tomorrowBox">📅 الغد</div>
     </div>
+
     <div class="date-picker">
-      <input type="date" id="customDate"/>
+      <input type="date" id="customDate">
     </div>
-    <div id="tasksList"><p>🔄 جاري تحميل الأعمال...</p></div>
+
+    <div id="tasksList">
+      <p>🔄 جاري تحميل الأعمال...</p>
+    </div>
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, collection, query, where, getDocs, Timestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    getDocs,
+    Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
-    };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  // إعداد Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    authDomain: "topclim-3edfa.firebaseapp.com",
+    projectId: "topclim-3edfa"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const workerId = localStorage.getItem("workerId");
-    if (!workerId) window.location.href = "worker-login.html";
+  // التحقق من العامل
+  const workerId = localStorage.getItem("workerId");
+  if (!workerId) {
+    window.location.href = "worker-login.html";
+  }
 
-    const tasksList = document.getElementById("tasksList");
-    const todayInput = document.getElementById("customDate");
-    const boxes = {
-      yesterday: document.getElementById("yesterdayBox"),
-      today: document.getElementById("todayBox"),
-      tomorrow: document.getElementById("tomorrowBox")
-    };
+  // عناصر الصفحة
+  const tasksList = document.getElementById("tasksList");
+  const todayInput = document.getElementById("customDate");
+  const boxes = {
+    yesterday: document.getElementById("yesterdayBox"),
+    today: document.getElementById("todayBox"),
+    tomorrow: document.getElementById("tomorrowBox")
+  };
 
-    function dateString(offset = 0) {
-      const d = new Date();
-      d.setDate(d.getDate() + offset);
-      return d.toISOString().split("T")[0];
-    }
+  // حساب التاريخ بصيغة YYYY-MM-DD
+  function dateString(offsetDays = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return d.toISOString().split("T")[0];
+  }
 
-    let selectedDate = dateString();
+  // تاريخ مبدئي (اليوم)
+  let selectedDate = dateString();
 
-    function setActive(key) {
-      Object.values(boxes).forEach(b => b.classList.remove("active"));
-      boxes[key].classList.add("active");
-      selectedDate = dateString(key === "yesterday" ? -1 : key === "tomorrow" ? 1 : 0);
-      todayInput.value = selectedDate;
-      loadTasks();
-    }
+  function setActive(key) {
+    Object.values(boxes).forEach(b => b.classList.remove("active"));
+    boxes[key].classList.add("active");
 
-    boxes.yesterday.onclick = () => setActive("yesterday");
-    boxes.today.onclick = () => setActive("today");
-    boxes.tomorrow.onclick = () => setActive("tomorrow");
-
+    selectedDate = dateString(key === "yesterday" ? -1 : key === "tomorrow" ? 1 : 0);
     todayInput.value = selectedDate;
-    todayInput.onchange = e => {
-      Object.values(boxes).forEach(b => b.classList.remove("active"));
-      selectedDate = e.target.value;
-      loadTasks();
-    };
-
-    async function loadTasks() {
-      tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
-      try {
-        const start = Timestamp.fromDate(new Date(`${selectedDate}T00:00:00`));
-        const end = Timestamp.fromDate(new Date(`${selectedDate}T23:59:59`));
-
-        const q = query(
-          collection(db, "requests"),
-          where("assignedTo", "==", workerId),
-          where("executionSchedule", ">=", start),
-          where("executionSchedule", "<=", end)
-        );
-
-        const snap = await getDocs(q);
-        if (snap.empty) {
-          tasksList.innerHTML = "<p>🚫 لا توجد أعمال في هذا التاريخ.</p>";
-          return;
-        }
-
-        tasksList.innerHTML = "";
-        snap.forEach(docSnap => {
-          const d = docSnap.data();
-          const execTS = d.executionSchedule;
-          const datePart = execTS instanceof Timestamp
-            ? execTS.toDate().toLocaleDateString("ar-DZ")
-            : execTS.split("T")[0];
-          const timePart = execTS instanceof Timestamp
-            ? execTS.toDate().toLocaleTimeString("ar-DZ", {hour:'2-digit', minute:'2-digit'})
-            : execTS.split("T")[1].slice(0,5);
-
-          const el = document.createElement("div");
-          el.className = "task";
-          el.innerHTML = `
-            <h3>👤 ${d.name || "زبون"}</h3>
-            <p>📍 ${d.address || "غير محدد"}</p>
-            <p>🕒 ${datePart} – ${timePart}</p>
-            <a href="worker-task-details.html?id=${docSnap.id}">📄 تنفيذ</a>
-          `;
-          tasksList.appendChild(el);
-        });
-      } catch (err) {
-        console.error(err);
-        tasksList.innerHTML = "<p>❌ خطأ أثناء تحميل الأعمال.</p>";
-      }
-    }
 
     loadTasks();
-  </script>
+  }
+
+  // تفعيل أزرار الفلاتر
+  boxes.yesterday.onclick = () => setActive("yesterday");
+  boxes.today.onclick = () => setActive("today");
+  boxes.tomorrow.onclick = () => setActive("tomorrow");
+
+  // عند اختيار تاريخ مخصص
+  todayInput.value = selectedDate;
+  todayInput.onchange = e => {
+    Object.values(boxes).forEach(b => b.classList.remove("active"));
+    selectedDate = e.target.value;
+    loadTasks();
+  };
+
+  // تحميل المهام من Firestore
+  async function loadTasks() {
+    tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
+
+    try {
+      const startDate = new Date(`${selectedDate}T00:00:00`);
+      const endDate = new Date(`${selectedDate}T23:59:59`);
+
+      const q = query(
+        collection(db, "requests"),
+        where("assignedTo", "==", workerId),
+        where("executionSchedule", ">=", Timestamp.fromDate(startDate)),
+        where("executionSchedule", "<=", Timestamp.fromDate(endDate))
+      );
+
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        tasksList.innerHTML = "<p>🚫 لا توجد أعمال في هذا التاريخ.</p>";
+        return;
+      }
+
+      tasksList.innerHTML = "";
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const execDate = d.executionSchedule?.toDate?.();
+        const dateStr = execDate?.toLocaleDateString("ar-DZ") || "";
+        const timeStr = execDate?.toLocaleTimeString("ar-DZ", { hour: "2-digit", minute: "2-digit" }) || "";
+
+        const el = document.createElement("div");
+        el.className = "task";
+        el.innerHTML = `
+          <h3>👤 ${d.name || "زبون"}</h3>
+          <p>📍 العنوان: ${d.address || "غير محدد"}</p>
+          <p>🕒 ${dateStr} – ${timeStr}</p>
+          <a href="worker-task-details.html?id=${docSnap.id}">📄 تنفيذ</a>
+        `;
+        tasksList.appendChild(el);
+      });
+
+    } catch (error) {
+      console.error(error);
+      tasksList.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
+    }
+  }
+
+  // تشغيل تحميل مبدئي
+  loadTasks();
+</script>
+
+
+
 </body>
 </html>
