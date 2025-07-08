@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📋 تفاصيل الطلب</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+      direction: rtl;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #007BFF;
+      text-align: center;
+    }
+    .info {
+      margin-bottom: 10px;
+    }
+    .info strong {
+      display: inline-block;
+      width: 130px;
+      color: #555;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+    #map {
+      height: 250px;
+      margin-top: 15px;
+      border-radius: 8px;
+      display: none;
+    }
+    .actions {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .actions a {
+      margin: 0 10px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-block;
+    }
+    .whatsapp { background: #25D366; color: #fff; }
+    .call { background: #007BFF; color: #fff; }
+    .note-box {
+      background: #eafaf1;
+      padding: 10px;
+      border: 1px solid #cce5d0;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📋 تفاصيل الطلب</h2>
+    <div id="orderDetails">⏳ جاري التحميل...</div>
+    <div id="map"></div>
+    <div class="actions" id="actionLinks" style="display:none;"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get("id");
+
+    const orderBox = document.getElementById("orderDetails");
+    const actionBox = document.getElementById("actionLinks");
+
+    async function loadOrder() {
+      if (!orderId) {
+        orderBox.innerHTML = "❌ لم يتم تحديد الطلب.";
+        return;
+      }
+
+      const docRef = doc(db, "requests", orderId);
+      const snap = await getDoc(docRef);
+
+      if (!snap.exists()) {
+        orderBox.innerHTML = "❌ الطلب غير موجود.";
+        return;
+      }
+
+      const data = snap.data();
+
+      orderBox.innerHTML = `
+        <div class="info"><strong>📄 رقم الطلب:</strong> ${orderId}</div>
+        <div class="info"><strong>👤 الاسم:</strong> ${data.name}</div>
+        <div class="info"><strong>📞 الهاتف:</strong> ${data.phone}</div>
+        <div class="info"><strong>📍 العنوان:</strong> ${data.address}</div>
+        <div class="info"><strong>❄️ عدد المكيفات:</strong> ${data.acCount}</div>
+        ${data.ac1 ? `<div class="info"><strong>🔧 نوع 1:</strong> ${data.ac1.type || "غير محدد"}</div>` : ""}
+        ${data.ac1 ? `<div class="info"><strong>📏 حجم 1:</strong> ${data.ac1.size || "غير محدد"}</div>` : ""}
+        ${data.ac2 ? `<div class="info"><strong>🔧 نوع 2:</strong> ${data.ac2.type || "غير محدد"}</div>` : ""}
+        ${data.ac2 ? `<div class="info"><strong>📏 حجم 2:</strong> ${data.ac2.size || "غير محدد"}</div>` : ""}
+        <div class="info"><strong>🕒 الحالة:</strong> ${data.status || "غير محددة"}</div>
+        ${data.opportunityNote ? `<div class="note-box"><strong>💡 فرصة:</strong> ${data.opportunityNote}</div>` : ""}
+        ${data.publicNotes ? `<div class="note-box"><strong>📝 ملاحظة:</strong> ${data.publicNotes}</div>` : ""}
+        ${data.afterImageUrl ? `<img src="${data.afterImageUrl}" alt="صورة بعد التنظيف">` : ""}
+      `;
+
+      // روابط الاتصال
+      if (data.phone) {
+        actionBox.innerHTML = `
+          <a class="call" href="tel:${data.phone}">📞 اتصال</a>
+          <a class="whatsapp" href="https://wa.me/213${data.phone.replace(/^0/, '')}?text=السلام عليكم، أستفسر عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
+        `;
+        actionBox.style.display = "block";
+      }
+
+      // خريطة
+      if (data.location) {
+        document.getElementById("map").style.display = "block";
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+        script.onload = () => {
+          const map = L.map("map").setView([data.location.lat, data.location.lng], 15);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors"
+          }).addTo(map);
+          L.marker([data.location.lat, data.location.lng]).addTo(map).bindPopup("📍 العنوان").openPopup();
+        };
+        document.body.appendChild(script);
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(link);
+      }
+    }
+
+    loadOrder();
+  </script>
+</body>
+</html>
