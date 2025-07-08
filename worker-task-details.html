@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📋 تنفيذ العمل – العامل</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📋 تنفيذ العمل – TopClim</title>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -74,14 +74,6 @@
       background-color: #218838;
     }
 
-    img#previewImage {
-      margin-top: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      max-width: 100%;
-      display: none;
-    }
-
     #smallToolsContainer,
     #largeToolsContainer {
       display: flex;
@@ -103,6 +95,13 @@
     .tool-item input[type="checkbox"] {
       transform: scale(1.2);
     }
+
+    img#previewImage {
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      max-width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -119,18 +118,18 @@
 
   <div class="section">
     <label>🧰 الأدوات الصغيرة:</label>
-    <div id="smallToolsContainer">⏳ جاري التحميل...</div>
+    <div id="smallToolsContainer"><p>⏳ تحميل...</p></div>
   </div>
 
   <div class="section">
     <label>📦 الأدوات الكبيرة:</label>
-    <div id="largeToolsContainer">⏳ جاري التحميل...</div>
+    <div id="largeToolsContainer"><p>⏳ تحميل...</p></div>
   </div>
 
   <div class="section">
     <label>📷 صورة بعد الإنجاز:</label>
     <input type="file" id="finishImage" accept="image/*" />
-    <img id="previewImage" />
+    <img id="previewImage" style="display:none;" />
   </div>
 
   <div class="section">
@@ -139,8 +138,8 @@
   </div>
 
   <div class="section">
-    <label>📌 فرصة (مثل مكيف للبيع):</label>
-    <textarea id="opportunityNote" placeholder="أدخل فرصة أو اقتراح..."></textarea>
+    <label>📌 فرصة (مكيف للبيع أو طلب خاص):</label>
+    <textarea id="opportunityNote" placeholder="أدخل وصف الفرصة..."></textarea>
   </div>
 
   <div class="section">
@@ -156,7 +155,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
-    getFirestore, doc, getDoc, updateDoc, collection, getDocs, addDoc
+    getFirestore, doc, getDoc, updateDoc,
+    collection, getDocs, addDoc
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -168,40 +168,47 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const requestId = new URLSearchParams(window.location.search).get("id");
+  const params = new URLSearchParams(window.location.search);
+  const requestId = params.get("id");
 
-  let toolsSmall = [], toolsLarge = [];
+  let toolsSmall = [];
+  let toolsLarge = [];
 
-  // ✅ تحميل أدوات العمل
-async function loadTools() {
-  const smallSnap = await getDocs(collection(db, "smallTools"));
-  const largeSnap = await getDocs(collection(db, "bigTools"));
+  // 🔄 تحميل الأدوات
+  async function loadTools() {
+    try {
+      const smallSnap = await getDocs(collection(db, "smallTools"));
+      const largeSnap = await getDocs(collection(db, "bigTools"));
 
-  const smallContainer = document.getElementById("smallToolsContainer");
-  const largeContainer = document.getElementById("largeToolsContainer");
+      const smallContainer = document.getElementById("smallToolsContainer");
+      const largeContainer = document.getElementById("largeToolsContainer");
 
-  smallContainer.innerHTML = "";
-  smallSnap.forEach(doc => {
-    const tool = doc.data().name;
-    toolsSmall.push(tool);
-    const div = document.createElement("div");
-    div.className = "tool-item";
-    div.innerHTML = `<input type="checkbox" value="${tool}" /> ${tool}`;
-    smallContainer.appendChild(div);
-  });
+      smallContainer.innerHTML = "";
+      largeContainer.innerHTML = "";
 
-  largeContainer.innerHTML = "";
-  largeSnap.forEach(doc => {
-    const tool = doc.data().name;
-    toolsLarge.push(tool);
-    const div = document.createElement("div");
-    div.className = "tool-item";
-    div.innerHTML = `<input type="checkbox" value="${tool}" /> ${tool}`;
-    largeContainer.appendChild(div);
-  });
-}
+      smallSnap.forEach(doc => {
+        const tool = doc.data().name;
+        toolsSmall.push(tool);
+        const div = document.createElement("div");
+        div.className = "tool-item";
+        div.innerHTML = `<input type="checkbox" value="${tool}" /> ${tool}`;
+        smallContainer.appendChild(div);
+      });
 
+      largeSnap.forEach(doc => {
+        const tool = doc.data().name;
+        toolsLarge.push(tool);
+        const div = document.createElement("div");
+        div.className = "tool-item";
+        div.innerHTML = `<input type="checkbox" value="${tool}" /> ${tool}`;
+        largeContainer.appendChild(div);
+      });
+    } catch (e) {
+      console.error("❌ فشل تحميل الأدوات:", e);
+    }
+  }
 
+  // ✅ رفع الصورة إلى Cloudinary
   async function uploadImageToCloudinary(file) {
     const formData = new FormData();
     formData.append("file", file);
@@ -217,10 +224,11 @@ async function loadTools() {
     return data.secure_url;
   }
 
+  // ✅ إنهاء العمل
   document.getElementById("finishBtn").addEventListener("click", async () => {
-    const indoor = +document.getElementById("indoorCount").value || 0;
-    const outdoor = +document.getElementById("outdoorCount").value || 0;
-    const maintenance = +document.getElementById("maintenanceCount").value || 0;
+    const indoor = document.getElementById("indoorCount").value || "0";
+    const outdoor = document.getElementById("outdoorCount").value || "0";
+    const maintenance = document.getElementById("maintenanceCount").value || "0";
     const publicNotes = document.getElementById("publicNotes").value;
     const privateNotes = document.getElementById("privateNotes").value;
     const opportunityNote = document.getElementById("opportunityNote").value;
@@ -243,9 +251,9 @@ async function loadTools() {
       await updateDoc(doc(db, "requests", requestId), {
         status: "تم الإنجاز",
         workDone: {
-          indoor,
-          outdoor,
-          maintenance,
+          indoor: parseInt(indoor),
+          outdoor: parseInt(outdoor),
+          maintenance: parseInt(maintenance),
           publicNotes,
           privateNotes,
           opportunityNote,
@@ -262,7 +270,7 @@ async function loadTools() {
         }
       });
 
-      if (missingSmall.length || missingLarge.length) {
+      if (missingSmall.length > 0 || missingLarge.length > 0) {
         await addDoc(collection(db, "alerts"), {
           requestId,
           missingSmall,
@@ -272,15 +280,18 @@ async function loadTools() {
         alert("⚠️ تم إرسال إشعار بفقدان الأدوات!");
       }
 
-      alert("✅ تم حفظ تنفيذ العمل بنجاح");
+      alert("✅ تم إنهاء العمل بنجاح");
       window.location.href = "worker-tasks.html";
+
     } catch (e) {
-      console.error(e);
-      alert("❌ حدث خطأ أثناء حفظ البيانات");
+      console.error("❌ خطأ في إنهاء العمل:", e);
+      alert("❌ حدث خطأ أثناء حفظ العمل");
     }
   });
 
+  // بدء التحميل
   loadTools();
 </script>
+
 </body>
 </html>
