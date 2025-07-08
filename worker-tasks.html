@@ -66,7 +66,15 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     // إعداد Firebase
     const firebaseConfig = {
@@ -74,29 +82,41 @@
       authDomain: "topclim-3edfa.firebaseapp.com",
       projectId: "topclim-3edfa"
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // جلب معرف العامل من localStorage، أو إعادة التوجيه لتسجيل الدخول
+    // التحقق من تسجيل الدخول
     const workerId = localStorage.getItem("workerId");
     if (!workerId) {
-      window.location.href = "worker-login.html"; // صفحة تسجيل الدخول
+      window.location.href = "worker-login.html";
     }
 
+    const tasksContainer = document.getElementById("tasksList");
+
     async function loadTasks() {
-      const container = document.getElementById("tasksList");
-      container.innerHTML = "⏳ جاري التحميل...";
+      tasksContainer.innerHTML = "⏳ جاري التحميل...";
 
       try {
-        const q = query(collection(db, "requests"), where("assignedTo", "==", workerId));
-        const snap = await getDocs(q);
-
-        if (snap.empty) {
-          container.innerHTML = "<p>🚫 لا توجد أعمال حالياً.</p>";
+        // 📌 جلب بيانات العامل (الاسم)
+        const workerDoc = await getDoc(doc(db, "workers", workerId));
+        if (!workerDoc.exists()) {
+          tasksContainer.innerHTML = "<p>⚠️ لم يتم العثور على بيانات هذا العامل.</p>";
           return;
         }
 
-        container.innerHTML = "";
+        const workerName = workerDoc.data().name;
+
+        // 🔍 البحث عن الطلبات التي تحتوي على assistantName = اسم العامل
+        const q = query(collection(db, "requests"), where("assistantName", "==", workerName));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          tasksContainer.innerHTML = "<p>🚫 لا توجد أعمال حالياً.</p>";
+          return;
+        }
+
+        tasksContainer.innerHTML = "";
         snap.forEach(doc => {
           const data = doc.data();
           const el = document.createElement("div");
@@ -104,15 +124,15 @@
           el.innerHTML = `
             <h3>👤 ${data.name || "زبون"}</h3>
             <p>📍 العنوان: ${data.address || "غير محدد"}</p>
-            <p>🗓️ التاريخ: ${data.date || "غير متوفر"}</p>
+            <p>🗓️ التاريخ: ${data.executionSchedule?.split('T')[0] || "غير محدد"}</p>
             <a href="worker-task-details.html?id=${doc.id}">📄 تنفيذ العمل</a>
           `;
-          container.appendChild(el);
+          tasksContainer.appendChild(el);
         });
 
       } catch (err) {
-        container.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
         console.error(err);
+        tasksContainer.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
       }
     }
 
