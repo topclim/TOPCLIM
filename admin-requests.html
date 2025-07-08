@@ -37,6 +37,7 @@
       font-weight: bold;
       color: #007BFF;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      cursor: pointer;
       transition: 0.2s;
     }
 
@@ -99,13 +100,13 @@
   <h2>📋 إدارة الطلبات</h2>
 
   <div class="status-boxes" id="statusBoxes">
-    <div class="box">🔄 الكل<span id="count-all">0</span></div>
-    <div class="box">📄 مبدئي<span id="count-مبدئي">0</span></div>
-    <div class="box">✅ مؤكد<span id="count-قيد المعالجة">0</span></div>
-    <div class="box">📦 تم الإنجاز<span id="count-تم الإنجاز">0</span></div>
-    <div class="box">💰 تم الدفع<span id="count-تم الدفع">0</span></div>
-    <div class="box">🕓 متروك<span id="count-متروك">0</span></div>
-    <div class="box">🗑️ محذوف<span id="count-محذوف">0</span></div>
+    <div class="box" onclick="filterOrders('الكل')">🔄 الكل<span id="count-الكل">0</span></div>
+    <div class="box" onclick="filterOrders('مبدئي')">📄 مبدئي<span id="count-مبدئي">0</span></div>
+    <div class="box" onclick="filterOrders('قيد المعالجة')">✅ مؤكد<span id="count-قيد المعالجة">0</span></div>
+    <div class="box" onclick="filterOrders('تم الإنجاز')">📦 تم الإنجاز<span id="count-تم الإنجاز">0</span></div>
+    <div class="box" onclick="filterOrders('تم الدفع')">💰 تم الدفع<span id="count-تم الدفع">0</span></div>
+    <div class="box" onclick="filterOrders('متروك')">🕓 متروك<span id="count-متروك">0</span></div>
+    <div class="box" onclick="filterOrders('محذوف')">🗑️ محذوف<span id="count-محذوف">0</span></div>
   </div>
 
   <div id="orders">⏳ جاري تحميل الطلبات...</div>
@@ -130,6 +131,7 @@
     const db = getFirestore(app);
 
     const ordersContainer = document.getElementById("orders");
+    let allOrders = [];
 
     async function loadOrders() {
       const querySnapshot = await getDocs(collection(db, "requests"));
@@ -145,25 +147,29 @@
       };
 
       let totalCount = 0;
-      const orders = [];
+      allOrders = [];
 
       querySnapshot.forEach(docSnap => {
         const data = docSnap.data();
         const id = docSnap.id;
+        const status = data.status || "مبدئي";
         totalCount++;
-        const stat = data.status || "مبدئي";
-        statusCounts[stat] = (statusCounts[stat] || 0) + 1;
-        orders.push({ id, ...data });
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+        allOrders.push({ id, ...data });
       });
 
-      // تحديث أرقام المربعات
-      document.getElementById("count-all").innerText = totalCount;
+      document.getElementById("count-الكل").innerText = totalCount;
       Object.keys(statusCounts).forEach(key => {
         const el = document.getElementById(`count-${key}`);
         if (el) el.innerText = statusCounts[key];
       });
 
-      // عرض جدول الطلبات
+      renderOrders(allOrders);
+    }
+
+    function renderOrders(list) {
+      ordersContainer.innerHTML = "";
+
       const table = document.createElement("table");
       table.innerHTML = `
         <thead>
@@ -179,7 +185,7 @@
           </tr>
         </thead>
         <tbody>
-          ${orders.map(order => `
+          ${list.map(order => `
             <tr>
               <td>${order.id}</td>
               <td>${order.name}</td>
@@ -198,7 +204,10 @@
       `;
       ordersContainer.appendChild(table);
 
-      // تحميل العاملين
+      loadWorkers(list);
+    }
+
+    async function loadWorkers(list) {
       const workersSnap = await getDocs(collection(db, "workers"));
       const options = [];
       workersSnap.forEach(w => {
@@ -206,7 +215,7 @@
         options.push(`<option value="${w.id}">${d.name || w.id}</option>`);
       });
 
-      orders.forEach(order => {
+      list.forEach(order => {
         const select = document.getElementById(`worker-${order.id}`);
         if (select) select.innerHTML += options.join("");
       });
@@ -229,6 +238,15 @@
 
       alert("✅ تم تأكيد الطلب!");
       loadOrders();
+    };
+
+    window.filterOrders = function (status) {
+      if (status === "الكل") {
+        renderOrders(allOrders);
+      } else {
+        const filtered = allOrders.filter(o => (o.status || "مبدئي") === status);
+        renderOrders(filtered);
+      }
     };
 
     loadOrders();
