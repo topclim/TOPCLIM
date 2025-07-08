@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>📊 ملخص الأعمال المنجزة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f8f9fa;
+      padding: 20px;
+      direction: rtl;
+    }
+
+    h2 {
+      text-align: center;
+      color: #007BFF;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+      padding: 12px 16px;
+      border: 1px solid #dee2e6;
+      text-align: center;
+    }
+
+    th {
+      background-color: #007BFF;
+      color: white;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f1f3f5;
+    }
+
+    .total {
+      background-color: #dff0d8;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>📊 ملخص المكيفات التي تم إنجازها</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>📅 التاريخ</th>
+        <th>📆 السنة</th>
+        <th>🧊 عدد الداخلية</th>
+        <th>❄️ عدد الخارجية</th>
+        <th>🔧 عدد الصيانة</th>
+        <th>💰 الأرباح (د.ج)</th>
+      </tr>
+    </thead>
+    <tbody id="ordersTableBody">
+      <tr><td colspan="6">⏳ جاري التحميل...</td></tr>
+    </tbody>
+  </table>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const tbody = document.getElementById("ordersTableBody");
+
+    let totalIndoor = 0;
+    let totalOutdoor = 0;
+    let totalMaintenance = 0;
+    let totalProfit = 0;
+
+    async function loadCompletedOrders() {
+      const snap = await getDocs(collection(db, "requests"));
+      tbody.innerHTML = "";
+
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (d.status === "تم الإنجاز" && d.workDone) {
+          const finishedAt = new Date(d.workDone.finishedAt?.seconds * 1000);
+          const day = finishedAt.toLocaleDateString("ar-DZ");
+          const year = finishedAt.getFullYear();
+
+          const indoor = parseInt(d.workDone.indoor || 0);
+          const outdoor = parseInt(d.workDone.outdoor || 0);
+          const maintenance = parseInt(d.workDone.maintenance || 0);
+
+          const earnings = (indoor * 500) + (outdoor * 400) + (maintenance * 300); // قيم تقريبية للأرباح
+
+          totalIndoor += indoor;
+          totalOutdoor += outdoor;
+          totalMaintenance += maintenance;
+          totalProfit += earnings;
+
+          const row = `
+            <tr>
+              <td>${day}</td>
+              <td>${year}</td>
+              <td>${indoor}</td>
+              <td>${outdoor}</td>
+              <td>${maintenance}</td>
+              <td>${earnings.toLocaleString()} د.ج</td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        }
+      });
+
+      // إضافة سطر المجموع
+      tbody.innerHTML += `
+        <tr class="total">
+          <td colspan="2">الإجمالي</td>
+          <td>${totalIndoor}</td>
+          <td>${totalOutdoor}</td>
+          <td>${totalMaintenance}</td>
+          <td>${totalProfit.toLocaleString()} د.ج</td>
+        </tr>
+      `;
+    }
+
+    loadCompletedOrders();
+  </script>
+</body>
+</html>
