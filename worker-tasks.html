@@ -97,7 +97,7 @@
 
     <div class="filters">
       <div class="filter-box" id="yesterdayBox">📅 البارحة</div>
-      <div class="filter-box active" id="todayBox">📆 اليوم</div>
+      <div class="filter-box" id="todayBox">📆 اليوم</div>
       <div class="filter-box" id="tomorrowBox">📅 الغد</div>
     </div>
 
@@ -130,9 +130,16 @@
     }
 
     const tasksList = document.getElementById("tasksList");
-    const today = new Date().toISOString().split("T")[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+
+    const getDateString = (offsetDays = 0) => {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      return d.toISOString().split("T")[0];
+    };
+
+    const today = getDateString(0);
+    const yesterday = getDateString(-1);
+    const tomorrow = getDateString(1);
 
     let selectedDate = today;
 
@@ -140,7 +147,8 @@
       tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
 
       try {
-        const q = query(collection(db, "requests"),
+        const q = query(
+          collection(db, "requests"),
           where("assignedTo", "==", workerId),
           where("executionSchedule", ">=", selectedDate),
           where("executionSchedule", "<", selectedDate + "T23:59:59")
@@ -189,9 +197,11 @@
       loadTasks();
     };
 
-    // تحميل المهام لأول مرة
-    document.getElementById("customDate").value = today;
-    loadTasks();
+    // 🟢 اختيار تلقائي حسب تاريخ اليوم
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("customDate").value = today;
+      setActive("todayBox", today);
+    });
   </script>
 </body>
 </html>
