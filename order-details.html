@@ -79,7 +79,6 @@
       background-color: #6c757d;
       color: white;
     }
-
     .modal {
       position: fixed;
       top: 0; right: 0; bottom: 0; left: 0;
@@ -143,7 +142,8 @@
       getDoc,
       getDocs,
       collection,
-      updateDoc
+      updateDoc,
+      Timestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -208,7 +208,6 @@
 
       orderBox.innerHTML = html;
 
-      // روابط الاتصال والخريطة
       if (d.phone) {
         let buttons = `
           <a class="call" href="tel:${d.phone}" onclick="localStorage.setItem('openModalAfterCall', 'yes')">📞 اتصال</a>
@@ -235,7 +234,6 @@
         actionBox.style.display = "block";
       }
 
-      // ✅ فتح النافذة تلقائيًا بعد العودة من الاتصال
       if (localStorage.getItem('openModalAfterCall') === 'yes') {
         setTimeout(() => {
           openModal();
@@ -283,33 +281,47 @@
       document.getElementById("scheduleModal").style.display = "none";
     }
 
-    import { Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    async function saveSchedule() {
+      const date = document.getElementById("execDate").value;
+      const time = document.getElementById("execTime").value;
+      const assistantName = document.getElementById("assistantSelect").value;
 
-async function saveSchedule() {
-  const date = document.getElementById("execDate").value;
-  const time = document.getElementById("execTime").value;
-  const assistantName = document.getElementById("assistantSelect").value;
+      if (!date || !time) {
+        alert("❌ يرجى تحديد التاريخ والوقت");
+        return;
+      }
 
-  if (!date || !time) {
-    alert("❌ يرجى تحديد التاريخ والوقت");
-    return;
-  }
+      const execDateTime = new Date(`${date}T${time}`);
 
-  const execDateTime = new Date(`${date}T${time}`);
+      // ✅ تحديد نوع اليوم
+      const today = new Date();
+      const dayOnly = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const typeLabel = (() => {
+        const diff = (dayOnly(execDateTime) - dayOnly(today)) / (1000 * 60 * 60 * 24);
+        if (diff === 0) return "اليوم";
+        if (diff === 1) return "غدًا";
+        if (diff === -1) return "البارحة";
+        return null;
+      })();
 
-  try {
-    await updateDoc(selectedOrderRef, {
-      executionSchedule: Timestamp.fromDate(execDateTime),
-      assistantName
-    });
-    alert("✅ تم حفظ الجدولة بنجاح");
-    closeModal();
-  } catch (e) {
-    alert("❌ فشل في الحفظ");
-    console.error(e);
-  }
-}
+      try {
+        await updateDoc(selectedOrderRef, {
+          executionSchedule: Timestamp.fromDate(execDateTime),
+          assistantName
+        });
 
+        if (typeLabel) {
+          alert(`✅ تم تحديد الجدولة ليوم: ${typeLabel}`);
+        } else {
+          alert("✅ تم حفظ الجدولة بنجاح");
+        }
+
+        closeModal();
+      } catch (e) {
+        alert("❌ فشل في الحفظ");
+        console.error(e);
+      }
+    }
 
     loadOrder();
     loadWorkers();
@@ -317,7 +329,6 @@ async function saveSchedule() {
     window.closeModal = closeModal;
     window.saveSchedule = saveSchedule;
 
-    
   </script>
 </body>
 </html>
