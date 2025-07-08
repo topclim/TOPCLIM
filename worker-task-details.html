@@ -2,9 +2,108 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📋 تفاصيل العمل – العامل</title>
-  <link rel="stylesheet" href="css/worker-task-details.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📋 تنفيذ العمل – العامل</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #007BFF;
+      margin-bottom: 25px;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+      background-color: #fdfdfd;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+    }
+
+    button {
+      background-color: #28a745;
+      color: white;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    img#previewImage {
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      max-width: 100%;
+      display: none;
+    }
+
+    #smallToolsContainer,
+    #largeToolsContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tool-item {
+      background-color: #eef2f7;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tool-item input[type="checkbox"] {
+      transform: scale(1.2);
+    }
+  </style>
 </head>
 <body>
 
@@ -20,22 +119,18 @@
 
   <div class="section">
     <label>🧰 الأدوات الصغيرة:</label>
-    <div id="smallToolsContainer">
-      <p>🔄 جاري تحميل الأدوات...</p>
-    </div>
+    <div id="smallToolsContainer">⏳ جاري التحميل...</div>
   </div>
 
   <div class="section">
     <label>📦 الأدوات الكبيرة:</label>
-    <div id="largeToolsContainer">
-      <p>🔄 جاري تحميل الأدوات...</p>
-    </div>
+    <div id="largeToolsContainer">⏳ جاري التحميل...</div>
   </div>
 
   <div class="section">
     <label>📷 صورة بعد الإنجاز:</label>
-    <input type="file" accept="image/*" onchange="uploadImage(this)" />
-    <img id="previewImage" style="display:none; max-width: 100%; margin-top: 10px;" />
+    <input type="file" id="finishImage" accept="image/*" />
+    <img id="previewImage" />
   </div>
 
   <div class="section">
@@ -44,8 +139,8 @@
   </div>
 
   <div class="section">
-    <label>📌 فرصة (مكيف للبيع أو طلب خاص):</label>
-    <textarea id="opportunity" placeholder="أدخل وصف الفرصة..."></textarea>
+    <label>📌 فرصة (مثل مكيف للبيع):</label>
+    <textarea id="opportunityNote" placeholder="أدخل فرصة أو اقتراح..."></textarea>
   </div>
 
   <div class="section">
@@ -54,10 +149,137 @@
   </div>
 
   <div class="section">
-    <button onclick="finishWork()">✅ إنهاء العمل</button>
+    <button id="finishBtn">✅ إنهاء العمل</button>
   </div>
 </div>
 
-<script type="module" src="js/worker-task-details.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, updateDoc, collection, getDocs, addDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    authDomain: "topclim-3edfa.firebaseapp.com",
+    projectId: "topclim-3edfa"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const requestId = new URLSearchParams(window.location.search).get("id");
+
+  let toolsSmall = [], toolsLarge = [];
+
+  async function loadTools() {
+    const smallSnap = await getDocs(collection(db, "toolsSmall"));
+    const largeSnap = await getDocs(collection(db, "toolsLarge"));
+
+    const smallContainer = document.getElementById("smallToolsContainer");
+    const largeContainer = document.getElementById("largeToolsContainer");
+
+    smallContainer.innerHTML = "";
+    largeContainer.innerHTML = "";
+
+    smallSnap.forEach(doc => {
+      const tool = doc.data().name;
+      toolsSmall.push(tool);
+      const div = document.createElement("div");
+      div.className = "tool-item";
+      div.innerHTML = `<input type="checkbox" value="${tool}" /> ${tool}`;
+      smallContainer.appendChild(div);
+    });
+
+    largeSnap.forEach(doc => {
+      const tool = doc.data().name;
+      toolsLarge.push(tool);
+      const div = document.createElement("div");
+      div.className = "tool-item";
+      div.innerHTML = `<input type="checkbox" value="${tool}" /> ${tool}`;
+      largeContainer.appendChild(div);
+    });
+  }
+
+  async function uploadImageToCloudinary(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "topclim_upload");
+    formData.append("folder", "WorkerPhotos");
+
+    const res = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/image/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+    return data.secure_url;
+  }
+
+  document.getElementById("finishBtn").addEventListener("click", async () => {
+    const indoor = +document.getElementById("indoorCount").value || 0;
+    const outdoor = +document.getElementById("outdoorCount").value || 0;
+    const maintenance = +document.getElementById("maintenanceCount").value || 0;
+    const publicNotes = document.getElementById("publicNotes").value;
+    const privateNotes = document.getElementById("privateNotes").value;
+    const opportunityNote = document.getElementById("opportunityNote").value;
+    const imageFile = document.getElementById("finishImage").files[0];
+
+    const selectedSmall = Array.from(document.querySelectorAll("#smallToolsContainer input:checked")).map(el => el.value);
+    const selectedLarge = Array.from(document.querySelectorAll("#largeToolsContainer input:checked")).map(el => el.value);
+
+    const missingSmall = toolsSmall.filter(tool => !selectedSmall.includes(tool));
+    const missingLarge = toolsLarge.filter(tool => !selectedLarge.includes(tool));
+
+    let imageUrl = "";
+    if (imageFile) {
+      imageUrl = await uploadImageToCloudinary(imageFile);
+      document.getElementById("previewImage").src = imageUrl;
+      document.getElementById("previewImage").style.display = "block";
+    }
+
+    try {
+      await updateDoc(doc(db, "requests", requestId), {
+        status: "تم الإنجاز",
+        workDone: {
+          indoor,
+          outdoor,
+          maintenance,
+          publicNotes,
+          privateNotes,
+          opportunityNote,
+          photo: imageUrl,
+          toolsUsed: {
+            small: selectedSmall,
+            large: selectedLarge
+          },
+          missingTools: {
+            small: missingSmall,
+            large: missingLarge
+          },
+          finishedAt: new Date()
+        }
+      });
+
+      if (missingSmall.length || missingLarge.length) {
+        await addDoc(collection(db, "alerts"), {
+          requestId,
+          missingSmall,
+          missingLarge,
+          timestamp: new Date()
+        });
+        alert("⚠️ تم إرسال إشعار بفقدان الأدوات!");
+      }
+
+      alert("✅ تم حفظ تنفيذ العمل بنجاح");
+      window.location.href = "worker-tasks.html";
+    } catch (e) {
+      console.error(e);
+      alert("❌ حدث خطأ أثناء حفظ البيانات");
+    }
+  });
+
+  loadTools();
+</script>
 </body>
 </html>
