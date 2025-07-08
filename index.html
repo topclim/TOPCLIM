@@ -22,14 +22,17 @@
 <body>
 
   <!-- ✅ الهيدر -->
-<!-- ✅ صورة علوية من قاعدة البيانات -->
-<section>
-  <div style="padding: 20px 10px; text-align: center;">
+  <header>
+    <div style="padding: 20px 10px; text-align: center;">
     <h2 id="landingTitle" style="color: #007BFF; font-size: 24px;"></h2>
     <p id="landingDesc" style="color: #444;"></p>
   </div>
-  <img id="headerImage" alt="إعلان" width="100%" />
-</section>
+  </header>
+
+  <!-- ✅ صورة علوية من قاعدة البيانات -->
+  <section>
+    <img id="headerImage" alt="إعلان" width="100%" />
+  </section>
 
   <!-- ✅ صور قبل وبعد -->
   <section>
@@ -128,11 +131,11 @@
         document.getElementById("beforeImage").src = data.beforeImage || "";
         document.getElementById("afterImage").src = data.afterImage || "";
         document.getElementById("footerImage").src = data.bannerBottom || "";
-      
-       // ✅ تحميل العنوان والوصف
+     
+         // ✅ تحميل العنوان والوصف
     document.getElementById("landingTitle").textContent = data.headerTitle || "";
     document.getElementById("landingDesc").textContent = data.headerDesc || "";
-
+     
       }
     }
     loadLandingContent();
