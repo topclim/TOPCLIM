@@ -177,25 +177,25 @@
         <div class="step ${data.status === 'مبدئي' ? 'active' : ''}">1</div>
         <div class="step ${data.status === 'قيد المعالجة' ? 'active' : ''}">2</div>
         <div class="step ${data.status === 'تم التأكيد' ? 'active' : ''}">3</div>
-        <div class="step ${data.status === 'تم الإرسال' ? 'active' : ''}">4</div>
+        <div class="step ${data.status === 'تم الإرسال' || data.status === 'تم الإنجاز' ? 'active' : ''}">4</div>
       </div>
     `;
 
-    // صورة بعد الخدمة
-    if (data.afterImageUrl) {
+    // صورة بعد الإنجاز
+    if (data.workDone?.photo) {
       const afterDiv = document.getElementById("afterServiceImage");
       afterDiv.innerHTML = `
-        <h3>📷 صورة بعد التنظيف:</h3>
-        <img src="${data.afterImageUrl}" alt="بعد التنظيف" width="300" />
+        <h3>📷 صورة بعد الإنجاز:</h3>
+        <img src="${data.workDone.photo}" alt="بعد الإنجاز" width="300" />
       `;
     }
 
-    // ملاحظات الفني
-    if (data.technicianNote || data.opportunityNote) {
+    // ملاحظات الفني (بدون الملاحظات الخاصة)
+    if (data.workDone?.publicNotes || data.workDone?.opportunityNote) {
       const notesDiv = document.getElementById("technicianNotes");
       notesDiv.innerHTML = `<h3>💬 ملاحظات الفني:</h3><ul>`;
-      if (data.technicianNote) notesDiv.innerHTML += `<li>${data.technicianNote}</li>`;
-      if (data.opportunityNote) notesDiv.innerHTML += `<li><strong>فرصة:</strong> ${data.opportunityNote}</li>`;
+      if (data.workDone.publicNotes) notesDiv.innerHTML += `<li>${data.workDone.publicNotes}</li>`;
+      if (data.workDone.opportunityNote) notesDiv.innerHTML += `<li><strong>فرصة:</strong> ${data.workDone.opportunityNote}</li>`;
       notesDiv.innerHTML += `</ul>`;
     }
 
@@ -205,10 +205,10 @@
         const priceEl = document.getElementById("priceValue");
         priceEl.textContent = `${data.price} دج`;
         priceEl.style.display = "block";
-      }
+      };
     }
 
-    // تحميل رسالة الشكر ورقم الاتصال من إعدادات قاعدة البيانات
+    // إعدادات الشكر والاتصال
     const settingsSnap = await getDoc(doc(db, "landing", "landingContent"));
     if (settingsSnap.exists()) {
       const settings = settingsSnap.data();
@@ -226,7 +226,8 @@
 
       if (settings.contactWhatsapp) {
         const whatsappNumber = settings.contactWhatsapp.replace(/^0/, '');
-        document.getElementById("whatsappLink").href = `https://wa.me/213${whatsappNumber}?text=السلام عليكم، أود الاستفسار حول طلبي رقم ${orderId}`;
+        document.getElementById("whatsappLink").href =
+          `https://wa.me/213${whatsappNumber}?text=السلام عليكم، أود الاستفسار حول طلبي رقم ${orderId}`;
       }
     }
 
