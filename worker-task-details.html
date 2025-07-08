@@ -125,6 +125,10 @@
     <label>📦 الأدوات الكبيرة:</label>
     <div id="largeToolsContainer"><p>⏳ تحميل...</p></div>
   </div>
+  
+  <div class="section">
+  <button type="button" onclick="selectAllTools()">📌 تحديد كل الأدوات</button>
+</div>
 
   <div class="section">
     <label>📷 صورة بعد الإنجاز:</label>
@@ -291,6 +295,12 @@
 
   // بدء التحميل
   loadTools();
+
+  window.selectAllTools = function () {
+  const allCheckboxes = document.querySelectorAll('#smallToolsContainer input[type="checkbox"], #largeToolsContainer input[type="checkbox"]');
+  allCheckboxes.forEach(cb => cb.checked = true);
+}
+
 </script>
 
 </body>
