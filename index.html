@@ -2,104 +2,98 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>🌬️ تنظيف مكيفات – TopClim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TopClim - تنظيف مكيفات</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo&display=swap">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      margin: 0; padding: 0;
-      background-color: #f2f2f2;
-      color: #333;
-      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f8f9fa;
     }
     header, footer {
-      padding: 20px;
       color: white;
+      text-align: center;
+      padding: 1rem;
     }
-    section { padding: 20px; }
+    section {
+      padding: 2rem;
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
     .before-after {
       display: flex;
-      justify-content: center;
       flex-wrap: wrap;
-      gap: 10px;
+      justify-content: space-between;
     }
     .before-after img {
-      width: 45%;
-      border-radius: 10px;
-    }
-    img.full-width {
-      width: 100%;
-      border-radius: 10px;
-      margin: 10px 0;
+      width: 48%;
+      border-radius: 8px;
+      margin-bottom: 1rem;
     }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-  <header id="headerSection">
-    <h1 id="headerTitle">TopClim</h1>
-    <p id="headerDesc">خدمة تنظيف مكيفات احترافية وسريعة في بيتك</p>
-  </header>
+<header id="pageHeader">
+  <h1 id="headerTitle">🌬️ TopClim</h1>
+  <p id="headerDesc">خدمة تنظيف مكيفات احترافية وسريعة في بيتك</p>
+</header>
 
-  <section>
-    <img id="bannerTop" class="full-width" alt="إعلان علوي" />
-  </section>
+<section>
+  <img id="bannerTop" src="" alt="إعلان علوي" style="width: 100%; border-radius: 10px;" />
+</section>
 
-  <section>
-    <h2>📸 نتائج قبل وبعد</h2>
-    <div class="before-after">
-      <img id="beforeImage" alt="قبل التنظيف" />
-      <img id="afterImage" alt="بعد التنظيف" />
-    </div>
-  </section>
+<section>
+  <h2>📸 نتائج أعمالنا</h2>
+  <div class="before-after">
+    <img id="beforeImage" src="" alt="قبل التنظيف" />
+    <img id="afterImage" src="" alt="بعد التنظيف" />
+  </div>
+</section>
 
-  <section>
-    <img id="bannerBottom" class="full-width" alt="صورة سفلية" />
-  </section>
+<section>
+  <img id="bannerBottom" src="" alt="إعلان سفلي" style="width: 100%; border-radius: 10px;" />
+</section>
 
-  <footer id="footerSection">
-    <p id="footerText">© جميع الحقوق محفوظة لـ TopClim</p>
-  </footer>
+<footer id="pageFooter">
+  <p id="footerText">جميع الحقوق محفوظة © TopClim 2025</p>
+</footer>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    authDomain: "topclim-3edfa.firebaseapp.com",
+    projectId: "topclim-3edfa"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
-    };
+  async function loadLandingContent() {
+    const doc = await db.collection("landing").doc("landingContent").get();
+    if (!doc.exists) return;
+    const data = doc.data();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    if (data.headerTitle) document.getElementById("headerTitle").textContent = data.headerTitle;
+    if (data.headerDesc) document.getElementById("headerDesc").textContent = data.headerDesc;
+    if (data.footerText) document.getElementById("footerText").textContent = data.footerText;
 
-    async function loadContent() {
-      const docRef = doc(db, "landing", "landingContent");
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        const data = snap.data();
+    if (data.bannerTop) document.getElementById("bannerTop").src = data.bannerTop;
+    if (data.beforeImage) document.getElementById("beforeImage").src = data.beforeImage;
+    if (data.afterImage) document.getElementById("afterImage").src = data.afterImage;
+    if (data.bannerBottom) document.getElementById("bannerBottom").src = data.bannerBottom;
 
-        // محتوى النصوص
-        document.getElementById("headerTitle").textContent = data.headerTitle || "TopClim";
-        document.getElementById("headerDesc").textContent = data.headerDesc || "خدمة تنظيف مكيفات احترافية وسريعة في بيتك";
-        document.getElementById("footerText").textContent = data.footerText || "© جميع الحقوق محفوظة لـ TopClim";
+    if (data.headerColor) document.getElementById("pageHeader").style.backgroundColor = data.headerColor;
+    if (data.footerColor) document.getElementById("pageFooter").style.backgroundColor = data.footerColor;
+    if (data.bgColor) document.body.style.backgroundColor = data.bgColor;
+  }
 
-        // الصور
-        document.getElementById("bannerTop").src = data.bannerTop || "";
-        document.getElementById("beforeImage").src = data.beforeImage || "";
-        document.getElementById("afterImage").src = data.afterImage || "";
-        document.getElementById("bannerBottom").src = data.bannerBottom || "";
+  loadLandingContent();
+</script>
 
-        // الألوان
-        document.body.style.backgroundColor = data.bgColor || "#f2f2f2";
-        document.getElementById("headerSection").style.backgroundColor = data.headerColor || "#007bff";
-        document.getElementById("footerSection").style.backgroundColor = data.footerColor || "#007bff";
-      }
-    }
-
-    loadContent();
-  </script>
 </body>
 </html>
