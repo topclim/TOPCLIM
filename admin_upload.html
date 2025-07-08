@@ -60,84 +60,58 @@
       height: 100%;
       border: none;
     }
-
     body {
-  font-family: 'Cairo', sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f8f9fa;
-  direction: rtl;
-  text-align: right;
-  transition: background-color 0.3s ease;
-}
-
-header, footer {
-  color: white;
-  text-align: center;
-  padding: 1rem;
-  transition: background-color 0.3s ease;
-}
-
-section {
-  padding: 2rem;
-}
-
-h1, h2 {
-  margin-top: 0;
-  color: #333;
-}
-
-img {
-  max-width: 100%;
-  border-radius: 10px;
-  display: block;
-}
-
-.before-after {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.before-after img {
-  width: 48%;
-}
-
-button {
-  background-color: #007BFF;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-@media (max-width: 768px) {
-  .before-after img {
-    width: 100%;
-  }
-
-  section {
-    padding: 1rem;
-  }
-}
-
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f8f9fa;
+      direction: rtl;
+      text-align: right;
+      transition: background-color 0.3s ease;
+    }
+    header, footer {
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    section {
+      padding: 2rem;
+    }
+    h1, h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 10px;
+      display: block;
+    }
+    .before-after {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .before-after img {
+      width: 48%;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    @media (max-width: 768px) {
+      .before-after img {
+        width: 100%;
+      }
+      section {
+        padding: 1rem;
+      }
+    }
   </style>
-  
 </head>
 <body>
-
-  <!-- ✅ جزء التعديل -->
   <div class="editor">
     <h2>🛠️ تعديل الصفحة</h2>
-
     <label>عنوان الهيدر</label>
     <input id="headerTitle" type="text" />
 
@@ -172,97 +146,123 @@ button:hover {
     <label>🎨 لون الفوتر</label>
     <input type="color" id="footerColor" />
 
+    <label>➕ إضافة نوع مكيف جديد</label>
+    <input id="newType" type="text" placeholder="أدخل نوع المكيف" />
+    <button onclick="addType()">إضافة النوع</button>
+
+    <label>➕ إضافة حجم مكيف جديد</label>
+    <input id="newSize" type="text" placeholder="أدخل حجم المكيف" />
+    <button onclick="addSize()">إضافة الحجم</button>
+
     <button onclick="saveContent()">💾 حفظ التعديلات</button>
   </div>
 
-  <!-- ✅ جزء المعاينة -->
   <div class="preview">
     <iframe src="index.html" id="previewFrame"></iframe>
   </div>
 
-  <!-- أضف هذا في أسفل صفحة admin_upload.html -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-    authDomain: "topclim-3edfa.firebaseapp.com",
-    projectId: "topclim-3edfa"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const fields = [
-    "headerTitle", "headerDesc",
-    "bannerTop", "beforeImage", "afterImage", "bannerBottom",
-    "footerText", "bgColor", "headerColor", "footerColor"
-  ];
+    const fields = [
+      "headerTitle", "headerDesc",
+      "bannerTop", "beforeImage", "afterImage", "bannerBottom",
+      "footerText", "bgColor", "headerColor", "footerColor"
+    ];
 
-  // ✅ تحميل البيانات القديمة
-  async function loadData() {
-    const snap = await getDoc(doc(db, "landing", "landingContent"));
-    if (!snap.exists()) return;
-    const data = snap.data();
+    async function loadData() {
+      const snap = await getDoc(doc(db, "landing", "landingContent"));
+      if (!snap.exists()) return;
+      const data = snap.data();
 
-    fields.forEach(id => {
-      if (data[id]) {
-        const el = document.getElementById(id);
-        if (el.type === "file") return;
-        if (el.type === "color") el.value = data[id];
-        else el.value = data[id];
-        if (id.includes("Image") || id.includes("banner")) {
-          document.getElementById("preview_" + id).src = data[id];
+      fields.forEach(id => {
+        if (data[id]) {
+          const el = document.getElementById(id);
+          if (el.type === "file") return;
+          if (el.type === "color") el.value = data[id];
+          else el.value = data[id];
+          if (id.includes("Image") || id.includes("banner")) {
+            document.getElementById("preview_" + id).src = data[id];
+          }
         }
-      }
-    });
-  }
-
-  loadData();
-
-  // ✅ رفع صورة
-  window.uploadImage = async function(input, fieldId) {
-    const file = input.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "topclim_upload");
-    formData.append("folder", "TOPCLIMasset");
-
-    try {
-      const res = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/image/upload", {
-        method: "POST",
-        body: formData
       });
-      const data = await res.json();
-      if (data.secure_url) {
-        document.getElementById(fieldId).value = data.secure_url;
-        document.getElementById("preview_" + fieldId).src = data.secure_url;
+    }
+
+    loadData();
+
+    window.uploadImage = async function(input, fieldId) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "topclim_upload");
+      formData.append("folder", "TOPCLIMasset");
+
+      try {
+        const res = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/image/upload", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        if (data.secure_url) {
+          document.getElementById(fieldId).value = data.secure_url;
+          document.getElementById("preview_" + fieldId).src = data.secure_url;
+        }
+      } catch (err) {
+        alert("❌ فشل رفع الصورة");
       }
-    } catch (err) {
-      alert("❌ فشل رفع الصورة");
     }
-  }
 
-  // ✅ حفظ البيانات
-  window.saveContent = async function () {
-    const data = {};
-    fields.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) data[id] = el.value;
-    });
+    window.saveContent = async function () {
+      const data = {};
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) data[id] = el.value;
+      });
 
-    try {
-      await setDoc(doc(db, "landing", "landingContent"), data, { merge: true });
-      alert("✅ تم الحفظ بنجاح");
-      document.getElementById("previewFrame").contentWindow.location.reload();
-    } catch (e) {
-      alert("❌ حدث خطأ أثناء الحفظ");
+      try {
+        await setDoc(doc(db, "landing", "landingContent"), data, { merge: true });
+        alert("✅ تم الحفظ بنجاح");
+        document.getElementById("previewFrame").contentWindow.location.reload();
+      } catch (e) {
+        alert("❌ حدث خطأ أثناء الحفظ");
+      }
     }
-  }
-</script>
 
+    window.addType = async function () {
+      const type = document.getElementById("newType").value.trim();
+      if (!type) return alert("❗ أدخل نوع المكيف أولاً");
+      try {
+        await addDoc(collection(db, "acTypes"), { name: type });
+        alert("✅ تم إضافة نوع المكيف بنجاح");
+        document.getElementById("newType").value = "";
+      } catch (e) {
+        alert("❌ فشل في إضافة نوع المكيف");
+      }
+    }
+
+    window.addSize = async function () {
+      const size = document.getElementById("newSize").value.trim();
+      if (!size) return alert("❗ أدخل حجم المكيف أولاً");
+      try {
+        await addDoc(collection(db, "acSizes"), { label: size });
+        alert("✅ تم إضافة حجم المكيف بنجاح");
+        document.getElementById("newSize").value = "";
+      } catch (e) {
+        alert("❌ فشل في إضافة حجم المكيف");
+      }
+    }
+  </script>
 </body>
 </html>
