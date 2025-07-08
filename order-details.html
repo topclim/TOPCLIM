@@ -80,7 +80,6 @@
       color: white;
     }
 
-    /* ✅ تنسيق النافذة المنبثقة */
     .modal {
       position: fixed;
       top: 0; right: 0; bottom: 0; left: 0;
@@ -98,7 +97,8 @@
       max-width: 400px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
-    .modal-content input {
+    .modal-content input,
+    .modal-content select {
       width: 100%;
       padding: 8px;
       margin: 8px 0;
@@ -117,7 +117,6 @@
     <div class="actions" id="actionLinks" style="display:none;"></div>
   </div>
 
-  <!-- ✅ نافذة جدولة العمل -->
   <div id="scheduleModal" class="modal">
     <div class="modal-content">
       <h3>📅 جدولة تنفيذ الطلب</h3>
@@ -125,9 +124,11 @@
       <input type="date" id="execDate">
       <label>⏰ الوقت:</label>
       <input type="time" id="execTime">
-      <label>👷‍♂️ اسم المساعد (اختياري):</label>
-      <input type="text" id="assistantName" placeholder="اسم المساعد">
-      <div style="text-align: right; margin-top: 10px;">
+      <label>👷‍♂️ اسم المساعد:</label>
+      <select id="assistantSelect">
+        <option value="">— اختر المساعد —</option>
+      </select>
+      <div style="margin-top: 10px; text-align: right;">
         <button onclick="closeModal()">❌ إلغاء</button>
         <button onclick="saveSchedule()">💾 حفظ</button>
       </div>
@@ -136,7 +137,14 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      getDocs,
+      collection,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
@@ -150,6 +158,7 @@
     const orderId = new URLSearchParams(window.location.search).get("id");
     const orderBox = document.getElementById("orderDetails");
     const actionBox = document.getElementById("actionLinks");
+    let selectedOrderRef = null;
 
     async function loadOrder() {
       if (!orderId) {
@@ -157,7 +166,8 @@
         return;
       }
 
-      const snap = await getDoc(doc(db, "requests", orderId));
+      selectedOrderRef = doc(db, "requests", orderId);
+      const snap = await getDoc(selectedOrderRef);
       if (!snap.exists()) {
         orderBox.innerHTML = "❌ الطلب غير موجود.";
         return;
@@ -171,7 +181,8 @@
         <div class="info"><strong>📍 العنوان:</strong> ${d.address || 'غير متوفر'}</div>
         <div class="info"><strong>🕒 التوقيت المفضل:</strong> ${d.preferredTime || 'غير محدد'}</div>
         <div class="info"><strong>📌 الحالة:</strong> ${d.status || 'غير معروفة'}</div>
-        <div class="info"><strong>❄️ عدد المكيفات:</strong> ${d.acCount || '0'}</div>`;
+        <div class="info"><strong>❄️ عدد المكيفات:</strong> ${d.acCount || '0'}</div>
+      `;
 
       if (Array.isArray(d.acUnits)) {
         d.acUnits.forEach((ac, index) => {
@@ -186,10 +197,6 @@
         html += `<div class="note-box"><strong>📝 ملاحظات الزبون:</strong><br>${d.notes}</div>`;
       }
 
-      if (d.opportunityNote) {
-        html += `<div class="note-box"><strong>💡 فرصة:</strong><br>${d.opportunityNote}</div>`;
-      }
-
       if (d.feedback) {
         const stars = "⭐".repeat(d.feedback.rating) + "☆".repeat(5 - d.feedback.rating);
         html += `<div class="feedback-box"><strong>⭐ تقييم الزبون:</strong> ${stars}<br><em>${d.feedback.comment || ""}</em></div>`;
@@ -198,23 +205,22 @@
       if (d.imageUrl) {
         html += `<img src="${d.imageUrl}" alt="📷 صورة قبل التنظيف">`;
       }
-      if (d.afterImageUrl) {
-        html += `<img src="${d.afterImageUrl}" alt="📷 صورة بعد التنظيف">`;
-      }
 
       orderBox.innerHTML = html;
 
-      // روابط الاتصال + الخريطة + زر الجدولة
+      // روابط الاتصال والخريطة
       if (d.phone) {
-        const mapBtn = d.location
-          ? `<a class="map-btn" href="https://www.google.com/maps?q=${d.location.lat},${d.location.lng}" target="_blank">🗺️ عرض على الخريطة</a>`
-          : "";
-
-        actionBox.innerHTML = `
+        let buttons = `
           <a class="call" href="tel:${d.phone}">📞 اتصال</a>
           <a class="whatsapp" href="https://wa.me/213${d.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
-          ${mapBtn}
         `;
+
+        if (d.location) {
+          buttons += `<a class="map-btn" href="https://www.google.com/maps?q=${d.location.lat},${d.location.lng}" target="_blank">🗺️ عرض على الخريطة</a>`;
+          showMap(d.location.lat, d.location.lng);
+        }
+
+        actionBox.innerHTML = buttons;
 
         const scheduleBtn = document.createElement("a");
         scheduleBtn.className = "map-btn";
@@ -226,70 +232,79 @@
         };
         actionBox.appendChild(scheduleBtn);
 
-        // استدعاء modal عند الضغط على زر الاتصال
-        document.querySelector('.call').addEventListener('click', function(e) {
-          e.preventDefault();
-          openModal();
-        });
-
         actionBox.style.display = "block";
-      }
-
-      // تفعيل خريطة Leaflet إذا كانت متوفرة
-      if (d.location) {
-        document.getElementById("map").style.display = "block";
-        const script = document.createElement("script");
-        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-        script.onload = () => {
-          const map = L.map("map").setView([d.location.lat, d.location.lng], 15);
-          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "© OpenStreetMap contributors"
-          }).addTo(map);
-          L.marker([d.location.lat, d.location.lng]).addTo(map).bindPopup("📍 موقع العميل").openPopup();
-        };
-        document.body.appendChild(script);
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-        document.head.appendChild(link);
       }
     }
 
-    loadOrder();
+    async function loadWorkers() {
+      const workersSnap = await getDocs(collection(db, "workers"));
+      const select = document.getElementById("assistantSelect");
+      select.innerHTML = '<option value="">— اختر المساعد —</option>';
+      workersSnap.forEach((doc) => {
+        const data = doc.data();
+        const option = document.createElement("option");
+        option.value = data.name;
+        option.textContent = `${data.name} – ${data.role || ""}`;
+        select.appendChild(option);
+      });
+    }
 
-    // فتح وغلق الـ Modal
+    function showMap(lat, lng) {
+      document.getElementById("map").style.display = "block";
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = () => {
+        const map = L.map("map").setView([lat, lng], 15);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors"
+        }).addTo(map);
+        L.marker([lat, lng]).addTo(map).bindPopup("📍 موقع العميل").openPopup();
+      };
+      document.body.appendChild(script);
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+
     function openModal() {
       document.getElementById("scheduleModal").style.display = "flex";
     }
+
     function closeModal() {
       document.getElementById("scheduleModal").style.display = "none";
     }
-    window.addEventListener("click", (e) => {
-      if (e.target.id === "scheduleModal") closeModal();
-    });
 
-    // حفظ الجدولة في قاعدة البيانات
     async function saveSchedule() {
       const date = document.getElementById("execDate").value;
       const time = document.getElementById("execTime").value;
-      const assistant = document.getElementById("assistantName").value;
+      const assistantName = document.getElementById("assistantSelect").value;
 
       if (!date || !time) {
         alert("❌ يرجى تحديد التاريخ والوقت");
         return;
       }
 
-      const datetime = `${date}T${time}`;
-      await updateDoc(doc(db, "requests", orderId), {
-        executionSchedule: datetime,
-        assistantName: assistant || null,
-        status: "قيد التنفيذ"
-      });
+      const execDateTime = `${date}T${time}`;
 
-      alert("✅ تم حفظ الجدولة بنجاح");
-      closeModal();
-      loadOrder();  // تحديث البيانات مع الجدولة الجديدة
+      try {
+        await updateDoc(selectedOrderRef, {
+          executionSchedule: execDateTime,
+          assistantName
+        });
+        alert("✅ تم حفظ الجدولة بنجاح");
+        closeModal();
+      } catch (e) {
+        alert("❌ فشل في الحفظ");
+        console.error(e);
+      }
     }
+
+    loadOrder();
+    loadWorkers();
+
+    window.closeModal = closeModal;
+    window.saveSchedule = saveSchedule;
   </script>
 </body>
 </html>
