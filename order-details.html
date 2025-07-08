@@ -1,25 +1,112 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>📋 تفاصيل الطلب</title>
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f0f0f0; padding: 20px; direction: rtl; }
-    .container { max-width: 800px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    h2 { color: #007BFF; text-align: center; margin-bottom: 20px; }
-    .info { margin-bottom: 12px; } .info strong { display: inline-block; width: 150px; color: #444; }
-    .note-box, .feedback-box { background: #f1f9f5; padding: 12px; border: 1px solid #cbe3d3; border-radius: 8px; margin-top: 15px; }
-    img { max-width: 100%; border-radius: 8px; margin-top: 20px; border: 1px solid #ddd; }
-    #map { height: 250px; margin-top: 20px; border-radius: 10px; display: none; }
-    .actions { margin-top: 25px; text-align: center; }
-    .actions a { display: inline-block; margin: 5px 10px; padding: 12px 20px; border-radius: 6px; font-weight: bold; text-decoration: none; }
-    .whatsapp { background-color: #25D366; color: white; }
-    .call { background-color: #007BFF; color: white; }
-    .map-btn { background-color: #6c757d; color: white; }
-    .modal { position: fixed; top:0; right:0; bottom:0; left:0; background: rgba(0,0,0,0.5); z-index:9999; display:none; justify-content:center; align-items:center; }
-    .modal-content { background:white; padding:20px 25px; border-radius:10px; width:90%; max-width:400px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
-    .modal-content input, .modal-content select { width: 100%; padding:8px; margin:8px 0; }
-    .modal-content button { padding:8px 16px; margin:5px; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+      direction: rtl;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #007BFF;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .info {
+      margin-bottom: 12px;
+    }
+    .info strong {
+      display: inline-block;
+      width: 150px;
+      color: #444;
+    }
+    .note-box, .feedback-box {
+      background: #f1f9f5;
+      padding: 12px;
+      border: 1px solid #cbe3d3;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+    .feedback-box span {
+      color: #ffb400;
+      font-size: 1.5em;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+    #map {
+      height: 250px;
+      margin-top: 20px;
+      border-radius: 10px;
+      display: none;
+    }
+    .actions {
+      margin-top: 25px;
+      text-align: center;
+    }
+    .actions a {
+      display: inline-block;
+      margin: 5px 10px;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .whatsapp {
+      background-color: #25D366;
+      color: white;
+    }
+    .call {
+      background-color: #007BFF;
+      color: white;
+    }
+    .map-btn {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    /* ✅ تنسيق النافذة المنبثقة */
+    .modal {
+      position: fixed;
+      top: 0; right: 0; bottom: 0; left: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 9999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px 25px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .modal-content input {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+    }
+    .modal-content button {
+      padding: 8px 16px;
+      margin: 5px;
+    }
   </style>
 </head>
 <body>
@@ -30,6 +117,7 @@
     <div class="actions" id="actionLinks" style="display:none;"></div>
   </div>
 
+  <!-- ✅ نافذة جدولة العمل -->
   <div id="scheduleModal" class="modal">
     <div class="modal-content">
       <h3>📅 جدولة تنفيذ الطلب</h3>
@@ -37,11 +125,9 @@
       <input type="date" id="execDate">
       <label>⏰ الوقت:</label>
       <input type="time" id="execTime">
-      <label>👷‍♂️ اختر المساعد:</label>
-      <select id="assistantSelect">
-        <option value="">-- بدون مساعد --</option>
-      </select>
-      <div style="text-align: right; margin-top:10px;">
+      <label>👷‍♂️ اسم المساعد (اختياري):</label>
+      <input type="text" id="assistantName" placeholder="اسم المساعد">
+      <div style="text-align: right; margin-top: 10px;">
         <button onclick="closeModal()">❌ إلغاء</button>
         <button onclick="saveSchedule()">💾 حفظ</button>
       </div>
@@ -50,65 +136,78 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "...", authDomain: "topclim-3edfa.firebaseapp.com", projectId: "topclim-3edfa"
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
     const orderId = new URLSearchParams(window.location.search).get("id");
     const orderBox = document.getElementById("orderDetails");
     const actionBox = document.getElementById("actionLinks");
-    const assistantSelect = document.getElementById("assistantSelect");
-
-    async function loadAssistants() {
-      const snap = await getDocs(collection(db, "workers"));
-      snap.forEach(w => {
-        const d = w.data();
-        assistantSelect.innerHTML += `<option value="${w.id}">${d.name || w.id}</option>`;
-      });
-    }
 
     async function loadOrder() {
-      if (!orderId) { orderBox.innerHTML = "❌ لم يتم تحديد الطلب."; return; }
+      if (!orderId) {
+        orderBox.innerHTML = "❌ لم يتم تحديد الطلب.";
+        return;
+      }
+
       const snap = await getDoc(doc(db, "requests", orderId));
-      if (!snap.exists()) { orderBox.innerHTML = "❌ الطلب غير موجود."; return; }
+      if (!snap.exists()) {
+        orderBox.innerHTML = "❌ الطلب غير موجود.";
+        return;
+      }
 
       const d = snap.data();
       let html = `
         <div class="info"><strong>📄 رقم الطلب:</strong> ${orderId}</div>
-        <div class="info"><strong>👤 الاسم:</strong> ${d.name}</div>
-        <div class="info"><strong>📞 الهاتف:</strong> ${d.phone}</div>
-        <div class="info"><strong>📍 العنوان:</strong> ${d.address}</div>
-        <div class="info"><strong>🕒 التوقيت المفضل:</strong> ${d.preferredTime}</div>
-        <div class="info"><strong>📌 الحالة:</strong> ${d.status}</div>
-        <div class="info"><strong>❄️ عدد المكيفات:</strong> ${d.acCount}</div>
-      `;
+        <div class="info"><strong>👤 الاسم:</strong> ${d.name || 'غير معروف'}</div>
+        <div class="info"><strong>📞 الهاتف:</strong> ${d.phone || 'غير متوفر'}</div>
+        <div class="info"><strong>📍 العنوان:</strong> ${d.address || 'غير متوفر'}</div>
+        <div class="info"><strong>🕒 التوقيت المفضل:</strong> ${d.preferredTime || 'غير محدد'}</div>
+        <div class="info"><strong>📌 الحالة:</strong> ${d.status || 'غير معروفة'}</div>
+        <div class="info"><strong>❄️ عدد المكيفات:</strong> ${d.acCount || '0'}</div>`;
 
-      if (Array.isArray(d.acUnits))
-        d.acUnits.forEach((ac,i) => {
-          html += `<div class="info"><strong>🔧 نوع ${i+1}:</strong> ${ac.type}</div><div class="info"><strong>📏 حجم ${i+1}:</strong> ${ac.size}</div>`;
+      if (Array.isArray(d.acUnits)) {
+        d.acUnits.forEach((ac, index) => {
+          html += `
+            <div class="info"><strong>🔧 نوع مكيف ${index + 1}:</strong> ${ac.type || 'غير محدد'}</div>
+            <div class="info"><strong>📏 حجم ${index + 1}:</strong> ${ac.size || 'غير محدد'}</div>
+          `;
         });
-      if (d.publicNotes)
-        html += `<div class="note-box"><strong>📝 ملاحظات الزبون:</strong><br>${d.publicNotes}</div>`;
-      if (d.opportunityNote)
-        html += `<div class="note-box"><strong>💡 فرصة:</strong><br>${d.opportunityNote}</div>`;
-      if (d.feedback) {
-        const stars = "⭐".repeat(d.feedback.rating)+"☆".repeat(5-d.feedback.rating);
-        html += `<div class="feedback-box"><strong>⭐ تقييم الزبون:</strong> ${stars}<br><em>${d.feedback.comment}</em></div>`;
       }
-      if (d.imageUrl)
-        html += `<img src="${d.imageUrl}" alt="📷 قبل التنظيف">`;
-      if (d.afterImageUrl)
-        html += `<img src="${d.afterImageUrl}" alt="📷 بعد التنظيف">`;
+
+      if (d.notes) {
+        html += `<div class="note-box"><strong>📝 ملاحظات الزبون:</strong><br>${d.notes}</div>`;
+      }
+
+      if (d.opportunityNote) {
+        html += `<div class="note-box"><strong>💡 فرصة:</strong><br>${d.opportunityNote}</div>`;
+      }
+
+      if (d.feedback) {
+        const stars = "⭐".repeat(d.feedback.rating) + "☆".repeat(5 - d.feedback.rating);
+        html += `<div class="feedback-box"><strong>⭐ تقييم الزبون:</strong> ${stars}<br><em>${d.feedback.comment || ""}</em></div>`;
+      }
+
+      if (d.imageUrl) {
+        html += `<img src="${d.imageUrl}" alt="📷 صورة قبل التنظيف">`;
+      }
+      if (d.afterImageUrl) {
+        html += `<img src="${d.afterImageUrl}" alt="📷 صورة بعد التنظيف">`;
+      }
 
       orderBox.innerHTML = html;
 
+      // روابط الاتصال + الخريطة + زر الجدولة
       if (d.phone) {
         const mapBtn = d.location
-          ? `<a class="map-btn" href="https://www.google.com/maps?q=${d.location.lat},${d.location.lng}" target="_blank">🗺️ على Google Map</a>`
+          ? `<a class="map-btn" href="https://www.google.com/maps?q=${d.location.lat},${d.location.lng}" target="_blank">🗺️ عرض على الخريطة</a>`
           : "";
 
         actionBox.innerHTML = `
@@ -116,61 +215,80 @@
           <a class="whatsapp" href="https://wa.me/213${d.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
           ${mapBtn}
         `;
+
         const scheduleBtn = document.createElement("a");
         scheduleBtn.className = "map-btn";
         scheduleBtn.textContent = "🗓️ جدولة التنفيذ";
         scheduleBtn.href = "#";
-        scheduleBtn.onclick = e => { e.preventDefault(); openModal(); };
+        scheduleBtn.onclick = (e) => {
+          e.preventDefault();
+          openModal();
+        };
         actionBox.appendChild(scheduleBtn);
 
-        document.querySelector('.call')?.addEventListener('click', e => { e.preventDefault(); openModal(); });
+        // استدعاء modal عند الضغط على زر الاتصال
+        document.querySelector('.call').addEventListener('click', function(e) {
+          e.preventDefault();
+          openModal();
+        });
+
         actionBox.style.display = "block";
       }
 
+      // تفعيل خريطة Leaflet إذا كانت متوفرة
       if (d.location) {
         document.getElementById("map").style.display = "block";
-        const s = document.createElement("script");
-        s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-        s.onload = () => {
-          const m = L.map("map").setView([d.location.lat, d.location.lng], 15);
-          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OSM" }).addTo(m);
-          L.marker([d.location.lat, d.location.lng]).addTo(m).bindPopup("📍 العميل").openPopup();
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+        script.onload = () => {
+          const map = L.map("map").setView([d.location.lat, d.location.lng], 15);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors"
+          }).addTo(map);
+          L.marker([d.location.lat, d.location.lng]).addTo(map).bindPopup("📍 موقع العميل").openPopup();
         };
-        document.head.appendChild(s);
-        const l = document.createElement("link");
-        l.rel = "stylesheet";
-        l.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-        document.head.appendChild(l);
+        document.body.appendChild(script);
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(link);
       }
     }
 
-    loadAssistants();
     loadOrder();
 
+    // فتح وغلق الـ Modal
     function openModal() {
       document.getElementById("scheduleModal").style.display = "flex";
     }
     function closeModal() {
       document.getElementById("scheduleModal").style.display = "none";
     }
-    window.addEventListener("click", e => {
-      const m = document.getElementById("scheduleModal");
-      if (e.target === m) closeModal();
+    window.addEventListener("click", (e) => {
+      if (e.target.id === "scheduleModal") closeModal();
     });
 
+    // حفظ الجدولة في قاعدة البيانات
     async function saveSchedule() {
       const date = document.getElementById("execDate").value;
       const time = document.getElementById("execTime").value;
-      const assistant = assistantSelect.value;
-      if (!date || !time) return alert("❌ يرجى تحديد التاريخ والوقت");
+      const assistant = document.getElementById("assistantName").value;
 
-      const dt = new Date(`${date}T${time}`);
+      if (!date || !time) {
+        alert("❌ يرجى تحديد التاريخ والوقت");
+        return;
+      }
+
+      const datetime = `${date}T${time}`;
       await updateDoc(doc(db, "requests", orderId), {
-        scheduledAt: dt,
-        assistantId: assistant || null
+        executionSchedule: datetime,
+        assistantName: assistant || null,
+        status: "قيد التنفيذ"
       });
-      alert("✅ تم حفظ الجدولة!");
+
+      alert("✅ تم حفظ الجدولة بنجاح");
       closeModal();
+      loadOrder();  // تحديث البيانات مع الجدولة الجديدة
     }
   </script>
 </body>
