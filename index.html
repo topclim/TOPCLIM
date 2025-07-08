@@ -84,8 +84,10 @@
       <input type="file" id="image" accept="image/*" capture="environment" />
 
       <button type="button" onclick="getLocation()">📍 تحديد موقعي</button>
-      <p id="locationStatus" class="note"></p>
-      <div id="map"></div>
+      <!-- يجب أن يكون هذا العنصر موجودًا في HTML -->
+<p id="locationStatus" class="note"></p>
+<div id="map" style="height: 300px; border-radius: 10px;"></div>
+
 
       <button type="submit">إرسال الطلب</button>
     </form>
@@ -188,29 +190,55 @@
     });
 
     // تحديد الموقع
-    function getLocation() {
-      const status = document.getElementById("locationStatus");
-      if (!navigator.geolocation) {
-        status.textContent = "المتصفح لا يدعم تحديد الموقع.";
-        return;
+function getLocation() {
+  const status = document.getElementById("locationStatus");
+  status.textContent = "⏳ جاري تحديد الموقع بدقة عالية...";
+
+  if (!navigator.geolocation) {
+    status.textContent = "❌ المتصفح لا يدعم تحديد الموقع.";
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const accuracy = position.coords.accuracy;
+
+      userLocation = { lat, lng };
+
+      status.innerHTML = `✅ تم تحديد الموقع بدقة ~${Math.round(accuracy)} متر`;
+
+      // عرض الخريطة
+      const map = L.map("map").setView([lat, lng], 15);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(map);
+
+      L.marker([lat, lng]).addTo(map).bindPopup("📍 موقعك الحالي").openPopup();
+    },
+    (error) => {
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          status.textContent = "❌ تم رفض الإذن لتحديد الموقع.";
+          break;
+        case error.POSITION_UNAVAILABLE:
+          status.textContent = "❌ معلومات الموقع غير متوفرة.";
+          break;
+        case error.TIMEOUT:
+          status.textContent = "❌ انتهى الوقت دون الحصول على الموقع.";
+          break;
+        default:
+          status.textContent = "❌ حدث خطأ غير معروف.";
       }
-
-      navigator.geolocation.getCurrentPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        userLocation = { lat, lng };
-        status.textContent = `تم تحديد موقعك بنجاح.`;
-
-        const map = L.map('map').setView([lat, lng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        L.marker([lat, lng]).addTo(map).bindPopup("📍 موقعك").openPopup();
-      }, () => {
-        status.textContent = "فشل في تحديد الموقع.";
-      });
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
     }
+  );
+}
 
     window.getLocation = getLocation;
 
