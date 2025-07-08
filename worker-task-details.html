@@ -172,34 +172,35 @@
 
   let toolsSmall = [], toolsLarge = [];
 
-  async function loadTools() {
-    const smallSnap = await getDocs(collection(db, "toolsSmall"));
-    const largeSnap = await getDocs(collection(db, "toolsLarge"));
+  // ✅ تحميل أدوات العمل
+async function loadTools() {
+  const smallSnap = await getDocs(collection(db, "smallTools"));
+  const largeSnap = await getDocs(collection(db, "bigTools"));
 
-    const smallContainer = document.getElementById("smallToolsContainer");
-    const largeContainer = document.getElementById("largeToolsContainer");
+  const smallContainer = document.getElementById("smallToolsContainer");
+  const largeContainer = document.getElementById("largeToolsContainer");
 
-    smallContainer.innerHTML = "";
-    largeContainer.innerHTML = "";
+  smallContainer.innerHTML = "";
+  smallSnap.forEach(doc => {
+    const tool = doc.data().name;
+    toolsSmall.push(tool);
+    const div = document.createElement("div");
+    div.className = "tool-item";
+    div.innerHTML = `<input type="checkbox" value="${tool}" /> ${tool}`;
+    smallContainer.appendChild(div);
+  });
 
-    smallSnap.forEach(doc => {
-      const tool = doc.data().name;
-      toolsSmall.push(tool);
-      const div = document.createElement("div");
-      div.className = "tool-item";
-      div.innerHTML = `<input type="checkbox" value="${tool}" /> ${tool}`;
-      smallContainer.appendChild(div);
-    });
+  largeContainer.innerHTML = "";
+  largeSnap.forEach(doc => {
+    const tool = doc.data().name;
+    toolsLarge.push(tool);
+    const div = document.createElement("div");
+    div.className = "tool-item";
+    div.innerHTML = `<input type="checkbox" value="${tool}" /> ${tool}`;
+    largeContainer.appendChild(div);
+  });
+}
 
-    largeSnap.forEach(doc => {
-      const tool = doc.data().name;
-      toolsLarge.push(tool);
-      const div = document.createElement("div");
-      div.className = "tool-item";
-      div.innerHTML = `<input type="checkbox" value="${tool}" /> ${tool}`;
-      largeContainer.appendChild(div);
-    });
-  }
 
   async function uploadImageToCloudinary(file) {
     const formData = new FormData();
