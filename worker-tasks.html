@@ -28,30 +28,6 @@
       margin-bottom: 20px;
     }
 
-    .filters {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .filter-box {
-      flex: 1;
-      text-align: center;
-      background: #e9ecef;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      border: 2px solid transparent;
-    }
-
-    .filter-box.active {
-      background: #007BFF;
-      color: white;
-      border-color: #0056b3;
-    }
-
     .task {
       border: 1px solid #ddd;
       padding: 15px;
@@ -78,157 +54,89 @@
     .task a:hover {
       background-color: #0056b3;
     }
-
-    .date-picker {
-      margin-top: 10px;
-      text-align: center;
-    }
-
-    .date-picker input {
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>🛠️ الأعمال الخاصة بك</h2>
-
-    <div class="filters">
-      <div class="filter-box" id="yesterdayBox">📅 البارحة</div>
-      <div class="filter-box active" id="todayBox">📆 اليوم</div>
-      <div class="filter-box" id="tomorrowBox">📅 الغد</div>
-    </div>
-
-    <div class="date-picker">
-      <input type="date" id="customDate">
-    </div>
-
     <div id="tasksList">
       <p>🔄 جاري تحميل الأعمال...</p>
     </div>
   </div>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    query,
-    where,
-    getDocs,
-    Timestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // إعداد Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-    authDomain: "topclim-3edfa.firebaseapp.com",
-    projectId: "topclim-3edfa"
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    // إعداد Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
 
-  // التحقق من العامل
-  const workerId = localStorage.getItem("workerId");
-  if (!workerId) {
-    window.location.href = "worker-login.html";
-  }
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  // عناصر الصفحة
-  const tasksList = document.getElementById("tasksList");
-  const todayInput = document.getElementById("customDate");
-  const boxes = {
-    yesterday: document.getElementById("yesterdayBox"),
-    today: document.getElementById("todayBox"),
-    tomorrow: document.getElementById("tomorrowBox")
-  };
-
-  // حساب التاريخ بصيغة YYYY-MM-DD
-  function dateString(offsetDays = 0) {
-    const d = new Date();
-    d.setDate(d.getDate() + offsetDays);
-    return d.toISOString().split("T")[0];
-  }
-
-  // تاريخ مبدئي (اليوم)
-  let selectedDate = dateString();
-
-  function setActive(key) {
-    Object.values(boxes).forEach(b => b.classList.remove("active"));
-    boxes[key].classList.add("active");
-
-    selectedDate = dateString(key === "yesterday" ? -1 : key === "tomorrow" ? 1 : 0);
-    todayInput.value = selectedDate;
-
-    loadTasks();
-  }
-
-  // تفعيل أزرار الفلاتر
-  boxes.yesterday.onclick = () => setActive("yesterday");
-  boxes.today.onclick = () => setActive("today");
-  boxes.tomorrow.onclick = () => setActive("tomorrow");
-
-  // عند اختيار تاريخ مخصص
-  todayInput.value = selectedDate;
-  todayInput.onchange = e => {
-    Object.values(boxes).forEach(b => b.classList.remove("active"));
-    selectedDate = e.target.value;
-    loadTasks();
-  };
-
-  // تحميل المهام من Firestore
-  async function loadTasks() {
-    tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
-
-    try {
-      const startDate = new Date(`${selectedDate}T00:00:00`);
-      const endDate = new Date(`${selectedDate}T23:59:59`);
-
-      const q = query(
-        collection(db, "requests"),
-        where("assignedTo", "==", workerId),
-        where("executionSchedule", ">=", Timestamp.fromDate(startDate)),
-        where("executionSchedule", "<=", Timestamp.fromDate(endDate))
-      );
-
-      const snap = await getDocs(q);
-
-      if (snap.empty) {
-        tasksList.innerHTML = "<p>🚫 لا توجد أعمال في هذا التاريخ.</p>";
-        return;
-      }
-
-      tasksList.innerHTML = "";
-      snap.forEach(docSnap => {
-        const d = docSnap.data();
-        const execDate = d.executionSchedule?.toDate?.();
-        const dateStr = execDate?.toLocaleDateString("ar-DZ") || "";
-        const timeStr = execDate?.toLocaleTimeString("ar-DZ", { hour: "2-digit", minute: "2-digit" }) || "";
-
-        const el = document.createElement("div");
-        el.className = "task";
-        el.innerHTML = `
-          <h3>👤 ${d.name || "زبون"}</h3>
-          <p>📍 العنوان: ${d.address || "غير محدد"}</p>
-          <p>🕒 ${dateStr} – ${timeStr}</p>
-          <a href="worker-task-details.html?id=${docSnap.id}">📄 تنفيذ</a>
-        `;
-        tasksList.appendChild(el);
-      });
-
-    } catch (error) {
-      console.error(error);
-      tasksList.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
+    // التحقق من تسجيل الدخول
+    const workerId = localStorage.getItem("workerId");
+    if (!workerId) {
+      window.location.href = "worker-login.html";
     }
-  }
 
-  // تشغيل تحميل مبدئي
-  loadTasks();
-</script>
+    const tasksContainer = document.getElementById("tasksList");
 
+    async function loadTasks() {
+      tasksContainer.innerHTML = "⏳ جاري التحميل...";
 
+      try {
+        // 📌 جلب بيانات العامل (الاسم)
+        const workerDoc = await getDoc(doc(db, "workers", workerId));
+        if (!workerDoc.exists()) {
+          tasksContainer.innerHTML = "<p>⚠️ لم يتم العثور على بيانات هذا العامل.</p>";
+          return;
+        }
 
+        const workerName = workerDoc.data().name;
+
+        // 🔍 البحث عن الطلبات التي تحتوي على assistantName = اسم العامل
+        const q = query(collection(db, "requests"), where("assistantName", "==", workerName));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          tasksContainer.innerHTML = "<p>🚫 لا توجد أعمال حالياً.</p>";
+          return;
+        }
+
+        tasksContainer.innerHTML = "";
+        snap.forEach(doc => {
+          const data = doc.data();
+          const el = document.createElement("div");
+          el.className = "task";
+          el.innerHTML = `
+            <h3>👤 ${data.name || "زبون"}</h3>
+            <p>📍 العنوان: ${data.address || "غير محدد"}</p>
+            <p>🗓️ التاريخ: ${data.executionSchedule?.split('T')[0] || "غير محدد"}</p>
+            <a href="worker-task-details.html?id=${doc.id}">📄 تنفيذ العمل</a>
+          `;
+          tasksContainer.appendChild(el);
+        });
+
+      } catch (err) {
+        console.error(err);
+        tasksContainer.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
+      }
+    }
+
+    loadTasks();
+  </script>
 </body>
 </html>
