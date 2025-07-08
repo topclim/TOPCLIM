@@ -86,6 +86,22 @@
       text-decoration: none;
       font-weight: bold;
     }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -93,6 +109,26 @@
   <h2>📦 تتبع طلبك</h2>
   <div id="orderDetails">
     <p>🔄 جاري تحميل تفاصيل الطلب...</p>
+  </div>
+  <div id="afterServiceImage" style="margin-top:20px; text-align:center;"></div>
+  <div id="technicianNotes" style="margin-top:20px;"></div>
+  <div style="text-align: center; margin-top: 10px;">
+    <button onclick="showPrice()" style="background:#ffc107;">💰 عرض السعر</button>
+    <div id="priceValue" style="margin-top: 10px; display: none; font-weight: bold; color: #28a745;"></div>
+  </div>
+  <div style="margin-top: 30px;">
+    <h3>⭐ تقييم الخدمة:</h3>
+    <form onsubmit="submitFeedback(event)">
+      <select id="rating">
+        <option value="5">⭐⭐⭐⭐⭐ ممتاز</option>
+        <option value="4">⭐⭐⭐⭐ جيد جدًا</option>
+        <option value="3">⭐⭐⭐ متوسط</option>
+        <option value="2">⭐⭐ ضعيف</option>
+        <option value="1">⭐ سيئ</option>
+      </select>
+      <textarea id="comment" placeholder="أكتب ملاحظتك..."></textarea>
+      <button type="submit">📤 إرسال التقييم</button>
+    </form>
   </div>
   <div id="map"></div>
   <div class="thank" id="thankMessage" style="display:none;"></div>
@@ -104,7 +140,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
@@ -145,25 +181,34 @@
       </div>
     `;
 
-    if (data.location) {
-      document.getElementById("map").style.display = "block";
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      script.onload = () => {
-        const map = L.map("map").setView([data.location.lat, data.location.lng], 15);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "© OpenStreetMap contributors"
-        }).addTo(map);
-        L.marker([data.location.lat, data.location.lng]).addTo(map).bindPopup("موقعك").openPopup();
-      };
-      document.body.appendChild(script);
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-      document.head.appendChild(link);
+    // صورة بعد الخدمة
+    if (data.afterImageUrl) {
+      const afterDiv = document.getElementById("afterServiceImage");
+      afterDiv.innerHTML = `
+        <h3>📷 صورة بعد التنظيف:</h3>
+        <img src="${data.afterImageUrl}" alt="بعد التنظيف" width="300" />
+      `;
     }
 
-    // تحميل رسالة الشكر ورقم الاتصال من قاعدة البيانات
+    // ملاحظات الفني
+    if (data.technicianNote || data.opportunityNote) {
+      const notesDiv = document.getElementById("technicianNotes");
+      notesDiv.innerHTML = `<h3>💬 ملاحظات الفني:</h3><ul>`;
+      if (data.technicianNote) notesDiv.innerHTML += `<li>${data.technicianNote}</li>`;
+      if (data.opportunityNote) notesDiv.innerHTML += `<li><strong>فرصة:</strong> ${data.opportunityNote}</li>`;
+      notesDiv.innerHTML += `</ul>`;
+    }
+
+    // السعر
+    if (data.price) {
+      window.showPrice = function () {
+        const priceEl = document.getElementById("priceValue");
+        priceEl.textContent = `${data.price} دج`;
+        priceEl.style.display = "block";
+      }
+    }
+
+    // تحميل رسالة الشكر ورقم الاتصال من إعدادات قاعدة البيانات
     const settingsSnap = await getDoc(doc(db, "landing", "landingContent"));
     if (settingsSnap.exists()) {
       const settings = settingsSnap.data();
@@ -183,6 +228,42 @@
         const whatsappNumber = settings.contactWhatsapp.replace(/^0/, '');
         document.getElementById("whatsappLink").href = `https://wa.me/213${whatsappNumber}?text=السلام عليكم، أود الاستفسار حول طلبي رقم ${orderId}`;
       }
+    }
+
+    // الخريطة
+    if (data.location) {
+      document.getElementById("map").style.display = "block";
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = () => {
+        const map = L.map("map").setView([data.location.lat, data.location.lng], 15);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors"
+        }).addTo(map);
+        L.marker([data.location.lat, data.location.lng]).addTo(map).bindPopup("موقعك").openPopup();
+      };
+      document.body.appendChild(script);
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+  }
+
+  window.submitFeedback = async function (e) {
+    e.preventDefault();
+    const rating = document.getElementById("rating").value;
+    const comment = document.getElementById("comment").value.trim();
+    if (!rating) return alert("يرجى اختيار التقييم");
+
+    try {
+      await setDoc(doc(db, "requests", orderId), {
+        feedback: { rating: parseInt(rating), comment: comment }
+      }, { merge: true });
+      alert("✅ شكرًا على تقييمك");
+      document.getElementById("comment").value = "";
+    } catch (err) {
+      alert("❌ حدث خطأ أثناء إرسال التقييم");
     }
   }
 
