@@ -10,73 +10,84 @@
       background: #f0f0f0;
       margin: 0;
       padding: 20px;
+      direction: rtl;
     }
-
     h2 {
       text-align: center;
       color: #007BFF;
+    }
+    .status-boxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    .box {
+      background-color: #fff;
+      border: 2px solid #007BFF;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      width: 130px;
+      font-weight: bold;
+      color: #007BFF;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .box span {
+      display: block;
+      font-size: 1.5em;
+      margin-top: 5px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       background: #fff;
-      margin-top: 20px;
       border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
 
     th, td {
-      padding: 12px 10px;
+      padding: 12px;
       text-align: center;
-      border-bottom: 1px solid #eee;
-      font-size: 0.95rem;
+      border-bottom: 1px solid #ddd;
     }
 
     th {
-      background: #007BFF;
-      color: #fff;
-    }
-
-    tr:nth-child(even) {
-      background: #f9f9f9;
-    }
-
-    select, input[type="datetime-local"] {
-      padding: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 0.9rem;
+      background-color: #007BFF;
+      color: white;
     }
 
     button {
       background-color: #28a745;
       color: white;
       border: none;
-      padding: 6px 10px;
-      margin: 2px;
+      padding: 6px 12px;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 0.85rem;
     }
 
     button:hover {
       background-color: #218838;
     }
 
-    .details-btn {
-      background-color: #007BFF;
-    }
-
-    .details-btn:hover {
-      background-color: #0056b3;
+    select, input[type="datetime-local"] {
+      padding: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
   </style>
 </head>
 <body>
-  <h2>📋 إدارة الطلبات الجديدة</h2>
-  <div id="orders">⏳ جاري تحميل الطلبات...</div>
+  <h2>📋 إدارة الطلبات</h2>
+  <div class="status-boxes" id="statusBoxes">
+    <!-- سيتم ملؤها برمجياً -->
+  </div>
+  <div id="orders">
+    ⏳ جاري تحميل الطلبات...
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -96,58 +107,90 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
     const ordersContainer = document.getElementById("orders");
+    const statusBoxes = document.getElementById("statusBoxes");
+
+    const statuses = [
+      { key: "مبدئي", label: "📄 مبدئي" },
+      { key: "قيد المعالجة", label: "✅ مؤكد" },
+      { key: "تم الإنجاز", label: "📦 انتهى" },
+      { key: "تم الدفع", label: "💰 تم الدفع" },
+      { key: "متروك", label: "🕓 متروك" },
+      { key: "محذوف", label: "🗑️ محذوف" }
+    ];
 
     async function loadOrders() {
       const querySnapshot = await getDocs(collection(db, "requests"));
-      const workersSnap = await getDocs(collection(db, "workers"));
-
-      let workerOptions = "";
-      workersSnap.forEach(w => {
-        const wData = w.data();
-        workerOptions += `<option value="${w.id}">${wData.name || w.id}</option>`;
-      });
-
-      let tableHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>🔢 رقم الطلب</th>
-              <th>👤 الاسم</th>
-              <th>📍 العنوان</th>
-              <th>📞 الهاتف</th>
-              <th>👷 العامل</th>
-              <th>🕒 الموعد</th>
-              <th>⚙️ إجراء</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
+      const statusCounts = {};
+      const orders = [];
 
       querySnapshot.forEach(docSnap => {
         const data = docSnap.data();
         const id = docSnap.id;
+        orders.push({ id, ...data });
 
-        if (data.status === "مبدئي") {
-          tableHTML += `
-            <tr>
-              <td>${id}</td>
-              <td>${data.name}</td>
-              <td>${data.address}</td>
-              <td>${data.phone}</td>
-              <td><select id="worker-${id}">${workerOptions}</select></td>
-              <td><input type="datetime-local" id="schedule-${id}" /></td>
-              <td>
-                <button onclick="confirmTask('${id}')">تأكيد ✅</button>
-                <button class="details-btn" onclick="openDetails('${id}')">📄 التفاصيل</button>
-              </td>
-            </tr>
-          `;
-        }
+        const status = data.status || "مبدئي";
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
       });
 
-      tableHTML += `</tbody></table>`;
-      ordersContainer.innerHTML = tableHTML;
+      // عرض صناديق الحالات
+      statusBoxes.innerHTML = statuses.map(stat =>
+        `<div class="box">${stat.label}<span>${statusCounts[stat.key] || 0}</span></div>`
+      ).join("");
+
+      // عرض جدول الطلبات
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>الطلب</th>
+            <th>الاسم</th>
+            <th>العنوان</th>
+            <th>الهاتف</th>
+            <th>الحالة</th>
+            <th>عامل</th>
+            <th>الجدولة</th>
+            <th>خيارات</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${orders.map(order => `
+            <tr>
+              <td>${order.id}</td>
+              <td>${order.name}</td>
+              <td>${order.address}</td>
+              <td>${order.phone}</td>
+              <td>${order.status || "مبدئي"}</td>
+              <td>
+                <select id="worker-${order.id}"><option value="">اختيار</option></select>
+              </td>
+              <td>
+                <input type="datetime-local" id="schedule-${order.id}" value="${order.schedule || ''}">
+              </td>
+              <td>
+                <button onclick="confirmTask('${order.id}')">✔ تأكيد</button>
+                <button onclick="location.href='order-details.html?id=${order.id}'">📋 عرض</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      `;
+      ordersContainer.innerHTML = "";
+      ordersContainer.appendChild(table);
+
+      // تحميل قائمة العمال وإضافتها لجميع الاختيارات
+      const workersSnap = await getDocs(collection(db, "workers"));
+      const workerOptions = [];
+      workersSnap.forEach(w => {
+        const data = w.data();
+        workerOptions.push(`<option value="${w.id}">${data.name || w.id}</option>`);
+      });
+
+      orders.forEach(order => {
+        const select = document.getElementById(`worker-${order.id}`);
+        if (select) select.innerHTML += workerOptions.join("");
+      });
     }
 
     window.confirmTask = async function (id) {
@@ -165,12 +208,8 @@
         schedule: schedule
       });
 
-      alert("✅ تم تأكيد الطلب وإرساله للعامل");
+      alert("✅ تم تأكيد الطلب");
       loadOrders();
-    };
-
-    window.openDetails = function(id) {
-      window.open(`tracking.html?id=${id}`, '_blank');
     };
 
     loadOrders();
