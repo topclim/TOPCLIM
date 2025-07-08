@@ -12,31 +12,42 @@
       padding: 20px;
       direction: rtl;
     }
+
     h2 {
       text-align: center;
       color: #007BFF;
     }
+
     .status-boxes {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 15px;
       justify-content: center;
-      margin-bottom: 30px;
+      margin: 30px auto;
+      max-width: 900px;
     }
+
     .box {
       background-color: #fff;
       border: 2px solid #007BFF;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 15px;
       text-align: center;
       width: 130px;
       font-weight: bold;
       color: #007BFF;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      transition: 0.2s;
     }
+
+    .box:hover {
+      background: #007BFF;
+      color: #fff;
+    }
+
     .box span {
       display: block;
-      font-size: 1.5em;
+      font-size: 1.6em;
       margin-top: 5px;
     }
 
@@ -78,16 +89,26 @@
       border-radius: 5px;
       border: 1px solid #ccc;
     }
+
+    #orders {
+      margin-top: 30px;
+    }
   </style>
 </head>
 <body>
   <h2>📋 إدارة الطلبات</h2>
+
   <div class="status-boxes" id="statusBoxes">
-    <!-- سيتم ملؤها برمجياً -->
+    <div class="box">🔄 الكل<span id="count-all">0</span></div>
+    <div class="box">📄 مبدئي<span id="count-مبدئي">0</span></div>
+    <div class="box">✅ مؤكد<span id="count-قيد المعالجة">0</span></div>
+    <div class="box">📦 تم الإنجاز<span id="count-تم الإنجاز">0</span></div>
+    <div class="box">💰 تم الدفع<span id="count-تم الدفع">0</span></div>
+    <div class="box">🕓 متروك<span id="count-متروك">0</span></div>
+    <div class="box">🗑️ محذوف<span id="count-محذوف">0</span></div>
   </div>
-  <div id="orders">
-    ⏳ جاري تحميل الطلبات...
-  </div>
+
+  <div id="orders">⏳ جاري تحميل الطلبات...</div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -109,35 +130,38 @@
     const db = getFirestore(app);
 
     const ordersContainer = document.getElementById("orders");
-    const statusBoxes = document.getElementById("statusBoxes");
-
-    const statuses = [
-      { key: "مبدئي", label: "📄 مبدئي" },
-      { key: "قيد المعالجة", label: "✅ مؤكد" },
-      { key: "تم الإنجاز", label: "📦 انتهى" },
-      { key: "تم الدفع", label: "💰 تم الدفع" },
-      { key: "متروك", label: "🕓 متروك" },
-      { key: "محذوف", label: "🗑️ محذوف" }
-    ];
 
     async function loadOrders() {
       const querySnapshot = await getDocs(collection(db, "requests"));
-      const statusCounts = {};
+      ordersContainer.innerHTML = "";
+
+      const statusCounts = {
+        "مبدئي": 0,
+        "قيد المعالجة": 0,
+        "تم الإنجاز": 0,
+        "تم الدفع": 0,
+        "متروك": 0,
+        "محذوف": 0
+      };
+
+      let totalCount = 0;
       const orders = [];
 
       querySnapshot.forEach(docSnap => {
         const data = docSnap.data();
         const id = docSnap.id;
+        totalCount++;
+        const stat = data.status || "مبدئي";
+        statusCounts[stat] = (statusCounts[stat] || 0) + 1;
         orders.push({ id, ...data });
-
-        const status = data.status || "مبدئي";
-        statusCounts[status] = (statusCounts[status] || 0) + 1;
       });
 
-      // عرض صناديق الحالات
-      statusBoxes.innerHTML = statuses.map(stat =>
-        `<div class="box">${stat.label}<span>${statusCounts[stat.key] || 0}</span></div>`
-      ).join("");
+      // تحديث أرقام المربعات
+      document.getElementById("count-all").innerText = totalCount;
+      Object.keys(statusCounts).forEach(key => {
+        const el = document.getElementById(`count-${key}`);
+        if (el) el.innerText = statusCounts[key];
+      });
 
       // عرض جدول الطلبات
       const table = document.createElement("table");
@@ -162,12 +186,8 @@
               <td>${order.address}</td>
               <td>${order.phone}</td>
               <td>${order.status || "مبدئي"}</td>
-              <td>
-                <select id="worker-${order.id}"><option value="">اختيار</option></select>
-              </td>
-              <td>
-                <input type="datetime-local" id="schedule-${order.id}" value="${order.schedule || ''}">
-              </td>
+              <td><select id="worker-${order.id}"><option value="">اختيار</option></select></td>
+              <td><input type="datetime-local" id="schedule-${order.id}" value="${order.schedule || ''}"></td>
               <td>
                 <button onclick="confirmTask('${order.id}')">✔ تأكيد</button>
                 <button onclick="location.href='order-details.html?id=${order.id}'">📋 عرض</button>
@@ -176,20 +196,19 @@
           `).join("")}
         </tbody>
       `;
-      ordersContainer.innerHTML = "";
       ordersContainer.appendChild(table);
 
-      // تحميل قائمة العمال وإضافتها لجميع الاختيارات
+      // تحميل العاملين
       const workersSnap = await getDocs(collection(db, "workers"));
-      const workerOptions = [];
+      const options = [];
       workersSnap.forEach(w => {
-        const data = w.data();
-        workerOptions.push(`<option value="${w.id}">${data.name || w.id}</option>`);
+        const d = w.data();
+        options.push(`<option value="${w.id}">${d.name || w.id}</option>`);
       });
 
       orders.forEach(order => {
         const select = document.getElementById(`worker-${order.id}`);
-        if (select) select.innerHTML += workerOptions.join("");
+        if (select) select.innerHTML += options.join("");
       });
     }
 
@@ -198,7 +217,7 @@
       const schedule = document.getElementById(`schedule-${id}`).value;
 
       if (!workerId || !schedule) {
-        alert("❗ الرجاء اختيار العامل وتحديد وقت التنفيذ.");
+        alert("❗ يرجى اختيار العامل وتحديد وقت التنفيذ.");
         return;
       }
 
@@ -208,7 +227,7 @@
         schedule: schedule
       });
 
-      alert("✅ تم تأكيد الطلب");
+      alert("✅ تم تأكيد الطلب!");
       loadOrders();
     };
 
