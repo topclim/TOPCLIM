@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>📋 تفاصيل الطلب</title>
   <style>
     body {
@@ -75,6 +75,10 @@
       background-color: #007BFF;
       color: white;
     }
+    .map-btn {
+      background-color: #6c757d;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -115,7 +119,6 @@
       }
 
       const d = snap.data();
-
       let html = `
         <div class="info"><strong>📄 رقم الطلب:</strong> ${orderId}</div>
         <div class="info"><strong>👤 الاسم:</strong> ${d.name || 'غير معروف'}</div>
@@ -127,16 +130,20 @@
       `;
 
       if (Array.isArray(d.acUnits)) {
-        d.acUnits.forEach((unit, i) => {
+        d.acUnits.forEach((ac, index) => {
           html += `
-            <div class="info"><strong>🔧 نوع مكيف ${i+1}:</strong> ${unit.type || 'غير محدد'}</div>
-            <div class="info"><strong>📏 حجم مكيف ${i+1}:</strong> ${unit.size || 'غير محدد'}</div>
+            <div class="info"><strong>🔧 نوع مكيف ${index + 1}:</strong> ${ac.type || 'غير محدد'}</div>
+            <div class="info"><strong>📏 حجم ${index + 1}:</strong> ${ac.size || 'غير محدد'}</div>
           `;
         });
       }
 
-      if (d.notes) {
-        html += `<div class="note-box"><strong>📝 ملاحظات الزبون:</strong><br>${d.notes}</div>`;
+      if (d.publicNotes) {
+        html += `<div class="note-box"><strong>📝 ملاحظات الزبون:</strong><br>${d.publicNotes}</div>`;
+      }
+
+      if (d.opportunityNote) {
+        html += `<div class="note-box"><strong>💡 فرصة:</strong><br>${d.opportunityNote}</div>`;
       }
 
       if (d.feedback) {
@@ -145,33 +152,30 @@
       }
 
       if (d.imageUrl) {
-        html += `<img src="${d.imageUrl}" alt="📷 صورة المكيف">`;
+        html += `<img src="${d.imageUrl}" alt="📷 صورة قبل التنظيف">`;
+      }
+
+      if (d.afterImageUrl) {
+        html += `<img src="${d.afterImageUrl}" alt="📷 صورة بعد التنظيف">`;
       }
 
       orderBox.innerHTML = html;
 
-      // روابط الاتصال
+      // روابط الاتصال + زر الخريطة
       if (d.phone) {
+        const mapBtn = d.location
+          ? `<a class="map-btn" href="https://www.google.com/maps?q=${d.location.lat},${d.location.lng}" target="_blank">🗺️ عرض على الخريطة</a>`
+          : "";
+
         actionBox.innerHTML = `
           <a class="call" href="tel:${d.phone}">📞 اتصال</a>
           <a class="whatsapp" href="https://wa.me/213${d.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
+          ${mapBtn}
         `;
         actionBox.style.display = "block";
-
-        const googleMapLink = d.location
-    ? `<a class="whatsapp" href="https://www.google.com/maps?q=${d.location.lat},${d.location.lng}" target="_blank">🗺️ عرض على الخريطة</a>`
-    : '';
-
-  actionBox.innerHTML = `
-    <a class="call" href="tel:${d.phone}">📞 اتصال</a>
-    <a class="whatsapp" href="https://wa.me/213${d.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار عن طلبي رقم ${orderId}" target="_blank">💬 واتساب</a>
-    ${googleMapLink}
-  `;
-  actionBox.style.display = "block";
-
       }
 
-      // الخريطة
+      // خريطة Leaflet
       if (d.location) {
         document.getElementById("map").style.display = "block";
         const script = document.createElement("script");
@@ -184,6 +188,7 @@
           L.marker([d.location.lat, d.location.lng]).addTo(map).bindPopup("📍 موقع العميل").openPopup();
         };
         document.body.appendChild(script);
+
         const link = document.createElement("link");
         link.rel = "stylesheet";
         link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
