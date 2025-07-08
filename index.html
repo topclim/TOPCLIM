@@ -21,257 +21,241 @@
 </head>
 <body>
 
-  <!-- ✅ الهيدر -->
-  <header id="pageHeader">
-    <div style="padding: 20px 10px; text-align: center;">
-      <h2 id="landingTitle" style="font-size: 28px;"></h2>
-      <p id="landingDesc" style="color: #eee; font-size: 18px;"></p>
-    </div>
-  </header>
+<header id="pageHeader">
+  <div style="padding: 20px 10px; text-align: center;">
+    <h2 id="landingTitle" style="font-size: 28px;"></h2>
+    <p id="landingDesc" style="color: #eee; font-size: 18px;"></p>
+  </div>
+</header>
 
-  <!-- ✅ صورة علوية -->
-  <section>
-    <img id="headerImage" alt="إعلان" width="100%" />
-  </section>
+<section>
+  <img id="headerImage" alt="إعلان" width="100%" />
+</section>
 
-  <!-- ✅ صور قبل وبعد -->
-  <section>
-    <h2>📸 نتائج أعمالنا</h2>
-    <div class="before-after">
-      <img id="beforeImage" alt="قبل التنظيف" />
-      <img id="afterImage" alt="بعد التنظيف" />
-    </div>
-  </section>
+<section>
+  <h2>📸 نتائج أعمالنا</h2>
+  <div class="before-after">
+    <img id="beforeImage" alt="قبل التنظيف" />
+    <img id="afterImage" alt="بعد التنظيف" />
+  </div>
+</section>
 
-  <!-- ✅ نموذج الطلب -->
-  <section id="order">
-    <h2>📝 قدم طلبك الآن</h2>
-    <form id="orderForm">
-      <input type="text" id="name" placeholder="الاسم الكامل" required />
-      <input type="tel" id="phone" placeholder="رقم الهاتف" required />
-      <input type="text" id="address" placeholder="العنوان" required />
-      <label>🕐 الوقت المناسب للزيارة:</label>
-<select id="preferredTime" required>
-  <option disabled selected>اختر الوقت المناسب</option>
-  <option value="صباحًا">صباحًا</option>
-  <option value="مساءً">مساءً</option>
-</select>
+<section id="order">
+  <h2>📝 قدم طلبك الآن</h2>
+  <form id="orderForm">
+    <input type="text" id="name" placeholder="الاسم الكامل" required />
+    <input type="tel" id="phone" placeholder="رقم الهاتف" required />
+    <input type="text" id="address" placeholder="العنوان" required />
+    
+    <label>🕐 الوقت المناسب للزيارة:</label>
+    <select id="preferredTime" required>
+      <option value="" disabled selected>اختر الوقت المناسب</option>
+      <option value="صباحًا">صباحًا</option>
+      <option value="مساءً">مساءً</option>
+    </select>
 
-<label>🗒️ ملاحظات إضافية:</label>
-<textarea id="notes" placeholder="اكتب أي ملاحظات تريدها..." rows="3" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;"></textarea>
+    <label>🗒️ ملاحظات إضافية:</label>
+    <textarea id="notes" placeholder="اكتب أي ملاحظات تريدها..." rows="3" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;"></textarea>
 
-      <label>عدد المكيفات:</label>
-      <input type="number" id="acCount" min="1" value="1" onchange="generateACFields()" required />
+    <label>عدد المكيفات:</label>
+    <input type="number" id="acCount" min="1" value="1" onchange="generateACFields()" required />
+    <div id="acContainer"></div>
 
-      <div id="acContainer"></div>
+    <label>📸 صورة المكيف (اختياري):</label>
+    <input type="file" id="image" accept="image/*" capture="environment" />
 
-      <label>📸 صورة المكيف (اختياري):</label>
-      <input type="file" id="image" accept="image/*" capture="environment" />
+    <button type="button" onclick="getLocation()">📍 تحديد موقعي</button>
+    <p id="locationStatus" class="note"></p>
+    <div id="map"></div>
 
-      <button type="button" onclick="getLocation()">📍 تحديد موقعي</button>
-      <p id="locationStatus" class="note"></p>
-      <div id="map" style="height: 300px; border-radius: 10px;"></div>
+    <button type="submit">إرسال الطلب</button>
+  </form>
+</section>
 
-      <button type="submit">إرسال الطلب</button>
-    </form>
-  </section>
+<section>
+  <img id="footerImage" alt="تنظيف احترافي" width="100%" />
+</section>
 
-  <!-- ✅ صورة سفلية -->
-  <section>
-    <img id="footerImage" alt="تنظيف احترافي" width="100%" />
-  </section>
+<footer id="pageFooter">
+  <p id="footerText">جميع الحقوق محفوظة © TopClim 2025</p>
+</footer>
 
-  <!-- ✅ الفوتر -->
-  <footer id="pageFooter">
-    <p id="footerText">جميع الحقوق محفوظة © TopClim 2025</p>
-  </footer>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    authDomain: "topclim-3edfa.firebaseapp.com",
+    projectId: "topclim-3edfa"
+  };
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
-    };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  let typeOptions = [];
+  let sizeOptions = [];
 
-    let typeOptions = [];
-    let sizeOptions = [];
-
-    async function loadLandingContent() {
-      const docRef = doc(db, "landing", "landingContent");
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        document.getElementById("headerImage").src = data.bannerTop || "";
-        document.getElementById("beforeImage").src = data.beforeImage || "";
-        document.getElementById("afterImage").src = data.afterImage || "";
-        document.getElementById("footerImage").src = data.bannerBottom || "";
-        document.getElementById("landingTitle").textContent = data.headerTitle || "";
-        document.getElementById("landingDesc").textContent = data.headerDesc || "";
-        document.getElementById("footerText").textContent = data.footerText || "";
-        if (data.headerColor) document.getElementById("pageHeader").style.backgroundColor = data.headerColor;
-        if (data.footerColor) document.getElementById("pageFooter").style.backgroundColor = data.footerColor;
-      }
-
-      const typesSnap = await getDocs(collection(db, "acTypes"));
-      const sizesSnap = await getDocs(collection(db, "acSizes"));
-
-      typeOptions = typesSnap.docs.map(doc => `<option value="${doc.data().name}">${doc.data().name}</option>`);
-      sizeOptions = sizesSnap.docs.map(doc => `<option value="${doc.data().label}">${doc.data().label}</option>`);
-
-      generateACFields();
+  async function loadLandingContent() {
+    const docRef = doc(db, "landing", "landingContent");
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      document.getElementById("headerImage").src = data.bannerTop || "";
+      document.getElementById("beforeImage").src = data.beforeImage || "";
+      document.getElementById("afterImage").src = data.afterImage || "";
+      document.getElementById("footerImage").src = data.bannerBottom || "";
+      document.getElementById("landingTitle").textContent = data.headerTitle || "";
+      document.getElementById("landingDesc").textContent = data.headerDesc || "";
+      document.getElementById("footerText").textContent = data.footerText || "";
+      if (data.headerColor) document.getElementById("pageHeader").style.backgroundColor = data.headerColor;
+      if (data.footerColor) document.getElementById("pageFooter").style.backgroundColor = data.footerColor;
     }
-    loadLandingContent();
 
-    window.generateACFields = function () {
-      const count = parseInt(document.getElementById("acCount").value) || 1;
-      const container = document.getElementById("acContainer");
-      container.innerHTML = "";
+    const typesSnap = await getDocs(collection(db, "acTypes"));
+    const sizesSnap = await getDocs(collection(db, "acSizes"));
 
-      for (let i = 1; i <= count; i++) {
-        container.innerHTML += `
-          <div class="ac-group">
-            <label>🌀 نوع المكيف ${i}</label>
-            <select name="type${i}" required>
-              <option disabled selected>اختر النوع</option>
-              ${typeOptions.join('')}
-            </select>
-            <label>📏 حجم المكيف ${i}</label>
-            <select name="size${i}" required>
-              <option disabled selected>اختر الحجم</option>
-              ${sizeOptions.join('')}
-            </select>
-          </div>
-        `;
-      }
-    };
+    typeOptions = typesSnap.docs.map(doc => `<option value="${doc.data().name}">${doc.data().name}</option>`);
+    sizeOptions = sizesSnap.docs.map(doc => `<option value="${doc.data().label}">${doc.data().label}</option>`);
 
-    const form = document.getElementById('orderForm');
-    const imageInput = document.getElementById('image');
-    let userLocation = null;
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const name = document.getElementById('name').value;
-  const phone = document.getElementById('phone').value;
-  const address = document.getElementById('address').value;
-  const acCount = parseInt(document.getElementById('acCount').value);
-  const preferredTime = document.getElementById('preferredTime').value;
-  const notes = document.getElementById('notes').value;
-
-  const acUnits = [];
-  for (let i = 1; i <= acCount; i++) {
-    const type = form.querySelector(`[name=type${i}]`).value;
-    const size = form.querySelector(`[name=size${i}]`).value;
-    acUnits.push({ type, size });
+    generateACFields();
   }
 
-  let imageUrl = "";
-  const imageFile = imageInput.files[0];
-  if (imageFile) {
-    const formData = new FormData();
-    formData.append("file", imageFile);
-    formData.append("upload_preset", "topclim_upload");
-    formData.append("folder", "TOPCLIMasset");
+  loadLandingContent();
+
+  window.generateACFields = function () {
+    const count = parseInt(document.getElementById("acCount").value) || 1;
+    const container = document.getElementById("acContainer");
+    container.innerHTML = "";
+
+    for (let i = 1; i <= count; i++) {
+      container.innerHTML += `
+        <div class="ac-group">
+          <label>🌀 نوع المكيف ${i}</label>
+          <select name="type${i}" required>
+            <option disabled selected>اختر النوع</option>
+            ${typeOptions.join('')}
+          </select>
+          <label>📏 حجم المكيف ${i}</label>
+          <select name="size${i}" required>
+            <option disabled selected>اختر الحجم</option>
+            ${sizeOptions.join('')}
+          </select>
+        </div>
+      `;
+    }
+  };
+
+  const form = document.getElementById('orderForm');
+  const imageInput = document.getElementById('image');
+  let userLocation = null;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('name').value;
+    const phone = document.getElementById('phone').value;
+    const address = document.getElementById('address').value;
+    const acCount = parseInt(document.getElementById('acCount').value);
+    const preferredTime = document.getElementById('preferredTime').value;
+    const notes = document.getElementById('notes').value;
+
+    if (!preferredTime) {
+      alert("❌ يرجى اختيار الوقت المناسب للزيارة.");
+      return;
+    }
+
+    const acUnits = [];
+    for (let i = 1; i <= acCount; i++) {
+      const type = form.querySelector(`[name=type${i}]`).value;
+      const size = form.querySelector(`[name=size${i}]`).value;
+      acUnits.push({ type, size });
+    }
+
+    let imageUrl = "";
+    const imageFile = imageInput.files[0];
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      formData.append("upload_preset", "topclim_upload");
+      formData.append("folder", "TOPCLIMasset");
+
+      try {
+        const res = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+        imageUrl = data.secure_url;
+      } catch (uploadError) {
+        console.error("❌ خطأ أثناء رفع الصورة:", uploadError);
+      }
+    }
 
     try {
-      const res = await fetch("https://api.cloudinary.com/v1_1/dtrmfg2om/upload", {
-        method: "POST",
-        body: formData
-      });
+      const dataToSend = {
+        name,
+        phone,
+        address,
+        acCount,
+        acUnits,
+        location: userLocation,
+        imageUrl,
+        preferredTime,
+        notes,
+        status: "مبدئي",
+        createdAt: serverTimestamp()
+      };
 
-      const data = await res.json();
-      imageUrl = data.secure_url;
-    } catch (uploadError) {
-      console.error("❌ خطأ أثناء رفع الصورة:", uploadError);
+      console.log("📥 سيتم إرسال البيانات التالية إلى Firebase:", dataToSend);
+
+      const docRef = await addDoc(collection(db, "requests"), dataToSend);
+      window.location.href = `track.html?id=${docRef.id}`;
+    } catch (error) {
+      console.error("❌ خطأ أثناء إرسال الطلب إلى Firebase:", error);
+      alert("حدث خطأ أثناء إرسال الطلب. يرجى المحاولة لاحقًا.");
     }
-  }
+  });
 
-  try {
-    const dataToSend = {
-      name,
-      phone,
-      address,
-      acCount,
-      acUnits,
-      location: userLocation,
-      imageUrl,
-      preferredTime, // ✅ جديد
-      notes,         // ✅ جديد
-      status: "مبدئي",
-      createdAt: serverTimestamp()
-    };
+  function getLocation() {
+    const status = document.getElementById("locationStatus");
+    status.textContent = "⏳ جاري تحديد الموقع بدقة عالية...";
 
-    console.log("📥 سيتم إرسال البيانات التالية إلى Firebase:", dataToSend);
+    if (!navigator.geolocation) {
+      status.textContent = "❌ المتصفح لا يدعم تحديد الموقع.";
+      return;
+    }
 
-    const docRef = await addDoc(collection(db, "requests"), dataToSend);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
 
-    // ✅ الانتقال لصفحة تتبع الطلب
-    window.location.href = `track.html?id=${docRef.id}`;
-  } catch (error) {
-    console.error("❌ خطأ أثناء إرسال الطلب إلى Firebase:", error);
-    alert("حدث خطأ أثناء إرسال الطلب. يرجى المحاولة لاحقًا.");
-  }
-});
+        userLocation = { lat, lng };
+        status.innerHTML = `✅ تم تحديد الموقع بدقة ~${Math.round(accuracy)} متر`;
 
+        const map = L.map("map").setView([lat, lng], 15);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
 
-
-    function getLocation() {
-      const status = document.getElementById("locationStatus");
-      status.textContent = "⏳ جاري تحديد الموقع بدقة عالية...";
-
-      if (!navigator.geolocation) {
-        status.textContent = "❌ المتصفح لا يدعم تحديد الموقع.";
-        return;
+        L.marker([lat, lng]).addTo(map).bindPopup("📍 موقعك الحالي").openPopup();
+      },
+      (error) => {
+        status.textContent = "❌ تعذر تحديد الموقع.";
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
+    );
+  }
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          const accuracy = position.coords.accuracy;
+  window.getLocation = getLocation;
+</script>
 
-          userLocation = { lat, lng };
-
-          status.innerHTML = `✅ تم تحديد الموقع بدقة ~${Math.round(accuracy)} متر`;
-
-          const map = L.map("map").setView([lat, lng], 15);
-          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "© OpenStreetMap contributors",
-          }).addTo(map);
-
-          L.marker([lat, lng]).addTo(map).bindPopup("📍 موقعك الحالي").openPopup();
-        },
-        (error) => {
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              status.textContent = "❌ تم رفض الإذن لتحديد الموقع.";
-              break;
-            case error.POSITION_UNAVAILABLE:
-              status.textContent = "❌ معلومات الموقع غير متوفرة.";
-              break;
-            case error.TIMEOUT:
-              status.textContent = "❌ انتهى الوقت دون الحصول على الموقع.";
-              break;
-            default:
-              status.textContent = "❌ حدث خطأ غير معروف.";
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    }
-
-    window.getLocation = getLocation;
-  </script>
 </body>
 </html>
