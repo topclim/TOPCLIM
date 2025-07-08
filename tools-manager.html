@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🧰 إدارة الأدوات – TopClim</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f7f7f7;
+      padding: 20px;
+      direction: rtl;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #007BFF;
+    }
+    input[type="text"] {
+      width: 70%;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 8px 15px;
+      background: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    ul {
+      padding-right: 20px;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🧰 إدارة الأدوات</h2>
+
+    <div class="section">
+      <h3>🔧 إضافة أداة صغيرة</h3>
+      <input type="text" id="smallToolInput" placeholder="اسم الأداة الصغيرة" />
+      <button onclick="addTool('small')">➕ إضافة</button>
+      <ul id="smallToolList"></ul>
+    </div>
+
+    <div class="section">
+      <h3>🧱 إضافة أداة كبيرة</h3>
+      <input type="text" id="bigToolInput" placeholder="اسم الأداة الكبيرة" />
+      <button onclick="addTool('big')">➕ إضافة</button>
+      <ul id="bigToolList"></ul>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function addTool(type) {
+      const input = type === "small" ? document.getElementById("smallToolInput") : document.getElementById("bigToolInput");
+      const value = input.value.trim();
+      if (!value) return alert("❗يرجى إدخال اسم الأداة");
+
+      const collectionName = type === "small" ? "smallTools" : "bigTools";
+
+      try {
+        await addDoc(collection(db, collectionName), { name: value });
+        alert("✅ تم الإضافة بنجاح");
+        input.value = "";
+        loadTools(); // إعادة تحميل الأدوات
+      } catch (err) {
+        alert("❌ فشل في الإضافة");
+        console.error(err);
+      }
+    }
+
+    async function loadTools() {
+      const smallList = document.getElementById("smallToolList");
+      const bigList = document.getElementById("bigToolList");
+      smallList.innerHTML = "🔄 جاري التحميل...";
+      bigList.innerHTML = "🔄 جاري التحميل...";
+
+      try {
+        // أدوات صغيرة
+        const smallSnap = await getDocs(collection(db, "smallTools"));
+        smallList.innerHTML = "";
+        smallSnap.forEach(doc => {
+          const li = document.createElement("li");
+          li.textContent = "🔹 " + doc.data().name;
+          smallList.appendChild(li);
+        });
+
+        // أدوات كبيرة
+        const bigSnap = await getDocs(collection(db, "bigTools"));
+        bigList.innerHTML = "";
+        bigSnap.forEach(doc => {
+          const li = document.createElement("li");
+          li.textContent = "🔸 " + doc.data().name;
+          bigList.appendChild(li);
+        });
+
+      } catch (err) {
+        smallList.innerHTML = bigList.innerHTML = "<li>❌ حدث خطأ في تحميل الأدوات</li>";
+        console.error(err);
+      }
+    }
+
+    loadTools();
+    window.addTool = addTool;
+  </script>
+</body>
+</html>
