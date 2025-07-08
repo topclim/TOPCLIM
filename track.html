@@ -68,11 +68,23 @@
       text-decoration: none;
       font-weight: bold;
     }
-    .thanks {
+    .thank {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e7f7ec;
+      border: 1px solid #b2e5c4;
+      border-radius: 8px;
+      color: #2e7d32;
       text-align: center;
-      margin-top: 30px;
+    }
+    .call-us {
+      margin-top: 10px;
+      text-align: center;
+    }
+    .call-us a {
+      color: #007BFF;
+      text-decoration: none;
       font-weight: bold;
-      color: green;
     }
   </style>
 </head>
@@ -83,11 +95,10 @@
     <p>🔄 جاري تحميل تفاصيل الطلب...</p>
   </div>
   <div id="map"></div>
-  <div class="thanks" id="thanksMessage"></div>
+  <div class="thank" id="thankMessage" style="display:none;"></div>
+  <div class="call-us" id="callUs" style="display:none;"></div>
   <div class="whatsapp">
     <a id="whatsappLink" href="#" target="_blank">📞 تواصل معنا عبر واتساب</a>
-    <br><br>
-    <a id="callLink" href="#">📱 اتصل بنا</a>
   </div>
 </div>
 
@@ -134,8 +145,6 @@
       </div>
     `;
 
-    document.getElementById("thanksMessage").textContent = `🎉 شكرًا لتقديم طلبك، سنتواصل معك قريبًا.`;
-
     if (data.location) {
       document.getElementById("map").style.display = "block";
       const script = document.createElement("script");
@@ -154,21 +163,30 @@
       document.head.appendChild(link);
     }
 
-    document.getElementById("whatsappLink").href = `https://wa.me/213${data.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار حول طلبي رقم ${orderId}`;
-  }
+    // تحميل رسالة الشكر ورقم الاتصال من قاعدة البيانات
+    const settingsSnap = await getDoc(doc(db, "landing", "landingContent"));
+    if (settingsSnap.exists()) {
+      const settings = settingsSnap.data();
+      if (settings.thankYouMessage) {
+        const thankBox = document.getElementById("thankMessage");
+        thankBox.innerText = settings.thankYouMessage;
+        thankBox.style.display = "block";
+      }
 
-  async function loadContactPhone() {
-    const snap = await getDoc(doc(db, "landing", "landingContent"));
-    if (snap.exists()) {
-      const phone = snap.data().contactPhone;
-      if (phone) {
-        document.getElementById("callLink").href = `tel:${phone}`;
+      if (settings.contactPhone) {
+        const callBox = document.getElementById("callUs");
+        callBox.innerHTML = `📱 للاتصال بنا مباشرة: <a href="tel:${settings.contactPhone}">${settings.contactPhone}</a>`;
+        callBox.style.display = "block";
+      }
+
+      if (settings.contactWhatsapp) {
+        const whatsappNumber = settings.contactWhatsapp.replace(/^0/, '');
+        document.getElementById("whatsappLink").href = `https://wa.me/213${whatsappNumber}?text=السلام عليكم، أود الاستفسار حول طلبي رقم ${orderId}`;
       }
     }
   }
 
   loadOrder();
-  loadContactPhone();
 </script>
 </body>
 </html>
