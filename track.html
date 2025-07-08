@@ -1,153 +1,86 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📦 تتبع طلبك</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تتبع الطلب – TopClim</title>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f9f9f9;
-      padding: 20px;
-      color: #333;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      direction: rtl;
+      text-align: center;
     }
     .container {
       max-width: 600px;
       margin: auto;
+      padding: 20px;
+    }
+    h2 {
+      color: #28a745;
+    }
+    .status-box {
       background: #fff;
       padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h2 { text-align: center; color: #007BFF; }
-    .info { margin-bottom: 15px; }
-    .info strong { display: inline-block; width: 120px; }
-    .progress {
-      display: flex;
-      justify-content: space-between;
-      margin: 20px 0;
-      position: relative;
-    }
-    .progress::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: #ddd;
-      z-index: 0;
-    }
-    .step {
-      position: relative;
-      z-index: 1;
-      background: #fff;
-      padding: 10px;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      border: 2px solid #007BFF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .step.active {
-      background: #007BFF;
-      color: #fff;
-    }
-    #map { height: 250px; margin-top: 15px; border-radius: 8px; display: none; }
-    .whatsapp {
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       margin-top: 20px;
-      text-align: center;
     }
-    .whatsapp a {
-      background: #25D366;
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
+    .note {
+      color: #888;
+      font-size: 0.9em;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <h2>📦 تتبع طلبك</h2>
-  <div id="orderDetails">
-    <p>🔄 جاري تحميل تفاصيل الطلب...</p>
+  <div class="container">
+    <h2 id="thankYouText">شكراً لطلبك! ✅</h2>
+    <div class="status-box">
+      <h3>📦 حالة الطلب:</h3>
+      <p id="orderStatus">جارٍ تحميل الحالة...</p>
+    </div>
+    <div class="note">سيتم تحديث حالة طلبك تلقائياً من قبل فريق الدعم</div>
   </div>
-  <div id="map"></div>
-  <div class="whatsapp">
-    <a id="whatsappLink" href="#" target="_blank">📞 تواصل معنا عبر واتساب</a>
-  </div>
-</div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-    authDomain: "topclim-3edfa.firebaseapp.com",
-    projectId: "topclim-3edfa"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const params = new URLSearchParams(window.location.search);
-  const orderId = params.get("id");
+    async function loadOrderStatus() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      if (!id) {
+        document.getElementById("orderStatus").textContent = "لم يتم العثور على الطلب.";
+        return;
+      }
 
-  async function loadOrder() {
-    if (!orderId) return;
-    const docRef = doc(db, "requests", orderId);
-    const snap = await getDoc(docRef);
-    if (!snap.exists()) return;
+      const docRef = doc(db, "requests", id);
+      const snap = await getDoc(docRef);
 
-    const data = snap.data();
-    const orderDiv = document.getElementById("orderDetails");
-    orderDiv.innerHTML = `
-      <div class="info"><strong>📄 رقم الطلب:</strong> ${orderId}</div>
-      <div class="info"><strong>👤 الاسم:</strong> ${data.name}</div>
-      <div class="info"><strong>📞 الهاتف:</strong> ${data.phone}</div>
-      <div class="info"><strong>📍 العنوان:</strong> ${data.address}</div>
-      <div class="info"><strong>❄️ عدد المكيفات:</strong> ${data.acCount}</div>
-      ${data.ac1 ? `<div class="info"><strong>🔧 نوع 1:</strong> ${data.ac1.type || "غير محدد"}</div>` : ""}
-      ${data.ac1 ? `<div class="info"><strong>📏 حجم 1:</strong> ${data.ac1.size || "غير محدد"}</div>` : ""}
-      ${data.ac2 ? `<div class="info"><strong>🔧 نوع 2:</strong> ${data.ac2.type || "غير محدد"}</div>` : ""}
-      ${data.ac2 ? `<div class="info"><strong>📏 حجم 2:</strong> ${data.ac2.size || "غير محدد"}</div>` : ""}
-      <div class="info"><strong>🕒 الحالة:</strong> ${data.status}</div>
-      <div class="progress">
-        <div class="step ${data.status === 'مبدئي' ? 'active' : ''}">1</div>
-        <div class="step ${data.status === 'قيد المعالجة' ? 'active' : ''}">2</div>
-        <div class="step ${data.status === 'تم التأكيد' ? 'active' : ''}">3</div>
-        <div class="step ${data.status === 'تم الإرسال' ? 'active' : ''}">4</div>
-      </div>
-    `;
-
-    if (data.location) {
-      document.getElementById("map").style.display = "block";
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      script.onload = () => {
-        const map = L.map("map").setView([data.location.lat, data.location.lng], 15);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "© OpenStreetMap contributors"
-        }).addTo(map);
-        L.marker([data.location.lat, data.location.lng]).addTo(map).bindPopup("موقعك").openPopup();
-      };
-      document.body.appendChild(script);
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-      document.head.appendChild(link);
+      if (snap.exists()) {
+        const data = snap.data();
+        document.getElementById("orderStatus").textContent = data.status || "قيد المعالجة";
+        if (data.name) {
+          document.getElementById("thankYouText").textContent = `شكراً لك ${data.name} على طلبك! ✅`;
+        }
+      } else {
+        document.getElementById("orderStatus").textContent = "تعذر العثور على الطلب.";
+      }
     }
 
-    // رابط واتساب تلقائي
-    document.getElementById("whatsappLink").href = `https://wa.me/213${data.phone.replace(/^0/, '')}?text=السلام عليكم، أود الاستفسار حول طلبي رقم ${orderId}`;
-  }
-
-  loadOrder();
-</script>
+    loadOrderStatus();
+  </script>
 </body>
 </html>
