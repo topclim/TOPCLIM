@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>تسجيل دخول العامل</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      direction: rtl;
+    }
+
+    .login-box {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      color: #007BFF;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+
+    select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>👷 تسجيل دخول العامل</h2>
+
+    <label>اختر اسمك:</label>
+    <select id="workerSelect">
+      <option value="">🔽 اختر من القائمة</option>
+    </select>
+
+    <button onclick="login()">🔓 دخول</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // تحميل قائمة العمال
+    async function loadWorkers() {
+      const snap = await getDocs(collection(db, "workers"));
+      const select = document.getElementById("workerSelect");
+
+      snap.forEach(doc => {
+        const worker = doc.data();
+        const option = document.createElement("option");
+        option.value = doc.id;
+        option.textContent = `${worker.name} (${worker.role})`;
+        select.appendChild(option);
+      });
+    }
+
+    window.login = function () {
+      const workerId = document.getElementById("workerSelect").value;
+      if (!workerId) {
+        alert("❗ يرجى اختيار اسمك أولاً");
+        return;
+      }
+      localStorage.setItem("workerId", workerId);
+      window.location.href = "worker-tasks.html";
+    }
+
+    loadWorkers();
+  </script>
+</body>
+</html>
