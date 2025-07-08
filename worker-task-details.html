@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📋 تفاصيل العمل – العامل</title>
+  <link rel="stylesheet" href="css/worker-task-details.css" />
+</head>
+<body>
+
+<div class="container">
+  <h2>📋 تنفيذ العمل</h2>
+
+  <div class="section">
+    <label>🧊 عدد المكيفات:</label>
+    <input type="number" id="indoorCount" placeholder="عدد المكيفات الداخلية" />
+    <input type="number" id="outdoorCount" placeholder="عدد المكيفات الخارجية" />
+    <input type="number" id="maintenanceCount" placeholder="عدد عمليات الصيانة" />
+  </div>
+
+  <div class="section">
+    <label>🧰 الأدوات الصغيرة:</label>
+    <div id="smallToolsContainer">
+      <p>🔄 جاري تحميل الأدوات...</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <label>📦 الأدوات الكبيرة:</label>
+    <div id="largeToolsContainer">
+      <p>🔄 جاري تحميل الأدوات...</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <label>📷 صورة بعد الإنجاز:</label>
+    <input type="file" accept="image/*" onchange="uploadImage(this)" />
+    <img id="previewImage" style="display:none; max-width: 100%; margin-top: 10px;" />
+  </div>
+
+  <div class="section">
+    <label>📝 ملاحظات عامة (تظهر للزبون):</label>
+    <textarea id="publicNotes" placeholder="أدخل ملاحظات عامة..."></textarea>
+  </div>
+
+  <div class="section">
+    <label>📌 فرصة (مكيف للبيع أو طلب خاص):</label>
+    <textarea id="opportunity" placeholder="أدخل وصف الفرصة..."></textarea>
+  </div>
+
+  <div class="section">
+    <label>🔒 ملاحظات خاصة (لا تظهر للزبون):</label>
+    <textarea id="privateNotes" placeholder="ملاحظات لصاحب المشروع فقط..."></textarea>
+  </div>
+
+  <div class="section">
+    <button onclick="finishWork()">✅ إنهاء العمل</button>
+  </div>
+</div>
+
+<script type="module" src="js/worker-task-details.js"></script>
+</body>
+</html>
