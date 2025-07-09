@@ -2,259 +2,251 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>📊 سجل الأعمال - ملخص ربحي</title>
+  <title>📊 لوحة إدارة مكيفات هواء</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f4f6f9;
-      padding: 20px;
-      direction: rtl;
-      color: #333;
-    }
-    h2 {
-      text-align: center;
-      color: #007bff;
-    }
-    .worker-info {
-      text-align: center;
-      margin-top: 5px;
-      margin-bottom: 15px;
-      font-size: 18px;
-    }
-    #addBtn {
-      margin: 10px auto;
-      display: block;
-      padding: 10px 20px;
-      background: #28a745;
-      color: #fff;
-      border: none;
-      font-size: 16px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      margin-top: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background: #007bff;
-      color: #fff;
-    }
-    input[type="date"], input[type="number"] {
-      width: 100%;
-      padding: 6px;
-      box-sizing: border-box;
-    }
-    .deleteBtn {
-      cursor: pointer;
-      color: #dc3545;
-      font-size: 18px;
-    }
-    .summary {
-      margin-top: 20px;
-      padding: 10px;
-      background: #ffeeba;
-      border-radius: 4px;
-    }
+    body { font-family: 'Cairo', sans-serif; background: #f4f6f9; padding: 20px; color: #333; }
+    h1 { text-align: center; color: #007bff; margin-bottom: 10px; }
+    .info { text-align: center; margin-bottom: 20px; font-size: 18px; }
+    #controls { text-align: center; margin-bottom: 15px; }
+    #addBtn { padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; background: white; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    th, td { padding: 8px; border: 1px solid #ddd; text-align: center; }
+    th { background: #007bff; color: white; }
+    input[type="date"], input[type="number"], input[type="text"] { width: 100%; padding: 6px; box-sizing: border-box; }
+    button.detailsBtn { background: #17a2b8; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; }
+    button.deleteBtn { background: transparent; border: none; color: #dc3545; cursor: pointer; font-size: 16px; }
+    .hidden { display: none; }
+    .sub-table { width: 98%; margin: 10px auto; }
+    .summary-box { font-size: 18px; padding: 10px; background: #e9f5ff; border-radius: 4px; margin-bottom: 20px; text-align: center; }
   </style>
 </head>
 <body>
 
-  <h2>📊 سجل الأعمال للموظف</h2>
-  <div class="worker-info" id="workerDisplay">✅ يتم جلب اسم الموظف...</div>
-  <button id="addBtn">＋ إضافة صف جديد</button>
+<h1>📊 إدارة أعمال الفنيين</h1>
+<div class="info" id="workerInfo">يتم تحميل معلومات العامل…</div>
 
-  <table id="mainTable">
-    <thead>
-      <tr>
-        <th>م</th>
-        <th>من تاريخ</th>
-        <th>إلى تاريخ</th>
-        <th>سعر داخلي</th>
-        <th>سعر خارجي</th>
-        <th>سعر صيانة</th>
-        <th>💰 الربح</th>
-        <th>🔧 حذف</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody">
-      <!-- تُعرض هنا الصفوف -->
-    </tbody>
-  </table>
+<div id="controls">
+  <button id="addBtn">＋ إضافة سجل جديد</button>
+</div>
 
-  <div class="summary" id="totalSummary">المجموع الكلي: 0 دج</div>
+<table id="mainTable">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>من تاريخ</th>
+      <th>إلى تاريخ</th>
+      <th>سعر داخلي</th>
+      <th>سعر خارجي</th>
+      <th>سعر صيانة</th>
+      <th>💰 ربح اليوم</th>
+      <th>تفاصيل</th>
+      <th>حذف</th>
+    </tr>
+  </thead>
+  <tbody id="mainBody"></tbody>
+</table>
 
-  <script type="module">
-    // استيراد Firebase SDK v10
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection, getDocs,
-      doc, getDoc,
-      addDoc, updateDoc, deleteDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<div class="summary-box" id="totalProfit">🔢 إجمالي الربح: 0 دج</div>
 
-    // إعداد Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, doc,
+  getDocs, getDoc, addDoc,
+  updateDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// إعداد Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+  authDomain: "topclim-3edfa.firebaseapp.com",
+  projectId: "topclim-3edfa"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// عناصر الواجهة
+const workerInfo = document.getElementById("workerInfo");
+const addBtn = document.getElementById("addBtn");
+const mainBody = document.getElementById("mainBody");
+const totalProfitDiv = document.getElementById("totalProfit");
+
+// استخراج workerId من الرابط
+const workerId = new URLSearchParams(window.location.search).get("workerId");
+if (!workerId) {
+  alert("الرابط يجب أن يحتوي workerId");
+  throw new Error("workerId missing");
+}
+
+let prices = { indoor: 0, outdoor: 0, maintenance: 0 };
+
+// حساب ربح يومي
+function calcProfit(item) {
+  const d1 = new Date(item.start);
+  const d2 = new Date(item.end);
+  const days = Math.max(0, (d2 - d1) / (1000 * 60 * 60 * 24) + 1);
+  return days * (item.priceIndoor + item.priceOutdoor + item.priceMaintenance);
+}
+
+// تحديث ملخص الربح الإجمالي
+function updateTotalProfit() {
+  let sum = 0;
+  mainBody.querySelectorAll("tr.main-row").forEach(tr => {
+    const cell = tr.querySelector(".profit-cell");
+    const val = Number(cell.textContent.replace(/[^\d]/g, "")) || 0;
+    sum += val;
+  });
+  totalProfitDiv.textContent = `🔢 إجمالي الربح: ${sum.toLocaleString()} دج`;
+}
+
+// إضافة صف رئيسي وتهيئة الأحداث
+function appendMainRow(id, data) {
+  const tr = document.createElement("tr");
+  tr.classList.add("main-row");
+  tr.dataset.id = id;
+  tr.innerHTML = `
+    <td class="idx"></td>
+    <td><input type="date" class="start"/></td>
+    <td><input type="date" class="end"/></td>
+    <td><input type="number" class="priceIndoor"/></td>
+    <td><input type="number" class="priceOutdoor"/></td>
+    <td><input type="number" class="priceMaintenance"/></td>
+    <td class="profit-cell">0 دج</td>
+    <td><button class="detailsBtn">تفاصيل</button></td>
+    <td><button class="deleteBtn">🗑️</button></td>
+  `;
+  mainBody.appendChild(tr);
+
+  const startInput = tr.querySelector(".start");
+  const endInput = tr.querySelector(".end");
+  const piInput = tr.querySelector(".priceIndoor");
+  const poInput = tr.querySelector(".priceOutdoor");
+  const pmInput = tr.querySelector(".priceMaintenance");
+  const profitCell = tr.querySelector(".profit-cell");
+  const detailBtn = tr.querySelector(".detailsBtn");
+  const delBtn = tr.querySelector(".deleteBtn");
+
+  // تعيين القيم الأولية
+  startInput.value = data.start;
+  endInput.value = data.end;
+  piInput.value = data.priceIndoor;
+  poInput.value = data.priceOutdoor;
+  pmInput.value = data.priceMaintenance;
+  profitCell.textContent = `${calcProfit(data).toLocaleString()} دج`;
+
+  // تفريغ الصف الثانوي للتفاصيل
+  const detailTr = document.createElement("tr");
+  detailTr.classList.add("hidden", "detail-row");
+  detailTr.innerHTML = `<td colspan="9"><em>يتم تحميل التفاصيل...</em></td>`;
+  tr.after(detailTr);
+
+  function refreshProfitAndSave() {
+    const updated = {
+      start: startInput.value,
+      end: endInput.value,
+      priceIndoor: Number(piInput.value),
+      priceOutdoor: Number(poInput.value),
+      priceMaintenance: Number(pmInput.value)
     };
+    profitCell.textContent = `${calcProfit(updated).toLocaleString()} دج`;
+    updateTotalProfit();
+    updateDoc(doc(db, "summaries", workerId, "entries", id), updated).catch(console.error);
+  }
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  [startInput, endInput, piInput, poInput, pmInput].forEach(i => {
+    i.addEventListener("change", refreshProfitAndSave);
+  });
 
-    // جمع معلومات DOM
-    const workerDisplay = document.getElementById("workerDisplay");
-    const addBtn = document.getElementById("addBtn");
-    const tableBody = document.getElementById("tableBody");
-    const totalSummary = document.getElementById("totalSummary");
-
-    // استخراج workerId من الرابط
-    const workerId = new URLSearchParams(window.location.search).get("workerId");
-    if (!workerId) {
-      alert("❌ مطلوب workerId في الرابط!");
-      throw new Error("workerId missing");
+  detailBtn.addEventListener("click", async () => {
+    if (!detailTr.classList.contains("hidden")) {
+      detailTr.classList.add("hidden");
+      return;
     }
-
-    let totalProfitAll = 0;
-
-    // جلب اسم العامل من Firestore
-    async function loadWorkerName() {
-      try {
-        const snap = await getDoc(doc(db, "workers", workerId));
-        if (snap.exists()) {
-          const name = snap.data().name || "غير معروف";
-          workerDisplay.textContent = `👷 الموظف: ${name}`;
-        } else {
-          workerDisplay.textContent = "❌ العامل غير موجود";
-        }
-      } catch (e) {
-        console.error(e);
-        workerDisplay.textContent = "⚠️ خطأ أثناء جلب اسم العامل";
-      }
-    }
-
-    // حساب الربح حسب فترة وأسعار
-    function computeProfit(row) {
-      const d1 = new Date(row.start);
-      const d2 = new Date(row.end);
-      const days = (d2 - d1) / (1000*3600*24) + 1;
-      const sumPerDay = (row.priceIndoor + row.priceOutdoor + row.priceMaintenance);
-      return Math.max(0, days * sumPerDay);
-    }
-
-    // تحديث الملخص الكلي
-    function updateTotal() {
-      const rows = tableBody.querySelectorAll("tr");
-      totalProfitAll = 0;
-      rows.forEach(tr => {
-        const cell = tr.cells[6];
-        const value = Number(cell.textContent.replace(/[^\d]/g, "")) || 0;
-        totalProfitAll += value;
-      });
-      totalSummary.textContent = `المجموع الكلي: ${totalProfitAll.toLocaleString()} دج`;
-    }
-
-    // إعداد صف جديد أو المحفوظ
-    function appendRow(id, data) {
-      const tr = document.createElement("tr");
-      tr.dataset.id = id;
-
-      tr.innerHTML = `
-        <td>${tableBody.children.length + 1}</td>
-        <td><input type="date" value="${data.start}" /></td>
-        <td><input type="date" value="${data.end}" /></td>
-        <td><input type="number" min="0" value="${data.priceIndoor}" /></td>
-        <td><input type="number" min="0" value="${data.priceOutdoor}" /></td>
-        <td><input type="number" min="0" value="${data.priceMaintenance}" /></td>
-        <td><strong>0 دج</strong></td>
-        <td><span class="deleteBtn">🗑️</span></td>
-      `;
-
-      const inputs = tr.querySelectorAll("input");
-      const profitCell = tr.querySelector("strong");
-      const deleteBtn = tr.querySelector(".deleteBtn");
-
-      const saveAndRecalc = async () => {
-        const newData = {
-          start: inputs[0].value,
-          end: inputs[1].value,
-          priceIndoor: Number(inputs[2].value),
-          priceOutdoor: Number(inputs[3].value),
-          priceMaintenance: Number(inputs[4].value)
-        };
-        try {
-          await updateDoc(doc(db, "summaries", workerId, "entries", id), newData);
-        } catch (e) {
-          console.error(e);
-        }
-        const profit = computeProfit(newData);
-        profitCell.textContent = `${profit.toLocaleString()} دج`;
-        updateTotal();
-      };
-
-      inputs.forEach(i => i.addEventListener("change", saveAndRecalc));
-
-      deleteBtn.addEventListener("click", async () => {
-        if (confirm("هل تريد حذف هذا الصف؟")) {
-          await deleteDoc(doc(db, "summaries", workerId, "entries", id));
-          tr.remove();
-          Array.from(tableBody.children).forEach((r, idx) => r.cells[0].textContent = idx + 1);
-          updateTotal();
-        }
-      });
-
-      tableBody.appendChild(tr);
-      // حساب أولي
-      const initialProfit = computeProfit(data);
-      profitCell.textContent = `${initialProfit.toLocaleString()} دج`;
-      updateTotal();
-    }
-
-    // جلب جميع الصفوف من Firestore
-    async function loadRows() {
-      try {
-        const snap = await getDocs(collection(db, "summaries", workerId, "entries"));
-        tableBody.innerHTML = "";
-        snap.forEach(docSnap => {
-          appendRow(docSnap.id, docSnap.data());
-        });
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    // إضافة صف جديد افتراضي
-    addBtn.addEventListener("click", async () => {
-      const today = new Date().toISOString().split("T")[0];
-      const data = {
-        start: today,
-        end: today,
-        priceIndoor: 0,
-        priceOutdoor: 0,
-        priceMaintenance: 0
-      };
-      const docRef = await addDoc(collection(db, "summaries", workerId, "entries"), data);
-      appendRow(docRef.id, data);
+    // جلب تفاصيل من الطلبات
+    const snap = await getDocs(collection(db, "requests"));
+    const entries = snap.docs.map(d => d.data()).filter(dt => {
+      const w = dt.workDone;
+      const fin = w?.finishedAt?.seconds ? new Date(w.finishedAt.seconds*1000) : null;
+      return dt.assignedTo === workerId && dt.status === "تم الإنجاز" &&
+             fin && fin >= new Date(data.start) && fin <= new Date(data.end);
     });
+    const rows = entries.map(e => {
+      const w = e.workDone;
+      const d = w.finishedAt.seconds*1000;
+      return `<tr>
+        <td>${new Date(d).toISOString().split("T")[0]}</td>
+        <td>${w.indoor||0}</td>
+        <td>${w.outdoor||0}</td>
+        <td>${e.address||''}</td>
+      </tr>`;
+    }).join("");
+    detailTr.innerHTML = 
+      `<td colspan="9">
+         <table class="sub-table">
+           <thead><tr>
+             <th>تاريخ</th><th>داخلي</th><th>خارجي</th><th>العنوان</th>
+           </tr></thead>
+           <tbody>${rows || "<tr><td colspan='4'><em>لا توجد بيانات</em></td></tr>"}</tbody>
+         </table>
+       </td>`;
+    detailTr.classList.remove("hidden");
+  });
 
-    // عند بدء الصفحة
-    (async () => {
-      await loadWorkerName();
-      await loadRows();
-    })();
+  delBtn.addEventListener("click", async () => {
+    if (!confirm("هل تريد حذف هذا السجل؟")) return;
+    await deleteDoc(doc(db, "summaries", workerId, "entries", id));
+    detailTr.remove();
+    tr.remove();
+    updateRowIndexes();
+    updateTotalProfit();
+  });
 
-  </script>
+  updateRowIndexes();
+  updateTotalProfit();
+}
+
+// تحديث ترقيم الصفوف
+function updateRowIndexes() {
+  mainBody.querySelectorAll("tr.main-row").forEach((tr, i) => {
+    tr.querySelector(".idx").textContent = i + 1;
+  });
+}
+
+// تحميل كل الصفوف من Firestore
+async function loadData() {
+  mainBody.innerHTML = "";
+  const snap = await getDocs(collection(db, "summaries", workerId, "entries"));
+  snap.forEach(d => {
+    appendMainRow(d.id, d.data());
+  });
+}
+
+// إضافة سجل جديد
+addBtn.addEventListener("click", async () => {
+  const today = new Date().toISOString().split("T")[0];
+  const data = {
+    start: today,
+    end: today,
+    priceIndoor: prices.indoor,
+    priceOutdoor: prices.outdoor,
+    priceMaintenance: prices.maintenance
+  };
+  const docRef = await addDoc(collection(db, "summaries", workerId, "entries"), data);
+  appendMainRow(docRef.id, data);
+});
+
+// تحميل اسم العامل وأسعار افتراضية
+async function init() {
+  const wSnap = await getDoc(doc(db, "workers", workerId));
+  if (wSnap.exists()) workerInfo.textContent = `👷 الموظف: ${wSnap.data().name}`;
+  const pSnap = await getDoc(doc(db, "settings", "prices"));
+  if (pSnap.exists()) prices = pSnap.data();
+  await loadData();
+}
+
+init();
+</script>
 
 </body>
 </html>
