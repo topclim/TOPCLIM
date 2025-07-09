@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>💼 تأكيد تنفيذ العمل – TopClim</title>
+  <title>تأكيد تنفيذ العمل – TopClim</title>
   <style>
     * {
       box-sizing: border-box;
@@ -11,17 +11,16 @@
 
     body {
       font-family: 'Cairo', sans-serif;
-      background-color: #f1f1f1;
+      background-color: #f5f5f5;
       margin: 0;
       padding: 0;
     }
 
     .container {
       max-width: 750px;
-      margin: auto;
+      margin: 30px auto;
       background: #fff;
       padding: 25px;
-      margin-top: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
@@ -33,18 +32,19 @@
 
     label {
       font-weight: bold;
-      margin-top: 15px;
       display: block;
+      margin-top: 15px;
     }
 
-    input[type="number"], textarea {
+    input[type="number"],
+    textarea {
       width: 100%;
       padding: 10px;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       border: 1px solid #ccc;
       border-radius: 6px;
-      background: #fafafa;
       margin-bottom: 15px;
+      background: #fafafa;
     }
 
     textarea {
@@ -55,19 +55,28 @@
       width: 100%;
       padding: 12px;
       font-size: 1.1rem;
-      margin-top: 10px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      margin-top: 10px;
     }
 
     #openCalcBtn {
-      background: #007BFF;
+      background-color: #007BFF;
+      color: white;
+    }
+
+    #saveBtn {
+      background-color: #28a745;
       color: white;
     }
 
     #openCalcBtn:hover {
-      background: #0056b3;
+      background-color: #0056b3;
+    }
+
+    #saveBtn:hover {
+      background-color: #218838;
     }
 
     .warning {
@@ -76,12 +85,15 @@
       margin-top: 10px;
     }
 
-    /* Calculator popup */
+    /* الحاسبة كنافذة وسط الشاشة */
     .popup {
       display: none;
       position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-color: rgba(0,0,0,0.5);
       z-index: 9999;
       justify-content: center;
       align-items: center;
@@ -92,20 +104,21 @@
     }
 
     .calculator {
-      background: white;
-      width: 100vw;
-      height: 100vh;
+      background: #fff;
+      padding: 20px;
+      border-radius: 16px;
+      width: 340px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
       align-items: center;
-      padding: 20px 10px;
+      max-width: 95%;
     }
 
     .calc-display {
-      width: 95%;
+      width: 100%;
       height: 60px;
-      font-size: 2.2rem;
+      font-size: 2rem;
       text-align: left;
       margin-bottom: 20px;
       padding: 10px;
@@ -118,16 +131,17 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
-      width: 95%;
+      width: 100%;
     }
 
     .calc-buttons button {
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       padding: 20px;
       border: none;
       border-radius: 10px;
       background: #007BFF;
       color: white;
+      cursor: pointer;
     }
 
     .calc-buttons button:hover {
@@ -138,13 +152,19 @@
       grid-column: span 2;
     }
 
-    #saveBtn {
-      background-color: #28a745;
-      color: white;
-    }
+    @media (max-width: 500px) {
+      .calculator {
+        width: 95%;
+      }
 
-    #saveBtn:hover {
-      background-color: #218838;
+      .calc-buttons button {
+        font-size: 1.4rem;
+        padding: 15px;
+      }
+
+      .calc-display {
+        font-size: 1.8rem;
+      }
     }
   </style>
 </head>
@@ -154,26 +174,26 @@
   <h2>💼 تأكيد تنفيذ العمل</h2>
 
   <label>عدد المكيفات الداخلية:</label>
-  <input type="number" id="indoorCount" />
+  <input type="number" id="indoorCount"/>
 
   <label>عدد المكيفات الخارجية:</label>
-  <input type="number" id="outdoorCount" />
+  <input type="number" id="outdoorCount"/>
 
   <label>عدد الصيانات:</label>
-  <input type="number" id="maintenanceCount" />
+  <input type="number" id="maintenanceCount"/>
 
   <label>💰 الفاتورة:</label>
-  <input type="number" id="finalPrice" readonly />
+  <input type="number" id="finalPrice" readonly/>
   <button id="openCalcBtn">🧮 فتح الآلة الحاسبة</button>
 
   <label>ملاحظات:</label>
-  <textarea id="ownerNotes" placeholder="ملاحظات حول العمل..."></textarea>
+  <textarea id="ownerNotes" placeholder="ملاحظاتك..."></textarea>
 
   <div class="warning" id="warningMsg"></div>
   <button id="saveBtn" onclick="submitConfirmation()">✅ حفظ البيانات</button>
 </div>
 
-<!-- الآلة الحاسبة -->
+<!-- آلة حاسبة منبثقة -->
 <div id="calculatorPopup" class="popup" onclick="closeCalculator()">
   <div class="calculator" onclick="event.stopPropagation();">
     <input id="calcDisplay" class="calc-display" readonly />
@@ -269,7 +289,7 @@
       document.getElementById("finalPrice").value = result;
       closeCalculator();
     } catch {
-      alert("⚠️ عملية غير صحيحة");
+      alert("⚠️ صيغة غير صالحة");
     }
   };
 
@@ -282,6 +302,7 @@
   };
 
   document.getElementById("openCalcBtn").onclick = () => {
+    display.value = "";
     document.getElementById("calculatorPopup").classList.add("active");
   };
 
