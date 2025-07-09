@@ -58,11 +58,12 @@
     button:hover {
       background-color: #218838;
     }
-    .warning {
-      color: red;
-      font-weight: bold;
-      margin-top: 10px;
+    .total-display {
       text-align: center;
+      font-size: 1.2rem;
+      color: green;
+      margin-top: 10px;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -72,13 +73,13 @@
 
     <div class="section">
       <label>عدد المكيفات الداخلية:</label>
-      <input type="number" id="indoor" placeholder="أدخل عدد المكيفات الداخلية" />
+      <input type="number" id="indoorCount" placeholder="كم مكيف داخلي؟" />
 
       <label>عدد المكيفات الخارجية:</label>
-      <input type="number" id="outdoor" placeholder="أدخل عدد المكيفات الخارجية" />
+      <input type="number" id="outdoorCount" placeholder="كم مكيف خارجي؟" />
 
-      <label>عدد عمليات الصيانة:</label>
-      <input type="number" id="maintenance" placeholder="أدخل عدد الصيانات" />
+      <label>عدد الصيانات:</label>
+      <input type="number" id="maintenanceCount" placeholder="عدد عمليات الصيانة؟" />
     </div>
 
     <div class="section">
@@ -87,25 +88,23 @@
       <input type="number" id="priceOutdoor" placeholder="سعر المكيف الخارجي (DA)" />
       <input type="number" id="priceMaintenance" placeholder="سعر الصيانة (DA)" />
       <button onclick="calculateTotal()">📊 حساب الفاتورة</button>
-      <h3 id="totalDisplay">💰 الفاتورة: 0 DA</h3>
+      <div class="total-display" id="totalDisplay">💰 الفاتورة: 0 DA</div>
     </div>
 
     <div class="section">
       <label>ملاحظات:</label>
-      <textarea id="notes" placeholder="ملاحظات العمل (اختياري)"></textarea>
+      <textarea id="ownerNotes" placeholder="أدخل ملاحظاتك هنا..."></textarea>
     </div>
 
-    <div id="warning" class="warning"></div>
-
     <div class="section">
-      <button onclick="submitData()">✅ حفظ وتأكيد العمل</button>
+      <button onclick="submitData()">✅ تأكيد العمل وحفظ البيانات</button>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, doc, getDoc, updateDoc, collection, addDoc
+      getFirestore, doc, updateDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -120,88 +119,55 @@
     const params = new URLSearchParams(window.location.search);
     const requestId = params.get("id");
 
-    let customerData = {};
-
-    async function fetchCustomerData() {
-      const reqRef = doc(db, "requests", requestId);
-      const reqSnap = await getDoc(reqRef);
-      if (reqSnap.exists()) {
-        const data = reqSnap.data();
-        customerData = data.ownerConfirmation || {};
-        const workDone = data.workDone || {};
-        // تعبئة البيانات الموجودة
-        document.getElementById("indoor").value = workDone.indoor || 0;
-        document.getElementById("outdoor").value = workDone.outdoor || 0;
-        document.getElementById("maintenance").value = workDone.maintenance || 0;
-      }
-    }
+    let totalPrice = 0;
 
     window.calculateTotal = function () {
-      const indoor = parseInt(document.getElementById("indoor").value || 0);
-      const outdoor = parseInt(document.getElementById("outdoor").value || 0);
-      const maintenance = parseInt(document.getElementById("maintenance").value || 0);
-      const pi = parseFloat(document.getElementById("priceIndoor").value || 0);
-      const po = parseFloat(document.getElementById("priceOutdoor").value || 0);
-      const pm = parseFloat(document.getElementById("priceMaintenance").value || 0);
-      const total = (indoor * pi) + (outdoor * po) + (maintenance * pm);
-      document.getElementById("totalDisplay").textContent = `💰 الفاتورة: ${total} DA`;
+      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
+      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
+      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
+
+      const priceIndoor = parseFloat(document.getElementById("priceIndoor").value || 0);
+      const priceOutdoor = parseFloat(document.getElementById("priceOutdoor").value || 0);
+      const priceMaintenance = parseFloat(document.getElementById("priceMaintenance").value || 0);
+
+      totalPrice = (indoor * priceIndoor) + (outdoor * priceOutdoor) + (maintenance * priceMaintenance);
+
+      document.getElementById("totalDisplay").textContent = `💰 الفاتورة: ${totalPrice.toLocaleString()} DA`;
     }
 
     window.submitData = async function () {
-      const indoor = parseInt(document.getElementById("indoor").value || 0);
-      const outdoor = parseInt(document.getElementById("outdoor").value || 0);
-      const maintenance = parseInt(document.getElementById("maintenance").value || 0);
-      const notes = document.getElementById("notes").value;
+      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
+      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
+      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
+      const notes = document.getElementById("ownerNotes").value;
 
-      const mismatch =
-        customerData &&
-        (
-          indoor !== customerData.indoor ||
-          outdoor !== customerData.outdoor ||
-          maintenance !== customerData.maintenance
-        );
-
-      if (mismatch) {
-        document.getElementById("warning").textContent = "⚠️ البيانات غير متطابقة مع بيانات الزبون! سيتم تسجيل إشعار.";
-
-        await addDoc(collection(db, "alerts"), {
-          requestId,
-          type: "اختلاف في بيانات العمل",
-          expected: {
-            indoor: customerData.indoor,
-            outdoor: customerData.outdoor,
-            maintenance: customerData.maintenance
-          },
-          actual: {
-            indoor,
-            outdoor,
-            maintenance
-          },
-          verifiedAt: new Date()
-        });
-      } else {
-        document.getElementById("warning").textContent = "✅ البيانات مطابقة.";
+      if (isNaN(totalPrice) || totalPrice <= 0) {
+        alert("⚠️ الرجاء حساب الفاتورة أولاً قبل الحفظ.");
+        return;
       }
 
-      await updateDoc(doc(db, "requests", requestId), {
-        workDone: {
-          indoor,
-          outdoor,
-          maintenance
-        },
-        ownerConfirmation: {
-          ...customerData,
-          notes,
-          verified: !mismatch,
-          verifiedAt: new Date()
-        }
-      });
+      try {
+        await updateDoc(doc(db, "requests", requestId), {
+          workDone: {
+            indoor,
+            outdoor,
+            maintenance,
+            totalPrice
+          },
+          ownerConfirmation: {
+            notes,
+            verified: true,
+            verifiedAt: new Date()
+          }
+        });
 
-      alert("✅ تم حفظ العمل بنجاح.");
-      window.location.href = "admin.html";
+        alert("✅ تم حفظ البيانات بنجاح.");
+        window.location.href = "admin.html";
+      } catch (err) {
+        alert("❌ حدث خطأ أثناء الحفظ.");
+        console.error(err);
+      }
     }
-
-    fetchCustomerData();
   </script>
 </body>
 </html>
