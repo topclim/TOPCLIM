@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚨 التنبيهات – TopClim</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f1f1f1;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #dc3545;
+      margin-bottom: 20px;
+    }
+
+    .alert-item {
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+    }
+
+    .alert-item h3 {
+      margin: 0 0 10px;
+      color: #856404;
+    }
+
+    .alert-item ul {
+      padding-right: 20px;
+      margin: 0;
+    }
+
+    .alert-item li {
+      color: #444;
+    }
+
+    .timestamp {
+      font-size: 0.9rem;
+      color: #777;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>🚨 تنبيهات الأدوات المفقودة</h2>
+    <div id="alertsContainer">⏳ جاري تحميل التنبيهات...</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const alertsContainer = document.getElementById("alertsContainer");
+
+    async function loadAlerts() {
+      try {
+        const alertsSnap = await getDocs(collection(db, "alerts"));
+
+        if (alertsSnap.empty) {
+          alertsContainer.innerHTML = "<p>✅ لا توجد تنبيهات حالياً.</p>";
+          return;
+        }
+
+        alertsContainer.innerHTML = "";
+
+        alertsSnap.forEach(doc => {
+          const data = doc.data();
+
+          const missingSmall = data.missingSmall?.join("، ") || "لا توجد";
+          const missingLarge = data.missingLarge?.join("، ") || "لا توجد";
+
+          const date = data.timestamp?.toDate();
+          const formattedDate = date
+            ? `${date.toLocaleDateString("ar-DZ")} – ${date.toLocaleTimeString("ar-DZ", { hour: '2-digit', minute: '2-digit' })}`
+            : "⏱️ غير معروف";
+
+          const div = document.createElement("div");
+          div.className = "alert-item";
+
+          div.innerHTML = `
+            <h3>🔔 طلب رقم: ${data.requestId}</h3>
+            <ul>
+              <li>🧰 أدوات صغيرة مفقودة: ${missingSmall}</li>
+              <li>📦 أدوات كبيرة مفقودة: ${missingLarge}</li>
+            </ul>
+            <div class="timestamp">🕒 ${formattedDate}</div>
+          `;
+
+          alertsContainer.appendChild(div);
+        });
+
+      } catch (e) {
+        console.error("❌ خطأ أثناء تحميل التنبيهات:", e);
+        alertsContainer.innerHTML = "<p>❌ حدث خطأ أثناء تحميل التنبيهات.</p>";
+      }
+    }
+
+    loadAlerts();
+  </script>
+
+</body>
+</html>
