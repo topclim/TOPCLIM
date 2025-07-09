@@ -157,9 +157,9 @@ async function loadData() {
       const start = d.executionSchedule?.seconds ? new Date(d.executionSchedule.seconds * 1000) : null;
       const end = d.workDone.finishedAt?.seconds ? new Date(d.workDone.finishedAt.seconds * 1000) : null;
 
-      const indoor = parseInt(d.workDone.indoor || 0);
-      const outdoor = parseInt(d.workDone.outdoor || 0);
-      const maintenance = parseInt(d.workDone.maintenance || 0);
+      const indoor = Number(d.workDone?.indoor ?? 0);
+const outdoor = Number(d.workDone?.outdoor ?? 0);
+const maintenance = Number(d.workDone?.maintenance ?? 0);
 
       const total =
         (indoor * prices.indoor) +
