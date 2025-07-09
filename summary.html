@@ -87,6 +87,14 @@
       padding: 15px;
       border-radius: 6px;
     }
+
+    .worker-info {
+      text-align: center;
+      font-size: 16px;
+      margin-top: 10px;
+      color: #444;
+    }
+
   </style>
 </head>
 <body>
@@ -94,6 +102,10 @@
 <h2>📊 ملخص أعمال مساعد حسب التاريخ والأسعار</h2>
 
 <div class="filters">
+  <label>
+    اسم العامل:
+    <input type="text" id="workerName" placeholder="اكتب اسم العامل" />
+  </label>
   <label>
     من تاريخ:
     <input type="date" id="startDate" />
@@ -117,9 +129,13 @@
   <button id="filterBtn">🔍 بحث</button>
 </div>
 
+<div class="worker-info" id="workerDisplay">👷 اسم العامل: غير محدد</div>
+
 <table>
   <thead>
     <tr>
+      <th>📅 من تاريخ</th>
+      <th>📅 إلى تاريخ</th>
       <th>📦 داخلي</th>
       <th>🔥 خارجي</th>
       <th>🛠️ صيانة</th>
@@ -127,7 +143,7 @@
     </tr>
   </thead>
   <tbody id="summaryBody">
-    <tr><td colspan="4">⏳ الرجاء اختيار التواريخ والأسعار</td></tr>
+    <tr><td colspan="6">⏳ الرجاء ملء الحقول والضغط على بحث</td></tr>
   </tbody>
 </table>
 
@@ -141,7 +157,6 @@
     getDoc
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // ✅ إعدادات Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
     authDomain: "topclim-3edfa.firebaseapp.com",
@@ -152,13 +167,16 @@
   const db = getFirestore(app);
 
   const tbody = document.getElementById("summaryBody");
-  const workerId = new URLSearchParams(window.location.search).get("workerId");
   const filterBtn = document.getElementById("filterBtn");
 
-  // عند الضغط على زر "بحث"
+  const workerDisplay = document.getElementById("workerDisplay");
+
+  const workerId = new URLSearchParams(window.location.search).get("workerId");
+
   filterBtn.addEventListener("click", loadData);
 
   async function loadData() {
+    const workerName = document.getElementById("workerName").value.trim();
     const startDate = new Date(document.getElementById("startDate").value);
     const endDate = new Date(document.getElementById("endDate").value);
     const priceIndoor = Number(document.getElementById("priceIndoor").value);
@@ -175,7 +193,9 @@
       return;
     }
 
-    tbody.innerHTML = `<tr><td colspan="4">🔄 جاري تحميل البيانات...</td></tr>`;
+    workerDisplay.textContent = "👷 اسم العامل: " + (workerName || "غير محدد");
+
+    tbody.innerHTML = `<tr><td colspan="6">🔄 جاري تحميل البيانات...</td></tr>`;
 
     try {
       const requestsSnap = await getDocs(collection(db, "requests"));
@@ -202,10 +222,15 @@
         }
       }
 
-      const totalProfit = (totalIndoor * priceIndoor) + (totalOutdoor * priceOutdoor) + (totalMaintenance * priceMaintenance);
+      const totalProfit =
+        (totalIndoor * priceIndoor) +
+        (totalOutdoor * priceOutdoor) +
+        (totalMaintenance * priceMaintenance);
 
       tbody.innerHTML = `
         <tr>
+          <td>${startDate.toISOString().split("T")[0]}</td>
+          <td>${endDate.toISOString().split("T")[0]}</td>
           <td><strong>${totalIndoor}</strong></td>
           <td><strong>${totalOutdoor}</strong></td>
           <td><strong>${totalMaintenance}</strong></td>
@@ -214,7 +239,7 @@
       `;
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = `<tr><td colspan="4">⚠️ فشل تحميل البيانات</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6">⚠️ فشل تحميل البيانات</td></tr>`;
     }
   }
 </script>
