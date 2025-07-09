@@ -78,20 +78,25 @@
     <h2>💼 تأكيد تنفيذ العمل</h2>
 
     <div class="worker-data">
-      <h4>🔍 بيانات العامل المُسجلة:</h4>
-      <p id="workerIndoor">مكيفات داخلية: ⏳</p>
-      <p id="workerOutdoor">مكيفات خارجية: ⏳</p>
-      <p id="workerMaintenance">عمليات صيانة: ⏳</p>
+      <h4>🔧 بيانات العامل (قابلة للتعديل):</h4>
+      <label>مكيفات داخلية (من العامل):</label>
+      <input type="number" id="workerIndoorInput" placeholder="عدد المكيفات الداخلية" />
+
+      <label>مكيفات خارجية (من العامل):</label>
+      <input type="number" id="workerOutdoorInput" placeholder="عدد المكيفات الخارجية" />
+
+      <label>عمليات صيانة (من العامل):</label>
+      <input type="number" id="workerMaintenanceInput" placeholder="عدد الصيانات" />
     </div>
 
     <div class="section">
-      <label>عدد المكيفات الداخلية:</label>
+      <label>عدد المكيفات الداخلية (من الزبون):</label>
       <input type="number" id="indoorCount" placeholder="كم مكيف داخلي؟" />
 
-      <label>عدد المكيفات الخارجية:</label>
+      <label>عدد المكيفات الخارجية (من الزبون):</label>
       <input type="number" id="outdoorCount" placeholder="كم مكيف خارجي؟" />
 
-      <label>عدد الصيانات:</label>
+      <label>عدد الصيانات (من الزبون):</label>
       <input type="number" id="maintenanceCount" placeholder="عدد عمليات الصيانة؟" />
     </div>
 
@@ -141,11 +146,9 @@
       const snap = await getDoc(docRef);
       if (snap.exists()) {
         workerData = snap.data().workDone || {};
-
-        // عرض البيانات
-        document.getElementById("workerIndoor").textContent = `مكيفات داخلية: ${workerData.indoor || 0}`;
-        document.getElementById("workerOutdoor").textContent = `مكيفات خارجية: ${workerData.outdoor || 0}`;
-        document.getElementById("workerMaintenance").textContent = `عمليات صيانة: ${workerData.maintenance || 0}`;
+        document.getElementById("workerIndoorInput").value = workerData.indoor || 0;
+        document.getElementById("workerOutdoorInput").value = workerData.outdoor || 0;
+        document.getElementById("workerMaintenanceInput").value = workerData.maintenance || 0;
       }
     }
 
@@ -166,12 +169,14 @@
       const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
       const notes = document.getElementById("ownerNotes").value;
 
-      await fetchWorkerData();
+      const workerIndoor = parseInt(document.getElementById("workerIndoorInput").value || 0);
+      const workerOutdoor = parseInt(document.getElementById("workerOutdoorInput").value || 0);
+      const workerMaintenance = parseInt(document.getElementById("workerMaintenanceInput").value || 0);
 
       const mismatch =
-        indoor !== workerData.indoor ||
-        outdoor !== workerData.outdoor ||
-        maintenance !== workerData.maintenance;
+        indoor !== workerIndoor ||
+        outdoor !== workerOutdoor ||
+        maintenance !== workerMaintenance;
 
       if (mismatch) {
         document.getElementById("warning").textContent = "⚠️ البيانات غير متطابقة مع بيانات العامل! سيتم إرسال إشعار.";
@@ -180,9 +185,9 @@
           requestId,
           type: "اختلاف في بيانات العمل",
           expected: {
-            indoor: workerData.indoor,
-            outdoor: workerData.outdoor,
-            maintenance: workerData.maintenance
+            indoor: workerIndoor,
+            outdoor: workerOutdoor,
+            maintenance: workerMaintenance
           },
           actual: {
             indoor,
@@ -197,6 +202,11 @@
       }
 
       await updateDoc(doc(db, "requests", requestId), {
+        workDone: {
+          indoor: workerIndoor,
+          outdoor: workerOutdoor,
+          maintenance: workerMaintenance
+        },
         ownerConfirmation: {
           indoor,
           outdoor,
@@ -208,7 +218,7 @@
       });
 
       alert("✅ تم حفظ البيانات بنجاح.");
-      window.location.href = "admin-requests.html";
+      window.location.href = "admin.html";
     }
 
     fetchWorkerData();
