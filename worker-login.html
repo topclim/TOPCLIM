@@ -2,75 +2,98 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل دخول العامل – TopClim</title>
+  <title>تسجيل دخول العامل</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
-    * { box-sizing: border-box; }
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f0f0f0;
+      background: #f0f2f5;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      margin: 0;
     }
+
     .login-box {
-      background: white;
+      background: #fff;
       padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      max-width: 400px;
-      width: 100%;
+      width: 350px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
     }
+
     h2 {
       text-align: center;
       color: #007bff;
-      margin-bottom: 25px;
     }
+
     label {
-      font-weight: bold;
       display: block;
       margin-top: 15px;
+      font-weight: bold;
     }
-    select, button {
+
+    input {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
+      margin-top: 5px;
       border-radius: 6px;
+      border: 1px solid #ccc;
     }
+
     button {
-      background-color: #28a745;
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      background: #28a745;
       color: white;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
+
     button:hover {
-      background-color: #218838;
+      background: #218838;
     }
-    .loading {
-      text-align: center;
+
+    .error {
+      color: red;
       margin-top: 10px;
-      color: gray;
+      text-align: center;
+    }
+
+    .link {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .link a {
+      color: #007bff;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <div class="login-box" id="loginBox">
+  <div class="login-box">
     <h2>👷 تسجيل دخول العامل</h2>
-    <label>اختر اسمك:</label>
-    <select id="workerSelect">
-      <option value="">🔽 اختر من القائمة</option>
-    </select>
-    <button onclick="login()">🔓 دخول</button>
-    <div class="loading" id="loadingMsg">🔄 جاري تحميل القائمة...</div>
+    <label for="email">📧 البريد الإلكتروني:</label>
+    <input type="email" id="email" placeholder="example@email.com" required>
+
+    <label for="password">🔑 كلمة المرور:</label>
+    <input type="password" id="password" placeholder="••••••••" required>
+
+    <button id="loginBtn">دخول</button>
+    <div class="error" id="error"></div>
+
+    <div class="link">
+      <p>ليس لديك حساب؟ <a href="worker-register.html">سجل هنا</a></p>
+    </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
@@ -79,63 +102,37 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    const workerSelect = document.getElementById("workerSelect");
-    const loadingMsg = document.getElementById("loadingMsg");
+    const loginBtn = document.getElementById("loginBtn");
+    const errorDiv = document.getElementById("error");
 
-    // ✅ تحقق من وجود تسجيل دخول محفوظ مسبقًا
-    const savedWorkerId = localStorage.getItem("workerId");
-    if (savedWorkerId) {
-      const lastLogin = localStorage.getItem("lastLogin") || "";
-      // ✅ تحقق إذا لم يمر أكثر من 30 يومًا على آخر دخول
-      const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-      if (Date.now() - parseInt(lastLogin) < THIRTY_DAYS) {
+    loginBtn.onclick = async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // تخزين معلومات تسجيل الدخول
+        localStorage.setItem("workerEmail", user.email);
+        localStorage.setItem("workerUID", user.uid);
+
+        // الانتقال للوحة العمل
+        window.location.href = "worker.html";
+      } catch (error) {
+        errorDiv.textContent = "❌ البريد أو كلمة المرور غير صحيحة";
+      }
+    };
+
+    // إذا كان مسجلاً من قبل
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // تم تسجيل الدخول من قبل
         window.location.href = "worker.html";
       }
-    }
-
-    async function loadWorkers() {
-      const snap = await getDocs(collection(db, "workers"));
-      workerSelect.innerHTML = '<option value="">🔽 اختر من القائمة</option>';
-      snap.forEach(doc => {
-        const worker = doc.data();
-        const option = document.createElement("option");
-        option.value = doc.id;
-        option.textContent = `${worker.name} (${worker.role})`;
-        workerSelect.appendChild(option);
-      });
-      loadingMsg.textContent = "✅ تم تحميل القائمة";
-    }
-
-    // ✅ عملية الدخول
-    window.login = async function () {
-      const workerId = workerSelect.value;
-      if (!workerId) {
-        alert("❗ يرجى اختيار اسمك أولاً");
-        return;
-      }
-
-      // 📝 حفظ بيانات الدخول
-      localStorage.setItem("workerId", workerId);
-      localStorage.setItem("lastLogin", Date.now().toString());
-
-      // 📌 تسجيل في firestore آخر تسجيل دخول
-      try {
-        await setDoc(doc(db, "workerLogins", workerId), {
-          lastLogin: new Date(),
-          userAgent: navigator.userAgent,
-          ip: null // يمكن لاحقًا ربطه بـ Cloud Function لجلب IP
-        });
-      } catch (e) {
-        console.warn("⚠️ لم يتم حفظ تسجيل الدخول في السحابة");
-      }
-
-      // ✅ الانتقال إلى الصفحة الرئيسية
-      window.location.href = "worker.html";
-    }
-
-    loadWorkers();
+    });
   </script>
 </body>
 </html>
