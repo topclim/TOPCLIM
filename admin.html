@@ -1,55 +1,89 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
+  <title>📊 لوحة المدير – TopClim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>لوحة التحكم – TopClim</title>
   <style>
-    body { font-family: Arial; padding: 20px; background: #fff0f0; text-align: right; direction: rtl; }
-    input, textarea, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
-    img { max-width: 100px; margin-top: 10px; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f1f1f1;
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      color: #333;
+    }
+    .sidebar {
+      width: 260px;
+      background-color: #343a40;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 25px 20px;
+    }
+    .sidebar h2 {
+      font-size: 22px;
+      margin-bottom: 30px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      padding-bottom: 10px;
+    }
+    .dropdown {
+      margin-bottom: 20px;
+    }
+    .dropdown select {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      appearance: none;
+      cursor: pointer;
+    }
+    .dropdown select:hover {
+      background-color: #0056b3;
+    }
+    .content {
+      flex: 1;
+      padding: 0;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+    iframe {
+      width: 100%;
+      height: 100vh;
+      border: none;
+    }
   </style>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <h1>🛠️ لوحة التحكم - تعديل محتوى الهبوط</h1>
-  <label>العنوان</label>
-  <input id="headerTitle" type="text" />
-  <label>الوصف</label>
-  <textarea id="headerDesc"></textarea>
-  <label>رابط صورة علوية</label>
-  <input id="bannerTop" type="text" />
-  <label>رابط صورة قبل</label>
-  <input id="beforeImage" type="text" />
-  <label>رابط صورة بعد</label>
-  <input id="afterImage" type="text" />
-  <label>رابط صورة سفلية</label>
-  <input id="bannerBottom" type="text" />
-  <button onclick="saveContent()">💾 حفظ</button>
+  <div class="sidebar">
+    <h2>📊 لوحة المدير</h2>
+    <div class="dropdown">
+      <select id="navSelect">
+        <option value="admin-requests.html">📋 الطلبات</option>
+        <option value="admin_upload.html">🎯 تعديل صفحة الهبوط</option>
+        <option value="tools-manager.html">🧰 أدوات العمل</option>
+        <option value="worker-register.html">👷‍♂️ تسجيل العمال</option>
+        <option value="admin-profits.html">💰 الأرباح</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="content">
+    <iframe id="mainView" src="admin-requests.html"></iframe>
+  </div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSy...",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa",
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const navSelect = document.getElementById("navSelect");
+    const iframe = document.getElementById("mainView");
 
-    async function saveContent() {
-      const data = {
-        headerTitle: document.getElementById("headerTitle").value,
-        headerDesc: document.getElementById("headerDesc").value,
-        bannerTop: document.getElementById("bannerTop").value,
-        beforeImage: document.getElementById("beforeImage").value,
-        afterImage: document.getElementById("afterImage").value,
-        bannerBottom: document.getElementById("bannerBottom").value,
-      };
-      await db.collection("landing").doc("landingContent").set(data, { merge: true });
-      alert("✅ تم الحفظ بنجاح");
-    }
+    navSelect.onchange = function() {
+      const selectedPage = navSelect.value;
+      iframe.src = selectedPage;
+    };
   </script>
 </body>
 </html>
