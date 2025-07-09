@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💼 تأكيد تنفيذ العمل – TopClim</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f1f1f1;
+      padding: 20px;
+      margin: 0;
+      direction: rtl;
+    }
+    .container {
+      max-width: 750px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #007BFF;
+      margin-bottom: 25px;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 6px;
+    }
+    input[type="number"], textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #fafafa;
+      font-size: 1rem;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .warning {
+      color: red;
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>💼 تأكيد تنفيذ العمل</h2>
+
+    <div class="section">
+      <label>عدد المكيفات الداخلية:</label>
+      <input type="number" id="indoorCount" placeholder="كم مكيف داخلي؟" />
+
+      <label>عدد المكيفات الخارجية:</label>
+      <input type="number" id="outdoorCount" placeholder="كم مكيف خارجي؟" />
+
+      <label>عدد الصيانات:</label>
+      <input type="number" id="maintenanceCount" placeholder="عدد عمليات الصيانة؟" />
+    </div>
+
+    <div class="section">
+      <label>🧮 حساب الفاتورة:</label>
+      <input type="number" id="pricePerIndoor" placeholder="سعر المكيف الداخلي (DA)" />
+      <input type="number" id="pricePerOutdoor" placeholder="سعر المكيف الخارجي (DA)" />
+      <input type="number" id="pricePerMaintenance" placeholder="سعر الصيانة (DA)" />
+      <button onclick="calculateTotal()">📊 حساب الفاتورة</button>
+      <h3 id="totalPriceDisplay">💰 الفاتورة: 0 DA</h3>
+    </div>
+
+    <div class="section">
+      <label>ملاحظات:</label>
+      <textarea id="ownerNotes" placeholder="أدخل ملاحظاتك هنا..."></textarea>
+    </div>
+
+    <div id="warning" class="warning"></div>
+
+    <div class="section">
+      <button onclick="submitOwnerConfirmation()">✅ تأكيد العمل وحفظ البيانات</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, doc, getDoc, updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const requestId = params.get("id");
+
+    let workerData = {};
+
+    async function fetchWorkerData() {
+      const docRef = doc(db, "requests", requestId);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        workerData = snap.data().workDone || {};
+      }
+    }
+
+    window.calculateTotal = function () {
+      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
+      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
+      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
+      const pi = parseFloat(document.getElementById("pricePerIndoor").value || 0);
+      const po = parseFloat(document.getElementById("pricePerOutdoor").value || 0);
+      const pm = parseFloat(document.getElementById("pricePerMaintenance").value || 0);
+      const total = (indoor * pi) + (outdoor * po) + (maintenance * pm);
+      document.getElementById("totalPriceDisplay").textContent = `💰 الفاتورة: ${total} DA`;
+    }
+
+    window.submitOwnerConfirmation = async function () {
+      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
+      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
+      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
+      const notes = document.getElementById("ownerNotes").value;
+
+      await fetchWorkerData();
+
+      const mismatch =
+        indoor !== workerData.indoor ||
+        outdoor !== workerData.outdoor ||
+        maintenance !== workerData.maintenance;
+
+      if (mismatch) {
+        document.getElementById("warning").textContent = "⚠️ البيانات غير متطابقة مع بيانات العامل! سيتم إرسال إشعار.";
+        // يمكنك هنا إضافة كود لإرسال إشعار لاحقًا
+      } else {
+        document.getElementById("warning").textContent = "✅ البيانات مطابقة."
+      }
+
+      await updateDoc(doc(db, "requests", requestId), {
+        ownerConfirmation: {
+          indoor,
+          outdoor,
+          maintenance,
+          notes,
+          verified: !mismatch,
+          verifiedAt: new Date()
+        }
+      });
+
+      alert("✅ تم حفظ البيانات بنجاح.");
+      window.location.href = "admin-requests.html";
+    }
+
+    fetchWorkerData();
+  </script>
+</body>
+</html>
