@@ -2,14 +2,18 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>💼 تأكيد تنفيذ العمل – TopClim</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Cairo', sans-serif;
       background-color: #f1f1f1;
       margin: 0;
-      padding: 20px;
+      padding: 0;
     }
 
     .container {
@@ -17,56 +21,70 @@
       margin: auto;
       background: #fff;
       padding: 25px;
+      margin-top: 20px;
       border-radius: 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #007BFF;
     }
 
     label {
       font-weight: bold;
-      display: block;
       margin-top: 15px;
-      margin-bottom: 5px;
+      display: block;
     }
 
-    input[type="number"], input[type="text"], textarea {
+    input[type="number"], textarea {
       width: 100%;
       padding: 10px;
       font-size: 1.2rem;
       border: 1px solid #ccc;
       border-radius: 6px;
       background: #fafafa;
+      margin-bottom: 15px;
+    }
+
+    textarea {
+      min-height: 80px;
     }
 
     button {
-      margin-top: 15px;
+      width: 100%;
       padding: 12px;
       font-size: 1.1rem;
-      width: 100%;
+      margin-top: 10px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+    }
+
+    #openCalcBtn {
       background: #007BFF;
       color: white;
     }
 
-    button:hover {
+    #openCalcBtn:hover {
       background: #0056b3;
     }
 
     .warning {
-      text-align: center;
       color: red;
+      text-align: center;
       margin-top: 10px;
     }
 
+    /* Calculator popup */
     .popup {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
       justify-content: center;
       align-items: center;
-      z-index: 9999;
     }
 
     .popup.active {
@@ -77,35 +95,37 @@
       background: white;
       width: 100vw;
       height: 100vh;
-      padding: 20px;
-      box-sizing: border-box;
       display: flex;
       flex-direction: column;
+      justify-content: flex-start;
       align-items: center;
+      padding: 20px 10px;
     }
 
     .calc-display {
-      width: 90%;
-      font-size: 2.5rem;
-      padding: 10px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      width: 95%;
+      height: 60px;
+      font-size: 2.2rem;
       text-align: left;
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      background-color: #f5f5f5;
     }
 
     .calc-buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      width: 90%;
+      gap: 12px;
+      width: 95%;
     }
 
     .calc-buttons button {
-      font-size: 2rem;
+      font-size: 1.8rem;
+      padding: 20px;
       border: none;
       border-radius: 10px;
-      aspect-ratio: 1/1;
       background: #007BFF;
       color: white;
     }
@@ -113,145 +133,160 @@
     .calc-buttons button:hover {
       background: #0056b3;
     }
+
+    .calc-buttons button.large {
+      grid-column: span 2;
+    }
+
+    #saveBtn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    #saveBtn:hover {
+      background-color: #218838;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>💼 تأكيد العمل</h2>
 
-    <label>عدد المكيفات الداخلية:</label>
-    <input type="number" id="indoorCount">
+<div class="container">
+  <h2>💼 تأكيد تنفيذ العمل</h2>
 
-    <label>عدد المكيفات الخارجية:</label>
-    <input type="number" id="outdoorCount">
+  <label>عدد المكيفات الداخلية:</label>
+  <input type="number" id="indoorCount" />
 
-    <label>عدد عمليات الصيانة:</label>
-    <input type="number" id="maintenanceCount">
+  <label>عدد المكيفات الخارجية:</label>
+  <input type="number" id="outdoorCount" />
 
-    <label>💰 الفاتورة:</label>
-    <input type="number" id="finalPrice" readonly />
-    <button id="openCalcBtn">🧮 فتح الآلة الحاسبة</button>
+  <label>عدد الصيانات:</label>
+  <input type="number" id="maintenanceCount" />
 
-    <label>ملاحظات:</label>
-    <textarea id="ownerNotes" placeholder="ملاحظات حول التنفيذ..."></textarea>
+  <label>💰 الفاتورة:</label>
+  <input type="number" id="finalPrice" readonly />
+  <button id="openCalcBtn">🧮 فتح الآلة الحاسبة</button>
 
-    <div class="warning" id="warningMsg"></div>
-    <button onclick="submitConfirmation()">✅ حفظ البيانات</button>
-  </div>
+  <label>ملاحظات:</label>
+  <textarea id="ownerNotes" placeholder="ملاحظات حول العمل..."></textarea>
 
-  <!-- آلة حاسبة منبثقة -->
-  <div id="calculatorPopup" class="popup">
-    <div class="calculator" onclick="event.stopPropagation();">
-      <input id="calcDisplay" class="calc-display" readonly />
-      <div class="calc-buttons">
-        <button onclick="appendCalc('7')">7</button>
-        <button onclick="appendCalc('8')">8</button>
-        <button onclick="appendCalc('9')">9</button>
-        <button onclick="appendCalc('/')">÷</button>
+  <div class="warning" id="warningMsg"></div>
+  <button id="saveBtn" onclick="submitConfirmation()">✅ حفظ البيانات</button>
+</div>
 
-        <button onclick="appendCalc('4')">4</button>
-        <button onclick="appendCalc('5')">5</button>
-        <button onclick="appendCalc('6')">6</button>
-        <button onclick="appendCalc('*')">×</button>
+<!-- الآلة الحاسبة -->
+<div id="calculatorPopup" class="popup" onclick="closeCalculator()">
+  <div class="calculator" onclick="event.stopPropagation();">
+    <input id="calcDisplay" class="calc-display" readonly />
+    <div class="calc-buttons">
+      <button onclick="appendCalc('7')">7</button>
+      <button onclick="appendCalc('8')">8</button>
+      <button onclick="appendCalc('9')">9</button>
+      <button onclick="appendCalc('/')">÷</button>
 
-        <button onclick="appendCalc('1')">1</button>
-        <button onclick="appendCalc('2')">2</button>
-        <button onclick="appendCalc('3')">3</button>
-        <button onclick="appendCalc('-')">−</button>
+      <button onclick="appendCalc('4')">4</button>
+      <button onclick="appendCalc('5')">5</button>
+      <button onclick="appendCalc('6')">6</button>
+      <button onclick="appendCalc('*')">×</button>
 
-        <button onclick="appendCalc('0')">0</button>
-        <button onclick="appendCalc('.')">.</button>
-        <button onclick="calculateResult()">=</button>
-        <button onclick="appendCalc('+')">+</button>
+      <button onclick="appendCalc('1')">1</button>
+      <button onclick="appendCalc('2')">2</button>
+      <button onclick="appendCalc('3')">3</button>
+      <button onclick="appendCalc('-')">−</button>
 
-        <button onclick="deleteLast()" style="grid-column: span 2; background:#ffc107;">⌫ مسح</button>
-        <button onclick="closeCalculator()" style="grid-column: span 2; background:#dc3545;">❌ إلغاء</button>
-      </div>
+      <button onclick="appendCalc('0')">0</button>
+      <button onclick="appendCalc('.')">.</button>
+      <button onclick="calculateResult()">=</button>
+      <button onclick="appendCalc('+')">+</button>
+
+      <button class="large" onclick="deleteLast()" style="background:#ffc107">⌫ مسح</button>
+      <button class="large" onclick="closeCalculator()" style="background:#dc3545">❌ إلغاء</button>
     </div>
   </div>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, doc, getDoc, updateDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    updateDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    authDomain: "topclim-3edfa.firebaseapp.com",
+    projectId: "topclim-3edfa"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const params = new URLSearchParams(window.location.search);
-    const requestId = params.get("id");
+  const params = new URLSearchParams(window.location.search);
+  const requestId = params.get("id");
 
-    async function loadCounts() {
-      const docRef = doc(db, "requests", requestId);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        const data = snap.data().workDone || {};
-        document.getElementById("indoorCount").value = data.indoor || 0;
-        document.getElementById("outdoorCount").value = data.outdoor || 0;
-        document.getElementById("maintenanceCount").value = data.maintenance || 0;
-      }
+  async function loadCounts() {
+    const snap = await getDoc(doc(db, "requests", requestId));
+    if (snap.exists()) {
+      const data = snap.data().workDone || {};
+      document.getElementById("indoorCount").value = data.indoor || 0;
+      document.getElementById("outdoorCount").value = data.outdoor || 0;
+      document.getElementById("maintenanceCount").value = data.maintenance || 0;
     }
+  }
 
-    window.submitConfirmation = async () => {
-      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
-      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
-      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
-      const finalPrice = parseFloat(document.getElementById("finalPrice").value || 0);
-      const notes = document.getElementById("ownerNotes").value;
+  window.submitConfirmation = async () => {
+    const indoor = parseInt(document.getElementById("indoorCount").value || 0);
+    const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
+    const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
+    const price = parseFloat(document.getElementById("finalPrice").value || 0);
+    const notes = document.getElementById("ownerNotes").value;
 
-      await updateDoc(doc(db, "requests", requestId), {
-        ownerConfirmation: {
-          indoor,
-          outdoor,
-          maintenance,
-          price: finalPrice,
-          notes,
-          verifiedAt: new Date()
-        }
-      });
-
-      alert("✅ تم حفظ البيانات بنجاح.");
-      window.location.href = "admin.html";
-    };
-
-    // آلة حاسبة
-    document.getElementById("openCalcBtn").onclick = () =>
-      document.getElementById("calculatorPopup").classList.add("active");
-
-    window.closeCalculator = () =>
-      document.getElementById("calculatorPopup").classList.remove("active");
-
-    window.appendCalc = val => {
-      document.getElementById("calcDisplay").value += val;
-    };
-
-    window.deleteLast = () => {
-      const d = document.getElementById("calcDisplay");
-      d.value = d.value.slice(0, -1);
-    };
-
-    window.calculateResult = () => {
-      try {
-        const display = document.getElementById("calcDisplay");
-        const result = eval(display.value);
-        display.value = result;
-        document.getElementById("finalPrice").value = result;
-        closeCalculator();
-      } catch {
-        alert("⚠️ خطأ في العملية الحسابية");
+    await updateDoc(doc(db, "requests", requestId), {
+      ownerConfirmation: {
+        indoor, outdoor, maintenance,
+        price,
+        notes,
+        verifiedAt: new Date()
       }
-    };
+    });
 
-    document.getElementById("calculatorPopup").addEventListener("click", closeCalculator);
+    alert("✅ تم حفظ البيانات");
+    window.location.href = "admin.html";
+  };
 
-    loadCounts();
-  </script>
+  // الآلة الحاسبة
+  const display = document.getElementById("calcDisplay");
+
+  window.appendCalc = val => {
+    display.value += val;
+  };
+
+  window.calculateResult = () => {
+    try {
+      const result = eval(display.value);
+      display.value = result;
+      document.getElementById("finalPrice").value = result;
+      closeCalculator();
+    } catch {
+      alert("⚠️ عملية غير صحيحة");
+    }
+  };
+
+  window.deleteLast = () => {
+    display.value = display.value.slice(0, -1);
+  };
+
+  window.closeCalculator = () => {
+    document.getElementById("calculatorPopup").classList.remove("active");
+  };
+
+  document.getElementById("openCalcBtn").onclick = () => {
+    document.getElementById("calculatorPopup").classList.add("active");
+  };
+
+  loadCounts();
+</script>
+
 </body>
 </html>
