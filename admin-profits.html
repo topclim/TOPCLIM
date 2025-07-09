@@ -2,92 +2,60 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>📊 صفحة الأرباح – TopClim</title>
+  <title>📊 تقرير الأرباح – TopClim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f3f6f9;
-      margin: 0;
-      padding: 20px;
-      direction: rtl;
-    }
-    h1 {
-      text-align: center;
-      color: #007bff;
-    }
-    .info {
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 18px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-      background: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background: #007bff;
-      color: #fff;
-    }
-    .summary {
-      text-align: center;
-      font-weight: bold;
-      background: #dff0d8;
-      padding: 10px;
-      border-radius: 5px;
-    }
-    .details {
-      background: #f1f1f1;
-      padding: 10px;
-    }
-    button {
-      background: #28a745;
-      color: white;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #218838;
-    }
+    body { font-family: 'Cairo', sans-serif; background: #eef2f5; margin:0;padding:20px; direction: rtl; }
+    h1 { text-align:center; color:#007bff; margin-bottom:10px; }
+    .controls { text-align:center; margin-bottom:20px; }
+    input[type="date"] { padding:5px; margin:0 5px; }
+    button { padding:8px 16px; background:#28a745; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+    button:hover { background:#218838; }
+    table { width:100%; border-collapse:collapse; margin-bottom:20px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    th, td { padding:10px; border:1px solid #ccc; text-align:center; }
+    th { background:#007bff; color:#fff; }
+    .details-row { display:none; background:#f7f7f7; }
+    .summary-box { font-size:1.1rem; padding:10px; background:#d9edf7; border-radius:4px; text-align:center; margin-top:10px; }
   </style>
 </head>
 <body>
 
-<h1>📈 تقرير الأرباح</h1>
-<div class="info" id="workerName">🔄 جاري تحميل اسم العامل...</div>
+<h1>📈 تقرير أرباح شامل</h1>
+<div class="controls">
+  من: <input type="date" id="fromDate" />
+  إلى: <input type="date" id="toDate" />
+  <button onclick="loadReport()">عرض التقرير</button>
+</div>
 
-<table id="profitTable">
+<table id="reportTable">
   <thead>
     <tr>
       <th>#</th>
-      <th>📅 من تاريخ</th>
-      <th>📅 إلى تاريخ</th>
-      <th>💸 السعر/داخلي</th>
-      <th>💸 السعر/خارجي</th>
-      <th>💸 السعر/صيانة</th>
-      <th>💰 الربح</th>
-      <th>📄 التفاصيل</th>
+      <th>👷‍♂️ عامل</th>
+      <th>📅 من</th>
+      <th>📅 إلى</th>
+      <th>💸 سعر داخلي</th>
+      <th>💸 سعر خارجي</th>
+      <th>💸 سعر صيانة</th>
+      <th>💰 ربح</th>
+      <th>📄 تفاصيل</th>
     </tr>
   </thead>
-  <tbody id="profitBody"></tbody>
+  <tbody id="reportBody"></tbody>
 </table>
 
-<div class="summary" id="totalProfit">🔢 إجمالي الربح: 0 دج</div>
+<div id="totalAll" class="summary-box">🔢 إجمالي الربح الكلي: 0 دج</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
-    getFirestore, collection, doc, getDoc, getDocs
+    getFirestore,
+    collectionGroup,
+    getDocs,
+    query,
+    where,
+    doc,
+    getDoc
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const app = initializeApp({
@@ -97,121 +65,109 @@
   });
   const db = getFirestore(app);
 
-  const workerId = new URLSearchParams(location.search).get("workerId");
-  const workerNameDiv = document.getElementById("workerName");
-  const profitBody = document.getElementById("profitBody");
-  const totalProfitDiv = document.getElementById("totalProfit");
+  async function loadReport() {
+    const from = document.getElementById("fromDate").value;
+    const to   = document.getElementById("toDate").value;
+    if (!from || !to) return alert("يرجى تحديد الفترة!");
+    const body = document.getElementById("reportBody");
+    body.innerHTML = "";
+    let totalAll = 0;
 
-  if (!workerId) {
-    alert("❌ workerId مفقود في الرابط");
-    throw new Error("workerId required");
-  }
+    const q = query(
+      collectionGroup(db, "entries"),
+      where("start", ">=", from),
+      where("end", "<=", to)
+    );
+    const snap = await getDocs(q);
+    let i = 1;
 
-  async function loadWorkerName() {
-    const snap = await getDoc(doc(db, "workers", workerId));
-    if (snap.exists()) {
-      workerNameDiv.textContent = `👷 العامل: ${snap.data().name}`;
-    } else {
-      workerNameDiv.textContent = "❌ لم يتم العثور على العامل.";
-    }
-  }
-
-  async function loadProfits() {
-    const snap = await getDocs(collection(db, "summaries", workerId, "entries"));
-    let totalProfit = 0;
-    let index = 1;
-
-    for (const docSnap of snap.docs) {
-      const data = docSnap.data();
-      const { start, end, priceIndoor, priceOutdoor, priceMaintenance } = data;
-
-      // احسب الربح الحقيقي
-      const reqSnap = await getDocs(collection(db, "requests"));
-      let profit = 0;
-      let details = [];
-
-      reqSnap.forEach(r => {
-        const d = r.data();
-        if (d.assignedTo === workerId && d.status === "تم الإنجاز" && d.workDone?.finishedAt) {
-          const fDate = new Date(d.workDone.finishedAt.seconds * 1000);
-          const sDate = new Date(start);
-          const eDate = new Date(end);
-          if (fDate >= sDate && fDate <= eDate) {
-            const inCount = d.workDone.indoor || 0;
-            const outCount = d.workDone.outdoor || 0;
-            const mainCount = d.workDone.maintenance || 0;
-
-            profit += (inCount * priceIndoor) + (outCount * priceOutdoor) + (mainCount * priceMaintenance);
-
-            details.push({
-              date: fDate.toLocaleDateString("ar-DZ"),
-              indoor: inCount,
-              outdoor: outCount,
-              maintenance: mainCount,
-              address: d.address || "غير محدد"
-            });
-          }
-        }
-      });
-
-      totalProfit += profit;
+    for (const rec of snap.docs) {
+      const r = rec.data();
+      const workerId = rec.ref.parent.parent.id;
+      const workerSnap = await getDoc(doc(db, "workers", workerId));
+      const workerName = workerSnap.exists() ? workerSnap.data().name : "-";
+      const profit = await calcProfitForEntry(workerId, r);
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${index++}</td>
-        <td>${start}</td>
-        <td>${end}</td>
-        <td>${priceIndoor} دج</td>
-        <td>${priceOutdoor} دج</td>
-        <td>${priceMaintenance} دج</td>
+        <td>${i++}</td>
+        <td>${workerName}</td>
+        <td>${r.start}</td>
+        <td>${r.end}</td>
+        <td>${r.priceIndoor}</td>
+        <td>${r.priceOutdoor}</td>
+        <td>${r.priceMaintenance}</td>
         <td>${profit.toLocaleString()} دج</td>
-        <td><button onclick='toggleDetails(this)'>عرض</button></td>
+        <td><button onclick="toggleDetails(this)">عرض</button></td>
       `;
-
-      const detailRow = document.createElement("tr");
-      detailRow.className = "details hidden";
-      detailRow.innerHTML = `
-        <td colspan="8">
-          <table style="width:100%; background:#fcfcfc; margin-top:10px;">
-            <tr>
-              <th>📆 التاريخ</th>
-              <th>داخلي</th>
-              <th>خارجي</th>
-              <th>صيانة</th>
-              <th>📍 العنوان</th>
-            </tr>
-            ${
-              details.length
-                ? details.map(e => `
-                  <tr>
-                    <td>${e.date}</td>
-                    <td>${e.indoor}</td>
-                    <td>${e.outdoor}</td>
-                    <td>${e.maintenance}</td>
-                    <td>${e.address}</td>
-                  </tr>
-                `).join("")
-                : `<tr><td colspan="5">لا توجد تفاصيل</td></tr>`
-            }
-          </table>
-        </td>
-      `;
-
-      profitBody.appendChild(tr);
-      profitBody.appendChild(detailRow);
+      const detailsTr = document.createElement("tr");
+      detailsTr.className = "details-row";
+      const daily = await getDailyRecords(workerId, r.start, r.end, r);
+      detailsTr.innerHTML = `<td colspan="9">${daily}</td>`;
+      body.appendChild(tr);
+      body.appendChild(detailsTr);
+      totalAll += profit;
     }
 
-    totalProfitDiv.textContent = `🔢 إجمالي الربح: ${totalProfit.toLocaleString()} دج`;
+    document.getElementById("totalAll").textContent =
+      `🔢 إجمالي الربح الكلي: ${totalAll.toLocaleString()} دج`;
   }
 
-  window.toggleDetails = function (btn) {
-    const row = btn.closest("tr");
-    const next = row.nextElementSibling;
-    next.classList.toggle("hidden");
-  };
+  async function calcProfitForEntry(workerId, r) {
+    const q2 = query(
+      collectionGroup(db, "requests"),
+      where("assignedTo", "==", workerId),
+      where("status", "==", "تم الإنجاز")
+    );
+    const snap = await getDocs(q2);
+    let sum = 0;
+    snap.forEach(s => {
+      const d = s.data().workDone;
+      const f = d.finishedAt?.seconds ? new Date(d.finishedAt.seconds * 1000) : null;
+      if (f && f >= new Date(r.start) && f <= new Date(r.end)) {
+        sum += (d.indoor||0)*r.priceIndoor
+             + (d.outdoor||0)*r.priceOutdoor
+             + (d.maintenance||0)*r.priceMaintenance;
+      }
+    });
+    return sum;
+  }
 
-  loadWorkerName();
-  loadProfits();
+  async function getDailyRecords(workerId, start, end, r) {
+    const q2 = query(
+      collectionGroup(db, "requests"),
+      where("assignedTo", "==", workerId),
+      where("status", "==", "تم الإنجاز")
+    );
+    const snap = await getDocs(q2);
+    let html = `<table style="width:100%;background:#fdfdfd;border:1px solid #ccc;">
+      <tr><th>التاريخ</th><th>داخلي</th><th>خارجي</th><th>صيانة</th><th>🕒 عنوان</th><th>الربح</th></tr>`;
+    snap.forEach(s => {
+      const d = s.data();
+      const wd = d.workDone;
+      const f = wd.finishedAt?.seconds ? new Date(wd.finishedAt.seconds*1000) : null;
+      if (f && f >= new Date(start) && f <= new Date(end)) {
+        const profit = (wd.indoor||0)*r.priceIndoor
+                     + (wd.outdoor||0)*r.priceOutdoor
+                     + (wd.maintenance||0)*r.priceMaintenance;
+        html += `<tr>
+          <td>${f.toLocaleDateString("ar-DZ")}</td>
+          <td>${wd.indoor||0}</td>
+          <td>${wd.outdoor||0}</td>
+          <td>${wd.maintenance||0}</td>
+          <td>${d.address||""}</td>
+          <td>${profit.toLocaleString()} دج</td>
+        </tr>`;
+      }
+    });
+    html += "</table>";
+    return html;
+  }
+
+  window.toggleDetails = btn => {
+    const next = btn.closest("tr").nextElementSibling;
+    next.style.display = next.style.display === "table-row" ? "none" : "table-row";
+  };
 </script>
 
 </body>
