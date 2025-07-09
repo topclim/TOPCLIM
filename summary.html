@@ -79,22 +79,12 @@
       color: #2c3e50;
     }
 
-    .summary {
-      margin-top: 20px;
-      font-size: 18px;
-      text-align: center;
-      background: #e9f5ff;
-      padding: 15px;
-      border-radius: 6px;
-    }
-
     .worker-info {
       text-align: center;
       font-size: 16px;
       margin-top: 10px;
       color: #444;
     }
-
   </style>
 </head>
 <body>
@@ -102,10 +92,6 @@
 <h2>📊 ملخص أعمال مساعد حسب التاريخ والأسعار</h2>
 
 <div class="filters">
-  <label>
-    اسم العامل:
-    <input type="text" id="workerName" placeholder="اكتب اسم العامل" />
-  </label>
   <label>
     من تاريخ:
     <input type="date" id="startDate" />
@@ -129,21 +115,21 @@
   <button id="filterBtn">🔍 بحث</button>
 </div>
 
-<div class="worker-info" id="workerDisplay">👷 اسم العامل: غير محدد</div>
+<div class="worker-info" id="workerDisplay">👷 جاري جلب بيانات العامل...</div>
 
 <table>
   <thead>
     <tr>
-      <th>📅 من تاريخ</th>
-      <th>📅 إلى تاريخ</th>
+      <th>📅 من</th>
+      <th>📅 إلى</th>
       <th>📦 داخلي</th>
       <th>🔥 خارجي</th>
       <th>🛠️ صيانة</th>
-      <th>💰 الربح الكلي</th>
+      <th>💰 الربح</th>
     </tr>
   </thead>
   <tbody id="summaryBody">
-    <tr><td colspan="6">⏳ الرجاء ملء الحقول والضغط على بحث</td></tr>
+    <tr><td colspan="6">⏳ الرجاء اختيار الفترة والأسعار، ثم الضغط على "بحث"</td></tr>
   </tbody>
 </table>
 
@@ -162,86 +148,87 @@
     authDomain: "topclim-3edfa.firebaseapp.com",
     projectId: "topclim-3edfa"
   };
-
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const tbody = document.getElementById("summaryBody");
-  const filterBtn = document.getElementById("filterBtn");
-
   const workerDisplay = document.getElementById("workerDisplay");
+  const filterBtn = document.getElementById("filterBtn");
+  const tbody = document.getElementById("summaryBody");
 
   const workerId = new URLSearchParams(window.location.search).get("workerId");
+  let workerName = "";
 
-  filterBtn.addEventListener("click", loadData);
+  // جلب اسم العامل
+  async function loadWorkerName() {
+    if (!workerId) {
+      workerDisplay.textContent = "❌ لم يتم تمرير workerId في الرابط";
+      return;
+    }
+    try {
+      const snap = await getDoc(doc(db, "workers", workerId));
+      if (snap.exists()) {
+        workerName = snap.data().name || "غير معروف";
+        workerDisplay.textContent = "👷 اسم العامل: " + workerName;
+      } else {
+        workerDisplay.textContent = "❌ مستخدم غير موجود";
+      }
+    } catch {
+      workerDisplay.textContent = "⚠️ خطأ عند جلب اسم العامل";
+    }
+  }
 
-  async function loadData() {
-    const workerName = document.getElementById("workerName").value.trim();
-    const startDate = new Date(document.getElementById("startDate").value);
-    const endDate = new Date(document.getElementById("endDate").value);
+  // عند الضغط على زر البحث
+  filterBtn.addEventListener("click", async () => {
+    const start = new Date(document.getElementById("startDate").value);
+    const end = new Date(document.getElementById("endDate").value);
     const priceIndoor = Number(document.getElementById("priceIndoor").value);
     const priceOutdoor = Number(document.getElementById("priceOutdoor").value);
     const priceMaintenance = Number(document.getElementById("priceMaintenance").value);
 
-    if (!workerId) {
-      alert("❌ workerId غير موجود في الرابط.");
-      return;
+    if (!workerId) return alert("workerId مفقود!");
+    if (isNaN(start) || isNaN(end) || [priceIndoor, priceOutdoor, priceMaintenance].some(isNaN)) {
+      return alert("الرجاء ملء كل الحقول وتحديد الفترة");
     }
 
-    if (!startDate || !endDate || isNaN(priceIndoor) || isNaN(priceOutdoor) || isNaN(priceMaintenance)) {
-      alert("❌ الرجاء ملء كل الحقول بشكل صحيح.");
-      return;
-    }
-
-    workerDisplay.textContent = "👷 اسم العامل: " + (workerName || "غير محدد");
-
-    tbody.innerHTML = `<tr><td colspan="6">🔄 جاري تحميل البيانات...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6">🔄 جاري المعالجة...</td></tr>`;
 
     try {
-      const requestsSnap = await getDocs(collection(db, "requests"));
+      const snap = await getDocs(collection(db, "requests"));
+      let sumIndoor = 0, sumOutdoor = 0, sumMaintenance = 0;
 
-      let totalIndoor = 0;
-      let totalOutdoor = 0;
-      let totalMaintenance = 0;
-
-      for (const docSnap of requestsSnap.docs) {
-        const data = docSnap.data();
-        const finishedAt = data?.workDone?.finishedAt?.seconds ? new Date(data.workDone.finishedAt.seconds * 1000) : null;
-
-        if (
-          data.status === "تم الإنجاز" &&
-          data.assignedTo === workerId &&
-          data.workDone &&
-          finishedAt &&
-          finishedAt >= startDate &&
-          finishedAt <= endDate
-        ) {
-          totalIndoor += Number(data.workDone.indoor || 0);
-          totalOutdoor += Number(data.workDone.outdoor || 0);
-          totalMaintenance += Number(data.workDone.maintenance || 0);
+      snap.docs.forEach(d => {
+        const data = d.data();
+        const done = data.workDone;
+        const fin = done?.finishedAt?.seconds ? new Date(done.finishedAt.seconds * 1000) : null;
+        if (data.status === "تم الإنجاز" &&
+            data.assignedTo === workerId &&
+            fin && fin >= start && fin <= end) {
+          sumIndoor += Number(done.indoor || 0);
+          sumOutdoor += Number(done.outdoor || 0);
+          sumMaintenance += Number(done.maintenance || 0);
         }
-      }
+      });
 
-      const totalProfit =
-        (totalIndoor * priceIndoor) +
-        (totalOutdoor * priceOutdoor) +
-        (totalMaintenance * priceMaintenance);
+      const profit = sumIndoor*priceIndoor + sumOutdoor*priceOutdoor + sumMaintenance*priceMaintenance;
 
-      tbody.innerHTML = `
-        <tr>
-          <td>${startDate.toISOString().split("T")[0]}</td>
-          <td>${endDate.toISOString().split("T")[0]}</td>
-          <td><strong>${totalIndoor}</strong></td>
-          <td><strong>${totalOutdoor}</strong></td>
-          <td><strong>${totalMaintenance}</strong></td>
-          <td><strong>${totalProfit.toLocaleString()} دج</strong></td>
-        </tr>
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${start.toISOString().split("T")[0]}</td>
+        <td>${end.toISOString().split("T")[0]}</td>
+        <td><strong>${sumIndoor}</strong></td>
+        <td><strong>${sumOutdoor}</strong></td>
+        <td><strong>${sumMaintenance}</strong></td>
+        <td><strong>${profit.toLocaleString()} دج</strong></td>
       `;
-    } catch (err) {
-      console.error(err);
-      tbody.innerHTML = `<tr><td colspan="6">⚠️ فشل تحميل البيانات</td></tr>`;
+      tbody.appendChild(row);
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="6">⚠️ حدث خطأ أثناء المعالجة</td></tr>`;
     }
-  }
+  });
+
+  // جلب اسم العامل فوراً عند التحميل
+  loadWorkerName();
 </script>
 
 </body>
