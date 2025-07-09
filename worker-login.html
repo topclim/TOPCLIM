@@ -127,14 +127,12 @@
     };
 
     // إذا كان مسجلاً من قبل
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    // المستخدم لم يقم بتسجيل الدخول
-    window.location.href = "worker-login.html";
-  }
-});
-
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // تم تسجيل الدخول من قبل
+        window.location.href = "worker.html";
+      }
+    });
   </script>
 </body>
 </html>
