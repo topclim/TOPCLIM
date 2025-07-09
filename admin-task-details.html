@@ -41,6 +41,10 @@
       background: #fafafa;
       font-size: 1rem;
     }
+    input[readonly] {
+      background-color: #eee;
+      color: #666;
+    }
     textarea {
       resize: vertical;
       min-height: 70px;
@@ -64,40 +68,34 @@
       margin-top: 10px;
       text-align: center;
     }
-    .worker-data {
-      background: #fefefe;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 20px;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>💼 تأكيد تنفيذ العمل</h2>
 
-    <div class="worker-data">
-      <h4>🔧 بيانات العامل (قابلة للتعديل):</h4>
-      <label>مكيفات داخلية (من العامل):</label>
-      <input type="number" id="workerIndoorInput" placeholder="عدد المكيفات الداخلية" />
+    <div class="section">
+      <h4>📋 بيانات الزبون (غير قابلة للتعديل)</h4>
+      <label>عدد المكيفات الداخلية:</label>
+      <input type="number" id="customerIndoor" readonly />
 
-      <label>مكيفات خارجية (من العامل):</label>
-      <input type="number" id="workerOutdoorInput" placeholder="عدد المكيفات الخارجية" />
+      <label>عدد المكيفات الخارجية:</label>
+      <input type="number" id="customerOutdoor" readonly />
 
-      <label>عمليات صيانة (من العامل):</label>
-      <input type="number" id="workerMaintenanceInput" placeholder="عدد الصيانات" />
+      <label>عدد الصيانات:</label>
+      <input type="number" id="customerMaintenance" readonly />
     </div>
 
     <div class="section">
-      <label>عدد المكيفات الداخلية (من الزبون):</label>
-      <input type="number" id="indoorCount" placeholder="كم مكيف داخلي؟" />
+      <h4>🔧 تعديل بيانات العامل (ستُعتمد في الفاتورة)</h4>
+      <label>عدد المكيفات الداخلية:</label>
+      <input type="number" id="workerIndoorInput" />
 
-      <label>عدد المكيفات الخارجية (من الزبون):</label>
-      <input type="number" id="outdoorCount" placeholder="كم مكيف خارجي؟" />
+      <label>عدد المكيفات الخارجية:</label>
+      <input type="number" id="workerOutdoorInput" />
 
-      <label>عدد الصيانات (من الزبون):</label>
-      <input type="number" id="maintenanceCount" placeholder="عدد عمليات الصيانة؟" />
+      <label>عدد الصيانات:</label>
+      <input type="number" id="workerMaintenanceInput" />
     </div>
 
     <div class="section">
@@ -139,23 +137,30 @@
     const params = new URLSearchParams(window.location.search);
     const requestId = params.get("id");
 
-    let workerData = {};
-
-    async function fetchWorkerData() {
+    async function fetchRequestData() {
       const docRef = doc(db, "requests", requestId);
       const snap = await getDoc(docRef);
       if (snap.exists()) {
-        workerData = snap.data().workDone || {};
-        document.getElementById("workerIndoorInput").value = workerData.indoor || 0;
-        document.getElementById("workerOutdoorInput").value = workerData.outdoor || 0;
-        document.getElementById("workerMaintenanceInput").value = workerData.maintenance || 0;
+        const data = snap.data();
+        const customer = data.ownerConfirmation || {};
+        const worker = data.workDone || {};
+
+        // بيانات الزبون
+        document.getElementById("customerIndoor").value = customer.indoor || 0;
+        document.getElementById("customerOutdoor").value = customer.outdoor || 0;
+        document.getElementById("customerMaintenance").value = customer.maintenance || 0;
+
+        // بيانات العامل
+        document.getElementById("workerIndoorInput").value = worker.indoor || 0;
+        document.getElementById("workerOutdoorInput").value = worker.outdoor || 0;
+        document.getElementById("workerMaintenanceInput").value = worker.maintenance || 0;
       }
     }
 
     window.calculateTotal = function () {
-      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
-      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
-      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
+      const indoor = parseInt(document.getElementById("workerIndoorInput").value || 0);
+      const outdoor = parseInt(document.getElementById("workerOutdoorInput").value || 0);
+      const maintenance = parseInt(document.getElementById("workerMaintenanceInput").value || 0);
       const pi = parseFloat(document.getElementById("pricePerIndoor").value || 0);
       const po = parseFloat(document.getElementById("pricePerOutdoor").value || 0);
       const pm = parseFloat(document.getElementById("pricePerMaintenance").value || 0);
@@ -164,30 +169,31 @@
     }
 
     window.submitOwnerConfirmation = async function () {
-      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
-      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
-      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
+      const indoor = parseInt(document.getElementById("workerIndoorInput").value || 0);
+      const outdoor = parseInt(document.getElementById("workerOutdoorInput").value || 0);
+      const maintenance = parseInt(document.getElementById("workerMaintenanceInput").value || 0);
       const notes = document.getElementById("ownerNotes").value;
 
-      const workerIndoor = parseInt(document.getElementById("workerIndoorInput").value || 0);
-      const workerOutdoor = parseInt(document.getElementById("workerOutdoorInput").value || 0);
-      const workerMaintenance = parseInt(document.getElementById("workerMaintenanceInput").value || 0);
+      const customerIndoor = parseInt(document.getElementById("customerIndoor").value || 0);
+      const customerOutdoor = parseInt(document.getElementById("customerOutdoor").value || 0);
+      const customerMaintenance = parseInt(document.getElementById("customerMaintenance").value || 0);
 
-      const mismatch =
-        indoor !== workerIndoor ||
-        outdoor !== workerOutdoor ||
-        maintenance !== workerMaintenance;
+      const mismatch = (
+        indoor !== customerIndoor ||
+        outdoor !== customerOutdoor ||
+        maintenance !== customerMaintenance
+      );
 
       if (mismatch) {
-        document.getElementById("warning").textContent = "⚠️ البيانات غير متطابقة مع بيانات العامل! سيتم إرسال إشعار.";
+        document.getElementById("warning").textContent = "⚠️ البيانات غير متطابقة مع بيانات الزبون! سيتم إرسال إشعار.";
 
         await addDoc(collection(db, "alerts"), {
           requestId,
           type: "اختلاف في بيانات العمل",
           expected: {
-            indoor: workerIndoor,
-            outdoor: workerOutdoor,
-            maintenance: workerMaintenance
+            indoor: customerIndoor,
+            outdoor: customerOutdoor,
+            maintenance: customerMaintenance
           },
           actual: {
             indoor,
@@ -196,21 +202,20 @@
           },
           verifiedAt: new Date()
         });
-
       } else {
         document.getElementById("warning").textContent = "✅ البيانات مطابقة.";
       }
 
       await updateDoc(doc(db, "requests", requestId), {
         workDone: {
-          indoor: workerIndoor,
-          outdoor: workerOutdoor,
-          maintenance: workerMaintenance
-        },
-        ownerConfirmation: {
           indoor,
           outdoor,
-          maintenance,
+          maintenance
+        },
+        ownerConfirmation: {
+          indoor: customerIndoor,
+          outdoor: customerOutdoor,
+          maintenance: customerMaintenance,
           notes,
           verified: !mismatch,
           verifiedAt: new Date()
@@ -221,7 +226,7 @@
       window.location.href = "admin.html";
     }
 
-    fetchWorkerData();
+    fetchRequestData();
   </script>
 </body>
 </html>
