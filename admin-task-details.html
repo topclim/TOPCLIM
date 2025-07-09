@@ -1,45 +1,61 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تأكيد الفاتورة</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💼 تأكيد تنفيذ العمل – TopClim</title>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f1f1f1;
+      background-color: #f1f1f1;
       padding: 20px;
       margin: 0;
+      direction: rtl;
     }
 
     .container {
-      max-width: 600px;
+      max-width: 750px;
       margin: auto;
       background: #fff;
-      padding: 20px;
+      padding: 25px;
       border-radius: 10px;
       box-shadow: 0 0 8px rgba(0,0,0,0.1);
     }
 
-    label {
-      display: block;
-      margin: 10px 0 5px;
-      font-weight: bold;
+    h2 {
+      text-align: center;
+      color: #007BFF;
+      margin-bottom: 25px;
     }
 
-    input[type="number"], input[type="text"] {
+    .section {
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input[type="number"], textarea {
       width: 100%;
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 6px;
-      font-size: 1.1rem;
+      background: #fafafa;
+      font-size: 1rem;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
     }
 
     button {
       width: 100%;
       padding: 12px;
-      font-size: 1.1rem;
-      margin-top: 15px;
+      font-size: 1rem;
       background: #28a745;
       color: white;
       border: none;
@@ -48,9 +64,17 @@
     }
 
     button:hover {
-      background: #218838;
+      background-color: #218838;
     }
 
+    .warning {
+      color: red;
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    /* 🔢 الآلة الحاسبة المنبثقة */
     #calculatorPopup {
       position: fixed;
       top: 0;
@@ -74,14 +98,14 @@
 
     .calc-screen {
       width: 100%;
-      height: 80px;
-      font-size: 2.5rem;
-      text-align: left;
-      padding: 15px;
+      height: 70px;
+      font-size: 2.2rem;
+      text-align: right;
+      padding: 10px;
       margin-bottom: 20px;
       border: 1px solid #ccc;
       border-radius: 8px;
-      background: #f1f1f1;
+      background: #f8f9fa;
     }
 
     .calc-buttons {
@@ -91,43 +115,57 @@
     }
 
     .calc-buttons button {
-      font-size: 2rem;
-      aspect-ratio: 1/1;
-      background: #007BFF;
+      font-size: 1.8rem;
+      padding: 20px;
+      aspect-ratio: 1 / 1;
+      background: #007bff;
       color: white;
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    }
+
+    .calc-buttons button:hover {
+      background: #0056b3;
     }
 
     .close-calc {
-      background: #dc3545 !important;
+      background-color: #dc3545 !important;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>🧾 تأكيد الفاتورة</h2>
+    <h2>💼 تأكيد تنفيذ العمل</h2>
 
-    <label>عدد المكيفات الداخلية:</label>
-    <input type="number" id="indoorCount">
+    <div class="section">
+      <label>عدد المكيفات الداخلية:</label>
+      <input type="number" id="indoorCount" />
 
-    <label>عدد المكيفات الخارجية:</label>
-    <input type="number" id="outdoorCount">
+      <label>عدد المكيفات الخارجية:</label>
+      <input type="number" id="outdoorCount" />
 
-    <label>عدد الصيانات:</label>
-    <input type="number" id="maintenanceCount">
+      <label>عدد الصيانات:</label>
+      <input type="number" id="maintenanceCount" />
+    </div>
 
-    <label>💰 المبلغ الإجمالي:</label>
-    <input type="text" id="totalPrice" placeholder="اضغط على آلة الحاسبة" readonly onclick="openCalculator()">
+    <div class="section">
+      <label>ملاحظات:</label>
+      <textarea id="ownerNotes" placeholder="أدخل ملاحظاتك هنا..."></textarea>
+    </div>
 
-    <button onclick="saveInvoice()">✅ حفظ الفاتورة</button>
+    <div class="section">
+      <button onclick="openCalculator()">🧮 فتح الآلة الحاسبة</button>
+    </div>
+
+    <div id="warning" class="warning"></div>
+
+    <div class="section">
+      <button onclick="submitOwnerConfirmation()">✅ تأكيد العمل وحفظ البيانات</button>
+    </div>
   </div>
 
-  <!-- آلة حاسبة منبثقة -->
+  <!-- 💡 الآلة الحاسبة المنبثقة -->
   <div id="calculatorPopup" onclick="closeCalculator(event)">
     <div class="calculator" onclick="event.stopPropagation()">
       <input type="text" id="calcDisplay" class="calc-screen" readonly>
@@ -136,18 +174,22 @@
         <button onclick="appendCalc('8')">8</button>
         <button onclick="appendCalc('9')">9</button>
         <button onclick="appendCalc('/')">÷</button>
+
         <button onclick="appendCalc('4')">4</button>
         <button onclick="appendCalc('5')">5</button>
         <button onclick="appendCalc('6')">6</button>
         <button onclick="appendCalc('*')">×</button>
+
         <button onclick="appendCalc('1')">1</button>
         <button onclick="appendCalc('2')">2</button>
         <button onclick="appendCalc('3')">3</button>
         <button onclick="appendCalc('-')">−</button>
+
         <button onclick="appendCalc('0')">0</button>
         <button onclick="appendCalc('.')">.</button>
         <button onclick="calculateResult()">=</button>
         <button onclick="appendCalc('+')">+</button>
+
         <button class="close-calc" onclick="closeCalculator(true)">✖</button>
         <button onclick="clearCalc()" style="grid-column: span 3;">🗑 مسح</button>
       </div>
@@ -172,79 +214,72 @@
     const params = new URLSearchParams(window.location.search);
     const requestId = params.get("id");
 
-    const indoorInput = document.getElementById("indoorCount");
-    const outdoorInput = document.getElementById("outdoorCount");
-    const maintenanceInput = document.getElementById("maintenanceCount");
-    const totalInput = document.getElementById("totalPrice");
+    let totalFromCalc = 0;
 
-    // تحميل القيم من قاعدة البيانات
     async function loadWorkData() {
-      const snap = await getDoc(doc(db, "requests", requestId));
+      const docRef = doc(db, "requests", requestId);
+      const snap = await getDoc(docRef);
       if (snap.exists()) {
-        const data = snap.data().workDone || {};
-        indoorInput.value = data.indoor || 0;
-        outdoorInput.value = data.outdoor || 0;
-        maintenanceInput.value = data.maintenance || 0;
+        const data = snap.data();
+        const work = data.workDone || {};
+        document.getElementById("indoorCount").value = work.indoor || 0;
+        document.getElementById("outdoorCount").value = work.outdoor || 0;
+        document.getElementById("maintenanceCount").value = work.maintenance || 0;
       }
     }
 
-    // حفظ الفاتورة
-    window.saveInvoice = async function () {
-      const indoor = parseInt(indoorInput.value || 0);
-      const outdoor = parseInt(outdoorInput.value || 0);
-      const maintenance = parseInt(maintenanceInput.value || 0);
-      const total = totalInput.value || "0";
+    window.submitOwnerConfirmation = async function () {
+      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
+      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
+      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
+      const notes = document.getElementById("ownerNotes").value;
 
       await updateDoc(doc(db, "requests", requestId), {
-        invoice: {
-          indoor,
-          outdoor,
-          maintenance,
-          totalPrice: total,
-          savedAt: new Date()
+        ownerConfirmation: {
+          indoor, outdoor, maintenance, notes,
+          finalTotal: totalFromCalc,
+          verifiedAt: new Date()
         }
       });
 
-      alert("✅ تم حفظ الفاتورة بنجاح.");
+      alert("✅ تم حفظ البيانات بنجاح.");
       window.location.href = "admin.html";
     }
 
-    loadWorkData();
-
-    // آلة الحاسبة
-    let calcValue = "";
-
-    window.openCalculator = function () {
-      document.getElementById("calculatorPopup").style.display = "flex";
-      document.getElementById("calcDisplay").value = calcValue;
+    // 🧮 الآلة الحاسبة
+    let calcInput = "";
+    window.appendCalc = val => {
+      calcInput += val;
+      document.getElementById("calcDisplay").value = calcInput;
     }
 
-    window.appendCalc = function (val) {
-      calcValue += val;
-      document.getElementById("calcDisplay").value = calcValue;
-    }
-
-    window.clearCalc = function () {
-      calcValue = "";
+    window.clearCalc = () => {
+      calcInput = "";
       document.getElementById("calcDisplay").value = "";
     }
 
-    window.calculateResult = function () {
+    window.calculateResult = () => {
       try {
-        const result = eval(calcValue);
-        calcValue = result.toString();
-        document.getElementById("calcDisplay").value = calcValue;
-        document.getElementById("totalPrice").value = result;
-      } catch (e) {
-        alert("❌ حساب غير صحيح");
+        totalFromCalc = eval(calcInput);
+        document.getElementById("calcDisplay").value = totalFromCalc + " DA";
+        calcInput = totalFromCalc;
+      } catch {
+        document.getElementById("calcDisplay").value = "خطأ!";
+        calcInput = "";
       }
     }
 
-    window.closeCalculator = function (force = false) {
-      if (force || event.target.id === "calculatorPopup") {
+    window.openCalculator = () => {
+      document.getElementById("calculatorPopup").style.display = "flex";
+    }
+
+    window.closeCalculator = (event) => {
+      if (event === true || event.target.id === "calculatorPopup") {
         document.getElementById("calculatorPopup").style.display = "none";
       }
     }
+
+    loadWorkData();
   </script>
 </body>
 </html>
