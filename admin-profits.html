@@ -2,60 +2,77 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>📊 تقرير الأرباح – TopClim</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💰 تقارير الأرباح – TopClim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #eef2f5; margin:0;padding:20px; direction: rtl; }
-    h1 { text-align:center; color:#007bff; margin-bottom:10px; }
-    .controls { text-align:center; margin-bottom:20px; }
-    input[type="date"] { padding:5px; margin:0 5px; }
-    button { padding:8px 16px; background:#28a745; color:#fff; border:none; border-radius:4px; cursor:pointer; }
-    button:hover { background:#218838; }
-    table { width:100%; border-collapse:collapse; margin-bottom:20px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-    th, td { padding:10px; border:1px solid #ccc; text-align:center; }
-    th { background:#007bff; color:#fff; }
-    .details-row { display:none; background:#f7f7f7; }
-    .summary-box { font-size:1.1rem; padding:10px; background:#d9edf7; border-radius:4px; text-align:center; margin-top:10px; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+      direction: rtl;
+    }
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    .details {
+      background: #eef;
+      display: none;
+    }
+    button {
+      padding: 6px 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .summary {
+      margin: 20px 0;
+      font-size: 18px;
+      background: #e0f7e9;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
-<h1>📈 تقرير أرباح شامل</h1>
-<div class="controls">
-  من: <input type="date" id="fromDate" />
-  إلى: <input type="date" id="toDate" />
-  <button onclick="loadReport()">عرض التقرير</button>
-</div>
+<h1>📊 تقرير الأرباح اليومية</h1>
+<div class="summary" id="totalSummary">📦 جاري التحميل...</div>
 
-<table id="reportTable">
+<table id="profitsTable">
   <thead>
     <tr>
-      <th>#</th>
-      <th>👷‍♂️ عامل</th>
-      <th>📅 من</th>
-      <th>📅 إلى</th>
-      <th>💸 سعر داخلي</th>
-      <th>💸 سعر خارجي</th>
-      <th>💸 سعر صيانة</th>
-      <th>💰 ربح</th>
-      <th>📄 تفاصيل</th>
+      <th>📅 التاريخ</th>
+      <th>عدد الطلبات</th>
+      <th>إجمالي الربح</th>
+      <th>📌 تفاصيل</th>
     </tr>
   </thead>
-  <tbody id="reportBody"></tbody>
+  <tbody id="profitsBody"></tbody>
 </table>
-
-<div id="totalAll" class="summary-box">🔢 إجمالي الربح الكلي: 0 دج</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
-    getFirestore,
-    collectionGroup,
-    getDocs,
-    query,
-    where,
-    doc,
-    getDoc
+    getFirestore, collection, getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const app = initializeApp({
@@ -63,111 +80,104 @@
     authDomain: "topclim-3edfa.firebaseapp.com",
     projectId: "topclim-3edfa"
   });
+
   const db = getFirestore(app);
+  const profitsBody = document.getElementById("profitsBody");
+  const totalSummary = document.getElementById("totalSummary");
 
-  async function loadReport() {
-    const from = document.getElementById("fromDate").value;
-    const to   = document.getElementById("toDate").value;
-    if (!from || !to) return alert("يرجى تحديد الفترة!");
-    const body = document.getElementById("reportBody");
-    body.innerHTML = "";
-    let totalAll = 0;
+  async function loadProfits() {
+    const snap = await getDocs(collection(db, "requests"));
+    const data = {};
 
-    const q = query(
-      collectionGroup(db, "entries"),
-      where("start", ">=", from),
-      where("end", "<=", to)
-    );
-    const snap = await getDocs(q);
-    let i = 1;
+    let grandTotal = 0;
 
-    for (const rec of snap.docs) {
-      const r = rec.data();
-      const workerId = rec.ref.parent.parent.id;
-      const workerSnap = await getDoc(doc(db, "workers", workerId));
-      const workerName = workerSnap.exists() ? workerSnap.data().name : "-";
-      const profit = await calcProfitForEntry(workerId, r);
+    snap.docs.forEach(doc => {
+      const d = doc.data();
+      if (d.status !== "تم الإنجاز") return;
+      const conf = d.ownerConfirmation;
+      if (!conf || !conf.price) return;
 
+      const dateObj = d.executionSchedule?.seconds
+        ? new Date(d.executionSchedule.seconds * 1000)
+        : (d.createdAt?.seconds ? new Date(d.createdAt.seconds * 1000) : null);
+
+      if (!dateObj) return;
+
+      const date = dateObj.toISOString().split("T")[0];
+
+      if (!data[date]) data[date] = { total: 0, entries: [] };
+
+      data[date].total += conf.price;
+      grandTotal += conf.price;
+
+      data[date].entries.push({
+        name: d.name || "بدون اسم",
+        address: d.address || "",
+        indoor: conf.indoor || 0,
+        outdoor: conf.outdoor || 0,
+        maintenance: conf.maintenance || 0,
+        price: conf.price || 0,
+        phone: d.phone || ""
+      });
+    });
+
+    totalSummary.textContent = `💰 إجمالي الأرباح: ${grandTotal.toLocaleString()} دج`;
+
+    Object.entries(data).sort().reverse().forEach(([date, { total, entries }]) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${i++}</td>
-        <td>${workerName}</td>
-        <td>${r.start}</td>
-        <td>${r.end}</td>
-        <td>${r.priceIndoor}</td>
-        <td>${r.priceOutdoor}</td>
-        <td>${r.priceMaintenance}</td>
-        <td>${profit.toLocaleString()} دج</td>
+        <td>${date}</td>
+        <td>${entries.length}</td>
+        <td>${total.toLocaleString()} دج</td>
         <td><button onclick="toggleDetails(this)">عرض</button></td>
       `;
-      const detailsTr = document.createElement("tr");
-      detailsTr.className = "details-row";
-      const daily = await getDailyRecords(workerId, r.start, r.end, r);
-      detailsTr.innerHTML = `<td colspan="9">${daily}</td>`;
-      body.appendChild(tr);
-      body.appendChild(detailsTr);
-      totalAll += profit;
+      profitsBody.appendChild(tr);
+
+      const detailTr = document.createElement("tr");
+      detailTr.classList.add("details");
+      detailTr.innerHTML = `
+        <td colspan="4">
+          <table style="width: 100%; background: #f9f9f9; margin-top: 10px;">
+            <thead>
+              <tr>
+                <th>👤 الزبون</th>
+                <th>📍 العنوان</th>
+                <th>داخلي</th>
+                <th>خارجي</th>
+                <th>صيانة</th>
+                <th>📞 الهاتف</th>
+                <th>💵 السعر</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${entries.map(e => `
+                <tr>
+                  <td>${e.name}</td>
+                  <td>${e.address}</td>
+                  <td>${e.indoor}</td>
+                  <td>${e.outdoor}</td>
+                  <td>${e.maintenance}</td>
+                  <td>${e.phone}</td>
+                  <td>${e.price.toLocaleString()} دج</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </td>
+      `;
+      profitsBody.appendChild(detailTr);
+    });
+  }
+
+  window.toggleDetails = function (btn) {
+    const row = btn.closest("tr");
+    const next = row.nextElementSibling;
+    if (next && next.classList.contains("details")) {
+      next.style.display = next.style.display === "none" || !next.style.display ? "table-row" : "none";
     }
-
-    document.getElementById("totalAll").textContent =
-      `🔢 إجمالي الربح الكلي: ${totalAll.toLocaleString()} دج`;
-  }
-
-  async function calcProfitForEntry(workerId, r) {
-    const q2 = query(
-      collectionGroup(db, "requests"),
-      where("assignedTo", "==", workerId),
-      where("status", "==", "تم الإنجاز")
-    );
-    const snap = await getDocs(q2);
-    let sum = 0;
-    snap.forEach(s => {
-      const d = s.data().workDone;
-      const f = d.finishedAt?.seconds ? new Date(d.finishedAt.seconds * 1000) : null;
-      if (f && f >= new Date(r.start) && f <= new Date(r.end)) {
-        sum += (d.indoor||0)*r.priceIndoor
-             + (d.outdoor||0)*r.priceOutdoor
-             + (d.maintenance||0)*r.priceMaintenance;
-      }
-    });
-    return sum;
-  }
-
-  async function getDailyRecords(workerId, start, end, r) {
-    const q2 = query(
-      collectionGroup(db, "requests"),
-      where("assignedTo", "==", workerId),
-      where("status", "==", "تم الإنجاز")
-    );
-    const snap = await getDocs(q2);
-    let html = `<table style="width:100%;background:#fdfdfd;border:1px solid #ccc;">
-      <tr><th>التاريخ</th><th>داخلي</th><th>خارجي</th><th>صيانة</th><th>🕒 عنوان</th><th>الربح</th></tr>`;
-    snap.forEach(s => {
-      const d = s.data();
-      const wd = d.workDone;
-      const f = wd.finishedAt?.seconds ? new Date(wd.finishedAt.seconds*1000) : null;
-      if (f && f >= new Date(start) && f <= new Date(end)) {
-        const profit = (wd.indoor||0)*r.priceIndoor
-                     + (wd.outdoor||0)*r.priceOutdoor
-                     + (wd.maintenance||0)*r.priceMaintenance;
-        html += `<tr>
-          <td>${f.toLocaleDateString("ar-DZ")}</td>
-          <td>${wd.indoor||0}</td>
-          <td>${wd.outdoor||0}</td>
-          <td>${wd.maintenance||0}</td>
-          <td>${d.address||""}</td>
-          <td>${profit.toLocaleString()} دج</td>
-        </tr>`;
-      }
-    });
-    html += "</table>";
-    return html;
-  }
-
-  window.toggleDetails = btn => {
-    const next = btn.closest("tr").nextElementSibling;
-    next.style.display = next.style.display === "table-row" ? "none" : "table-row";
   };
+
+  loadProfits();
 </script>
 
 </body>
