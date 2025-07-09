@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -93,7 +93,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
@@ -111,30 +111,26 @@
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
+      if (!email || !password) {
+        errorDiv.textContent = "❗ الرجاء إدخال البريد وكلمة المرور";
+        return;
+      }
+
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // تخزين معلومات تسجيل الدخول
+        // حفظ بيانات المستخدم
         localStorage.setItem("workerEmail", user.email);
         localStorage.setItem("workerUID", user.uid);
 
-        // الانتقال للوحة العمل
+        // الانتقال للوحة العامل
         window.location.href = "worker.html";
       } catch (error) {
+        console.error(error);
         errorDiv.textContent = "❌ البريد أو كلمة المرور غير صحيحة";
       }
     };
-
-    // إذا كان مسجلاً من قبل
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    // المستخدم لم يقم بتسجيل الدخول
-    window.location.href = "worker-login.html";
-  }
-});
-
   </script>
 </body>
 </html>
