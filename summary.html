@@ -82,6 +82,8 @@
 </table>
 
 <script type="module">
+  const workerId = new URLSearchParams(window.location.search).get("workerId");
+
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
     getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc
@@ -105,7 +107,7 @@
 
   // قراءة workerId من رابط الصفحة
   const urlParams = new URLSearchParams(window.location.search);
-  const workerId = urlParams.get("workerId");
+
 
   // تحميل الأسعار من قاعدة البيانات
   async function loadPrices() {
@@ -135,56 +137,56 @@
   });
 
   // تحميل وإنشاء صفوف الطلبات
-  async function loadData() {
-    const snap = await getDocs(collection(db, "requests"));
-    const priceSnap = await getDoc(doc(db, "settings", "prices"));
-    const prices = priceSnap.data();
+async function loadData() {
+  const snap = await getDocs(collection(db, "requests"));
+  const priceSnap = await getDoc(doc(db, "settings", "prices"));
+  const prices = priceSnap.data();
 
-    tbody.innerHTML = "";
-    let count = 0;
+  tbody.innerHTML = "";
+  let count = 0;
 
-    for (const docSnap of snap.docs) {
-      const d = docSnap.data();
-      const id = docSnap.id;
+  for (const docSnap of snap.docs) {
+    const d = docSnap.data();
+    const id = docSnap.id;
 
-      if (
-        d.status === "تم الإنجاز" &&
-        d.workDone &&
-        d.assistantName === workerId
-      ) {
-        const start = d.executionSchedule?.seconds ? new Date(d.executionSchedule.seconds * 1000) : null;
-        const end = d.workDone.finishedAt?.seconds ? new Date(d.workDone.finishedAt.seconds * 1000) : null;
+    if (
+      d.status === "تم الإنجاز" &&
+      d.workDone &&
+      d.assignedTo === workerId // ✅ التعديل هنا
+    ) {
+      const start = d.executionSchedule?.seconds ? new Date(d.executionSchedule.seconds * 1000) : null;
+      const end = d.workDone.finishedAt?.seconds ? new Date(d.workDone.finishedAt.seconds * 1000) : null;
 
-        const indoor = parseInt(d.workDone.indoor || 0);
-        const outdoor = parseInt(d.workDone.outdoor || 0);
-        const maintenance = parseInt(d.workDone.maintenance || 0);
+      const indoor = parseInt(d.workDone.indoor || 0);
+      const outdoor = parseInt(d.workDone.outdoor || 0);
+      const maintenance = parseInt(d.workDone.maintenance || 0);
 
-        const total =
-          (indoor * prices.indoor) +
-          (outdoor * prices.outdoor) +
-          (maintenance * prices.maintenance);
+      const total =
+        (indoor * prices.indoor) +
+        (outdoor * prices.outdoor) +
+        (maintenance * prices.maintenance);
 
-        const row = document.createElement("tr");
+      const row = document.createElement("tr");
 
-        row.innerHTML = `
-          <td>${id}</td>
-          <td><input type="date" value="${start ? start.toISOString().split('T')[0] : ''}" onchange="updateStartDate('${id}', this.value)" /></td>
-          <td><input type="date" value="${end ? end.toISOString().split('T')[0] : ''}" onchange="updateEndDate('${id}', this.value)" /></td>
-          <td>${indoor}</td>
-          <td>${outdoor}</td>
-          <td>${maintenance}</td>
-          <td><strong>${total} دج</strong></td>
-        `;
+      row.innerHTML = `
+        <td>${id}</td>
+        <td><input type="date" value="${start ? start.toISOString().split('T')[0] : ''}" onchange="updateStartDate('${id}', this.value)" /></td>
+        <td><input type="date" value="${end ? end.toISOString().split('T')[0] : ''}" onchange="updateEndDate('${id}', this.value)" /></td>
+        <td>${indoor}</td>
+        <td>${outdoor}</td>
+        <td>${maintenance}</td>
+        <td><strong>${total} دج</strong></td>
+      `;
 
-        tbody.appendChild(row);
-        count++;
-      }
-    }
-
-    if (count === 0) {
-      tbody.innerHTML = `<tr><td colspan="7">🙁 لا توجد بيانات لهذا المساعد.</td></tr>`;
+      tbody.appendChild(row);
+      count++;
     }
   }
+
+  if (count === 0) {
+    tbody.innerHTML = `<tr><td colspan="7">🙁 لا توجد بيانات لهذا المساعد.</td></tr>`;
+  }
+}
 
   // تحديث تاريخ البداية
   window.updateStartDate = async (id, date) => {
