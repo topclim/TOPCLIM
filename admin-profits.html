@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>📊 صفحة الأرباح – TopClim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f3f6f9;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+    }
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+    .info {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: #fff;
+    }
+    .summary {
+      text-align: center;
+      font-weight: bold;
+      background: #dff0d8;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .details {
+      background: #f1f1f1;
+      padding: 10px;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+
+<h1>📈 تقرير الأرباح</h1>
+<div class="info" id="workerName">🔄 جاري تحميل اسم العامل...</div>
+
+<table id="profitTable">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>📅 من تاريخ</th>
+      <th>📅 إلى تاريخ</th>
+      <th>💸 السعر/داخلي</th>
+      <th>💸 السعر/خارجي</th>
+      <th>💸 السعر/صيانة</th>
+      <th>💰 الربح</th>
+      <th>📄 التفاصيل</th>
+    </tr>
+  </thead>
+  <tbody id="profitBody"></tbody>
+</table>
+
+<div class="summary" id="totalProfit">🔢 إجمالي الربح: 0 دج</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore, collection, doc, getDoc, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    authDomain: "topclim-3edfa.firebaseapp.com",
+    projectId: "topclim-3edfa"
+  });
+  const db = getFirestore(app);
+
+  const workerId = new URLSearchParams(location.search).get("workerId");
+  const workerNameDiv = document.getElementById("workerName");
+  const profitBody = document.getElementById("profitBody");
+  const totalProfitDiv = document.getElementById("totalProfit");
+
+  if (!workerId) {
+    alert("❌ workerId مفقود في الرابط");
+    throw new Error("workerId required");
+  }
+
+  async function loadWorkerName() {
+    const snap = await getDoc(doc(db, "workers", workerId));
+    if (snap.exists()) {
+      workerNameDiv.textContent = `👷 العامل: ${snap.data().name}`;
+    } else {
+      workerNameDiv.textContent = "❌ لم يتم العثور على العامل.";
+    }
+  }
+
+  async function loadProfits() {
+    const snap = await getDocs(collection(db, "summaries", workerId, "entries"));
+    let totalProfit = 0;
+    let index = 1;
+
+    for (const docSnap of snap.docs) {
+      const data = docSnap.data();
+      const { start, end, priceIndoor, priceOutdoor, priceMaintenance } = data;
+
+      // احسب الربح الحقيقي
+      const reqSnap = await getDocs(collection(db, "requests"));
+      let profit = 0;
+      let details = [];
+
+      reqSnap.forEach(r => {
+        const d = r.data();
+        if (d.assignedTo === workerId && d.status === "تم الإنجاز" && d.workDone?.finishedAt) {
+          const fDate = new Date(d.workDone.finishedAt.seconds * 1000);
+          const sDate = new Date(start);
+          const eDate = new Date(end);
+          if (fDate >= sDate && fDate <= eDate) {
+            const inCount = d.workDone.indoor || 0;
+            const outCount = d.workDone.outdoor || 0;
+            const mainCount = d.workDone.maintenance || 0;
+
+            profit += (inCount * priceIndoor) + (outCount * priceOutdoor) + (mainCount * priceMaintenance);
+
+            details.push({
+              date: fDate.toLocaleDateString("ar-DZ"),
+              indoor: inCount,
+              outdoor: outCount,
+              maintenance: mainCount,
+              address: d.address || "غير محدد"
+            });
+          }
+        }
+      });
+
+      totalProfit += profit;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${index++}</td>
+        <td>${start}</td>
+        <td>${end}</td>
+        <td>${priceIndoor} دج</td>
+        <td>${priceOutdoor} دج</td>
+        <td>${priceMaintenance} دج</td>
+        <td>${profit.toLocaleString()} دج</td>
+        <td><button onclick='toggleDetails(this)'>عرض</button></td>
+      `;
+
+      const detailRow = document.createElement("tr");
+      detailRow.className = "details hidden";
+      detailRow.innerHTML = `
+        <td colspan="8">
+          <table style="width:100%; background:#fcfcfc; margin-top:10px;">
+            <tr>
+              <th>📆 التاريخ</th>
+              <th>داخلي</th>
+              <th>خارجي</th>
+              <th>صيانة</th>
+              <th>📍 العنوان</th>
+            </tr>
+            ${
+              details.length
+                ? details.map(e => `
+                  <tr>
+                    <td>${e.date}</td>
+                    <td>${e.indoor}</td>
+                    <td>${e.outdoor}</td>
+                    <td>${e.maintenance}</td>
+                    <td>${e.address}</td>
+                  </tr>
+                `).join("")
+                : `<tr><td colspan="5">لا توجد تفاصيل</td></tr>`
+            }
+          </table>
+        </td>
+      `;
+
+      profitBody.appendChild(tr);
+      profitBody.appendChild(detailRow);
+    }
+
+    totalProfitDiv.textContent = `🔢 إجمالي الربح: ${totalProfit.toLocaleString()} دج`;
+  }
+
+  window.toggleDetails = function (btn) {
+    const row = btn.closest("tr");
+    const next = row.nextElementSibling;
+    next.classList.toggle("hidden");
+  };
+
+  loadWorkerName();
+  loadProfits();
+</script>
+
+</body>
+</html>
