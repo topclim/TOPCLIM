@@ -1,19 +1,104 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>واجهة المساعد</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-  <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/worker.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📋 لوحة العامل – TopClim</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Cairo', sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      direction: rtl;
+    }
+
+    /* القائمة اليمنى */
+    .sidebar {
+      width: 250px;
+      background: #0d6efd;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
+
+    .sidebar h2 {
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 22px;
+    }
+
+    .sidebar button {
+      background: transparent;
+      border: none;
+      color: white;
+      text-align: right;
+      font-size: 18px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+
+    .sidebar button:hover,
+    .sidebar button.active {
+      background: #0b5ed7;
+    }
+
+    /* المحتوى */
+    .main-content {
+      flex: 1;
+      background: #f1f1f1;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
 </head>
 <body>
-  <h1>مهام المساعد</h1>
-  <div id="workerSection">
-    <div id="workerTasks"></div>
+
+  <div class="sidebar">
+    <h2>📋 لوحة العامل</h2>
+    <button onclick="loadPage('worker-tasks.html')" class="active">📆 مهام اليوم</button>
+    <button onclick="loadPage('worker-task-details.html')">🛠️ تنفيذ العمل</button>
+    <button onclick="loadPageWithWorkerId('worker-completed-orders.html')">📊 التقارير الكاملة</button>
   </div>
+
+  <div class="main-content">
+    <iframe id="contentFrame" src="worker-tasks.html"></iframe>
+  </div>
+
+  <script>
+    const buttons = document.querySelectorAll(".sidebar button");
+
+    function setActive(btn) {
+      buttons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    }
+
+    function loadPage(page) {
+      document.getElementById("contentFrame").src = page;
+      setActive(event.target);
+    }
+
+    function loadPageWithWorkerId(page) {
+      const workerId = localStorage.getItem("workerId");
+      if (!workerId) {
+        alert("الرجاء تسجيل الدخول أولاً.");
+        return;
+      }
+      document.getElementById("contentFrame").src = `${page}?workerId=${workerId}`;
+      setActive(event.target);
+    }
+  </script>
+
 </body>
 </html>
