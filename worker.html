@@ -66,7 +66,7 @@
     <button id="detailsTab" disabled>✅ إنهاء العمل</button>
   </div>
   <div class="content">
-    <iframe id="iframeView" src="worker-tasks.html"></iframe>
+    <iframe id="iframeView" src=""></iframe>
   </div>
 
   <script>
@@ -75,13 +75,20 @@
     const detailsBtn = document.getElementById("detailsTab");
     const iframeView = document.getElementById("iframeView");
 
-    function setActive(button, src) {
+    // استخرج workerId من رابط الصفحة الحالية
+    const workerId = new URLSearchParams(window.location.search).get("workerId");
+    if (!workerId) {
+      alert("يجب تحديد معرف العامل workerId في الرابط");
+      throw new Error("workerId missing");
+    }
+
+    function setActive(button, page) {
       tasksBtn.classList.remove("active");
       reportBtn.classList.remove("active");
       detailsBtn.classList.remove("active");
 
       button.classList.add("active");
-      iframeView.src = src;
+      iframeView.src = `${page}?workerId=${workerId}`;
     }
 
     tasksBtn.onclick = () => setActive(tasksBtn, "worker-tasks.html");
@@ -90,9 +97,12 @@
     window.addEventListener("message", e => {
       if (e.data && e.data.type === "openDetails" && e.data.id) {
         detailsBtn.disabled = false;
-        setActive(detailsBtn, `worker-task-details.html?id=${e.data.id}`);
+        setActive(detailsBtn, `worker-task-details.html?id=${e.data.id}&workerId=${workerId}`);
       }
     });
+
+    // تحميل الصفحة الأولى
+    iframeView.src = `worker-tasks.html?workerId=${workerId}`;
   </script>
 </body>
 </html>
