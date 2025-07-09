@@ -75,42 +75,82 @@
       font-weight: bold;
     }
 
-    .calculator {
+    /* Popup Calculator */
+    .calculator-popup {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      background: #fff;
+      border: 2px solid #007BFF;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .calc-screen {
+      width: 100%;
+      height: 50px;
+      font-size: 1.5rem;
+      text-align: left;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #f1f1f1;
+    }
+
+    .calc-buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
-      margin-top: 10px;
     }
 
-    .calculator input {
-      grid-column: span 4;
-      height: 40px;
-      font-size: 1.2rem;
-      text-align: left;
-    }
-
-    .calculator button {
-      padding: 15px;
-      font-size: 1.1rem;
+    .calc-buttons button {
+      font-size: 1.4rem;
+      padding: 20px;
       background: #007BFF;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 10px;
       cursor: pointer;
     }
 
-    .calculator button:hover {
+    .calc-buttons button:hover {
       background: #0056b3;
     }
 
-    .save-calc {
-      margin-top: 10px;
+    .popup-footer {
+      margin-top: 15px;
+    }
+
+    .popup-footer button {
       background-color: #ffc107;
-      color: #000;
+      color: black;
+      margin-bottom: 10px;
+    }
+
+    .close-btn {
+      background-color: #dc3545;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      z-index: 999;
     }
   </style>
 </head>
 <body>
+  <div class="overlay" id="overlay"></div>
+
   <div class="container">
     <h2>💼 تأكيد تنفيذ العمل</h2>
 
@@ -126,41 +166,8 @@
     </div>
 
     <div class="section">
-      <label>🧮 حساب الفاتورة تلقائيًا:</label>
-      <input type="number" id="priceIndoor" placeholder="سعر المكيف الداخلي (DA)" />
-      <input type="number" id="priceOutdoor" placeholder="سعر المكيف الخارجي (DA)" />
-      <input type="number" id="priceMaintenance" placeholder="سعر الصيانة (DA)" />
-      <button onclick="calculateTotal()">📊 حساب الفاتورة</button>
-      <div class="total-display" id="totalDisplay">💰 الفاتورة: 0 DA</div>
-    </div>
-
-    <div class="section">
-      <label>💡 آلة حاسبة يدوية (لحساب السعر بنفسك):</label>
-      <div class="calculator">
-        <input type="text" id="calcInput" readonly />
-        <button onclick="pressCalc('7')">7</button>
-        <button onclick="pressCalc('8')">8</button>
-        <button onclick="pressCalc('9')">9</button>
-        <button onclick="pressCalc('/')">÷</button>
-
-        <button onclick="pressCalc('4')">4</button>
-        <button onclick="pressCalc('5')">5</button>
-        <button onclick="pressCalc('6')">6</button>
-        <button onclick="pressCalc('*')">×</button>
-
-        <button onclick="pressCalc('1')">1</button>
-        <button onclick="pressCalc('2')">2</button>
-        <button onclick="pressCalc('3')">3</button>
-        <button onclick="pressCalc('-')">−</button>
-
-        <button onclick="pressCalc('0')">0</button>
-        <button onclick="pressCalc('.')">.</button>
-        <button onclick="pressCalc('C')">C</button>
-        <button onclick="pressCalc('+')">+</button>
-
-        <button onclick="calculateCalc()" style="grid-column: span 4;">= النتيجة</button>
-      </div>
-      <button class="save-calc" onclick="saveCalcResult()">💾 حفظ المبلغ النهائي من الآلة الحاسبة</button>
+      <label>🧮 فتح آلة حاسبة:</label>
+      <button onclick="showCalculator()">📱 فتح الآلة الحاسبة</button>
     </div>
 
     <div class="section">
@@ -173,11 +180,41 @@
     </div>
   </div>
 
+  <!-- 🧮 آلة حاسبة Popup -->
+  <div class="calculator-popup" id="calculatorPopup">
+    <input type="text" id="calcInput" class="calc-screen" readonly />
+    <div class="calc-buttons">
+      <button onclick="press('7')">7</button>
+      <button onclick="press('8')">8</button>
+      <button onclick="press('9')">9</button>
+      <button onclick="press('/')">÷</button>
+
+      <button onclick="press('4')">4</button>
+      <button onclick="press('5')">5</button>
+      <button onclick="press('6')">6</button>
+      <button onclick="press('*')">×</button>
+
+      <button onclick="press('1')">1</button>
+      <button onclick="press('2')">2</button>
+      <button onclick="press('3')">3</button>
+      <button onclick="press('-')">−</button>
+
+      <button onclick="press('0')">0</button>
+      <button onclick="press('.')">.</button>
+      <button onclick="press('C')">C</button>
+      <button onclick="press('+')">+</button>
+
+      <button onclick="calculate()" style="grid-column: span 4;">= النتيجة</button>
+    </div>
+    <div class="popup-footer">
+      <button onclick="saveCalculator()" class="save-btn">💾 حفظ المبلغ النهائي</button>
+      <button onclick="closeCalculator()" class="close-btn">❌ إغلاق</button>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, doc, updateDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
@@ -187,48 +224,33 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const params = new URLSearchParams(window.location.search);
-    const requestId = params.get("id");
 
-    let totalPrice = 0;
+    const requestId = new URLSearchParams(window.location.search).get("id");
     let manualPrice = 0;
+    let buffer = "";
 
-    window.calculateTotal = function () {
-      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
-      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
-      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
-
-      const priceIndoor = parseFloat(document.getElementById("priceIndoor").value || 0);
-      const priceOutdoor = parseFloat(document.getElementById("priceOutdoor").value || 0);
-      const priceMaintenance = parseFloat(document.getElementById("priceMaintenance").value || 0);
-
-      totalPrice = (indoor * priceIndoor) + (outdoor * priceOutdoor) + (maintenance * priceMaintenance);
-      document.getElementById("totalDisplay").textContent = `💰 الفاتورة: ${totalPrice.toLocaleString()} DA`;
-    }
-
-    // آلة الحاسبة
-    let calcBuffer = "";
-    window.pressCalc = function (val) {
+    // الآلة الحاسبة
+    window.press = function(val) {
       if (val === "C") {
-        calcBuffer = "";
-        document.getElementById("calcInput").value = "";
-        return;
+        buffer = "";
+      } else {
+        buffer += val;
       }
-      calcBuffer += val;
-      document.getElementById("calcInput").value = calcBuffer;
+      document.getElementById("calcInput").value = buffer;
     }
 
-    window.calculateCalc = function () {
+    window.calculate = function() {
       try {
-        manualPrice = eval(calcBuffer);
+        manualPrice = eval(buffer);
         document.getElementById("calcInput").value = manualPrice.toFixed(2);
       } catch {
         document.getElementById("calcInput").value = "خطأ";
       }
     }
 
-    window.saveCalcResult = function () {
-      alert(`✅ تم حفظ القيمة: ${manualPrice} DA`);
+    window.saveCalculator = function() {
+      alert(`✅ تم حفظ المبلغ: ${manualPrice.toFixed(2)} DA`);
+      closeCalculator();
     }
 
     window.submitData = async function () {
@@ -242,23 +264,32 @@
           workDone: {
             indoor,
             outdoor,
-            maintenance,
-            totalPrice
+            maintenance
           },
           ownerConfirmation: {
             notes,
-            verified: true,
             totalManual: manualPrice || 0,
+            verified: true,
             verifiedAt: new Date()
           }
         });
 
         alert("✅ تم حفظ البيانات بنجاح.");
         window.location.href = "admin.html";
-      } catch (err) {
+      } catch (e) {
         alert("❌ حدث خطأ أثناء الحفظ.");
-        console.error(err);
+        console.error(e);
       }
+    }
+
+    window.showCalculator = function() {
+      document.getElementById("calculatorPopup").style.display = "block";
+      document.getElementById("overlay").style.display = "block";
+    }
+
+    window.closeCalculator = function() {
+      document.getElementById("calculatorPopup").style.display = "none";
+      document.getElementById("overlay").style.display = "none";
     }
   </script>
 </body>
