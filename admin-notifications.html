@@ -59,7 +59,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, doc, getDoc, query, orderBy
+      getFirestore, collection, getDocs, doc, getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -74,45 +74,68 @@
     const alertsContainer = document.getElementById("alertsContainer");
 
     async function loadAlerts() {
-      const q = query(collection(db, "alerts"), orderBy("verifiedAt", "desc"));
-      const alertSnap = await getDocs(q);
+      alertsContainer.innerHTML = "🔄 جاري تحميل الإشعارات...";
 
-      if (alertSnap.empty) {
-        alertsContainer.innerHTML = "<p>📭 لا توجد إشعارات حالياً.</p>";
-        return;
-      }
+      try {
+        const alertSnap = await getDocs(collection(db, "alerts"));
 
-      alertsContainer.innerHTML = "";
-
-      for (const alertDoc of alertSnap.docs) {
-        const alert = alertDoc.data();
-        const requestId = alert.requestId;
-
-        // استدعاء بيانات الطلب المرتبط
-        const requestRef = doc(db, "requests", requestId);
-        const requestSnap = await getDoc(requestRef);
-        let address = "❓ غير معروف";
-        let date = "❓";
-        let customer = "زبون غير معروف";
-
-        if (requestSnap.exists()) {
-          const req = requestSnap.data();
-          address = req.address || "❓ لا يوجد عنوان";
-          date = req.executionSchedule?.toDate()?.toLocaleDateString("ar-DZ", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) || "❓";
-          customer = req.name || "زبون";
+        if (alertSnap.empty) {
+          alertsContainer.innerHTML = "<p>📭 لا توجد إشعارات حالياً.</p>";
+          return;
         }
 
-        const box = document.createElement("div");
-        box.className = "alert-box";
-        box.innerHTML = `
-          <h3>🚨 ${alert.type}</h3>
-          <p><strong>📍 العنوان:</strong> ${address}</p>
-          <p><strong>🗓️ تاريخ العمل:</strong> ${date}</p>
-          <p><strong>👤 الزبون:</strong> ${customer}</p>
-          <p><strong>📌 وقت الإشعار:</strong> ${new Date(alert.verifiedAt.toDate()).toLocaleString('ar-DZ')}</p>
-        `;
+        alertsContainer.innerHTML = "";
 
-        alertsContainer.appendChild(box);
+        for (const alertDoc of alertSnap.docs) {
+          const alert = alertDoc.data();
+          const requestId = alert.requestId;
+
+          // البيانات الافتراضية
+          let address = "❓ غير معروف";
+          let date = "❓";
+          let customer = "❓ الزبون غير معروف";
+          let verifiedAtText = "❓";
+
+          // جلب بيانات الطلب المرتبط
+          try {
+            const requestRef = doc(db, "requests", requestId);
+            const requestSnap = await getDoc(requestRef);
+            if (requestSnap.exists()) {
+              const req = requestSnap.data();
+              address = req.address || address;
+              date = req.executionSchedule?.toDate?.().toLocaleDateString("ar-DZ", {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }) || date;
+              customer = req.name || customer;
+            }
+          } catch (err) {
+            console.warn("فشل في جلب بيانات الطلب:", err);
+          }
+
+          // جلب تاريخ الإشعار
+          if (alert.verifiedAt?.toDate) {
+            verifiedAtText = new Date(alert.verifiedAt.toDate()).toLocaleString('ar-DZ');
+          }
+
+          const box = document.createElement("div");
+          box.className = "alert-box";
+          box.innerHTML = `
+            <h3>🚨 ${alert.type || "إشعار غير معروف"}</h3>
+            <p><strong>📍 العنوان:</strong> ${address}</p>
+            <p><strong>🗓️ تاريخ العمل:</strong> ${date}</p>
+            <p><strong>👤 الزبون:</strong> ${customer}</p>
+            <p><strong>⏰ وقت الإشعار:</strong> ${verifiedAtText}</p>
+          `;
+
+          alertsContainer.appendChild(box);
+        }
+
+      } catch (error) {
+        console.error("خطأ أثناء تحميل الإشعارات:", error);
+        alertsContainer.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الإشعارات.</p>";
       }
     }
 

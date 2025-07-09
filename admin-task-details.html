@@ -8,8 +8,8 @@
     body {
       font-family: 'Cairo', sans-serif;
       background-color: #f1f1f1;
-      padding: 20px;
       margin: 0;
+      padding: 20px;
     }
 
     .container {
@@ -21,67 +21,52 @@
       box-shadow: 0 0 8px rgba(0,0,0,0.1);
     }
 
-    h2 {
-      text-align: center;
-      color: #007BFF;
-      margin-bottom: 25px;
-    }
-
     label {
       font-weight: bold;
       display: block;
       margin-top: 15px;
+      margin-bottom: 5px;
     }
 
-    input[type="number"], textarea {
+    input[type="number"], input[type="text"], textarea {
       width: 100%;
       padding: 10px;
       font-size: 1.2rem;
-      margin-top: 5px;
-      border-radius: 8px;
       border: 1px solid #ccc;
-      box-sizing: border-box;
+      border-radius: 6px;
+      background: #fafafa;
     }
 
     button {
-      width: 100%;
-      padding: 14px;
+      margin-top: 15px;
+      padding: 12px;
       font-size: 1.1rem;
-      margin-top: 20px;
-      background: #28a745;
-      color: white;
+      width: 100%;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      background: #007BFF;
+      color: white;
     }
 
     button:hover {
-      background-color: #218838;
+      background: #0056b3;
     }
 
-    #warning {
+    .warning {
+      text-align: center;
       color: red;
-      font-weight: bold;
       margin-top: 10px;
-      text-align: center;
     }
 
-    #totalPriceDisplay {
-      text-align: center;
-      font-size: 1.3rem;
-      margin-top: 10px;
-      color: #000;
-    }
-
-    /* الآلة الحاسبة المنبثقة */
     .popup {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.6);
       justify-content: center;
       align-items: center;
-      z-index: 1000;
+      z-index: 9999;
     }
 
     .popup.active {
@@ -90,18 +75,20 @@
 
     .calculator {
       background: white;
+      width: 100vw;
+      height: 100vh;
       padding: 20px;
-      border-radius: 15px;
-      width: 95vw;
-      max-width: 400px;
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .calc-display {
-      width: 100%;
-      font-size: 2rem;
+      width: 90%;
+      font-size: 2.5rem;
       padding: 10px;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       border-radius: 8px;
       border: 1px solid #ccc;
       text-align: left;
@@ -111,51 +98,48 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
+      width: 90%;
     }
 
     .calc-buttons button {
       font-size: 2rem;
-      background: #007bff;
-      color: white;
       border: none;
       border-radius: 10px;
       aspect-ratio: 1/1;
-      cursor: pointer;
+      background: #007BFF;
+      color: white;
     }
 
-    .close-btn {
-      margin-top: 15px;
-      background: #dc3545;
+    .calc-buttons button:hover {
+      background: #0056b3;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>💼 تأكيد تنفيذ العمل</h2>
+    <h2>💼 تأكيد العمل</h2>
 
     <label>عدد المكيفات الداخلية:</label>
-    <input type="number" id="indoorCount" />
+    <input type="number" id="indoorCount">
 
     <label>عدد المكيفات الخارجية:</label>
-    <input type="number" id="outdoorCount" />
+    <input type="number" id="outdoorCount">
 
     <label>عدد عمليات الصيانة:</label>
-    <input type="number" id="maintenanceCount" />
+    <input type="number" id="maintenanceCount">
 
-    <label>💰 السعر النهائي:</label>
-    <input type="number" id="finalPrice" placeholder="أدخل المبلغ الإجمالي هنا" />
-
+    <label>💰 الفاتورة:</label>
+    <input type="number" id="finalPrice" readonly />
     <button id="openCalcBtn">🧮 فتح الآلة الحاسبة</button>
-    <h3 id="totalPriceDisplay">💰 الفاتورة: 0 DA</h3>
 
     <label>ملاحظات:</label>
-    <textarea id="ownerNotes" placeholder="أدخل ملاحظاتك هنا..."></textarea>
+    <textarea id="ownerNotes" placeholder="ملاحظات حول التنفيذ..."></textarea>
 
-    <div id="warning"></div>
-    <button onclick="submitOwnerConfirmation()">✅ تأكيد العمل وحفظ البيانات</button>
+    <div class="warning" id="warningMsg"></div>
+    <button onclick="submitConfirmation()">✅ حفظ البيانات</button>
   </div>
 
-  <!-- الآلة الحاسبة -->
+  <!-- آلة حاسبة منبثقة -->
   <div id="calculatorPopup" class="popup">
     <div class="calculator" onclick="event.stopPropagation();">
       <input id="calcDisplay" class="calc-display" readonly />
@@ -164,28 +148,32 @@
         <button onclick="appendCalc('8')">8</button>
         <button onclick="appendCalc('9')">9</button>
         <button onclick="appendCalc('/')">÷</button>
+
         <button onclick="appendCalc('4')">4</button>
         <button onclick="appendCalc('5')">5</button>
         <button onclick="appendCalc('6')">6</button>
         <button onclick="appendCalc('*')">×</button>
+
         <button onclick="appendCalc('1')">1</button>
         <button onclick="appendCalc('2')">2</button>
         <button onclick="appendCalc('3')">3</button>
         <button onclick="appendCalc('-')">−</button>
+
         <button onclick="appendCalc('0')">0</button>
         <button onclick="appendCalc('.')">.</button>
         <button onclick="calculateResult()">=</button>
         <button onclick="appendCalc('+')">+</button>
+
+        <button onclick="deleteLast()" style="grid-column: span 2; background:#ffc107;">⌫ مسح</button>
+        <button onclick="closeCalculator()" style="grid-column: span 2; background:#dc3545;">❌ إلغاء</button>
       </div>
-      <button class="close-btn" onclick="closeCalculator()">❌ إلغاء</button>
     </div>
   </div>
 
-  <!-- سكربت -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, doc, getDoc, updateDoc, addDoc, collection
+      getFirestore, doc, getDoc, updateDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -197,80 +185,73 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const requestId = new URLSearchParams(window.location.search).get("id");
-    let workerData = {};
+    const params = new URLSearchParams(window.location.search);
+    const requestId = params.get("id");
 
-    async function fetchWorkerData() {
+    async function loadCounts() {
       const docRef = doc(db, "requests", requestId);
       const snap = await getDoc(docRef);
       if (snap.exists()) {
-        workerData = snap.data().workDone || {};
-        document.getElementById("indoorCount").value = workerData.indoor || 0;
-        document.getElementById("outdoorCount").value = workerData.outdoor || 0;
-        document.getElementById("maintenanceCount").value = workerData.maintenance || 0;
+        const data = snap.data().workDone || {};
+        document.getElementById("indoorCount").value = data.indoor || 0;
+        document.getElementById("outdoorCount").value = data.outdoor || 0;
+        document.getElementById("maintenanceCount").value = data.maintenance || 0;
       }
     }
 
-    window.submitOwnerConfirmation = async function () {
+    window.submitConfirmation = async () => {
       const indoor = parseInt(document.getElementById("indoorCount").value || 0);
       const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
       const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
-      const notes = document.getElementById("ownerNotes").value;
       const finalPrice = parseFloat(document.getElementById("finalPrice").value || 0);
-
-      const mismatch =
-        indoor !== workerData.indoor ||
-        outdoor !== workerData.outdoor ||
-        maintenance !== workerData.maintenance;
-
-      if (mismatch) {
-        document.getElementById("warning").textContent = "⚠️ البيانات غير مطابقة لبيانات العامل!";
-        await addDoc(collection(db, "alerts"), {
-          requestId,
-          type: "اختلاف في العمل",
-          expected: workerData,
-          actual: { indoor, outdoor, maintenance },
-          verifiedAt: new Date()
-        });
-      } else {
-        document.getElementById("warning").textContent = "✅ البيانات مطابقة.";
-      }
+      const notes = document.getElementById("ownerNotes").value;
 
       await updateDoc(doc(db, "requests", requestId), {
         ownerConfirmation: {
-          indoor, outdoor, maintenance, notes,
-          verified: !mismatch,
-          finalPrice,
+          indoor,
+          outdoor,
+          maintenance,
+          price: finalPrice,
+          notes,
           verifiedAt: new Date()
         }
       });
 
       alert("✅ تم حفظ البيانات بنجاح.");
       window.location.href = "admin.html";
-    }
+    };
 
-    // 🔢 الآلة الحاسبة
-    const popup = document.getElementById("calculatorPopup");
-    document.getElementById("openCalcBtn").onclick = () => popup.classList.add("active");
-    window.closeCalculator = () => popup.classList.remove("active");
-    window.appendCalc = val => document.getElementById("calcDisplay").value += val;
+    // آلة حاسبة
+    document.getElementById("openCalcBtn").onclick = () =>
+      document.getElementById("calculatorPopup").classList.add("active");
+
+    window.closeCalculator = () =>
+      document.getElementById("calculatorPopup").classList.remove("active");
+
+    window.appendCalc = val => {
+      document.getElementById("calcDisplay").value += val;
+    };
+
+    window.deleteLast = () => {
+      const d = document.getElementById("calcDisplay");
+      d.value = d.value.slice(0, -1);
+    };
+
     window.calculateResult = () => {
       try {
         const display = document.getElementById("calcDisplay");
         const result = eval(display.value);
-        display.value = result.toFixed(2);
-        document.getElementById("finalPrice").value = result.toFixed(2);
-        document.getElementById("totalPriceDisplay").textContent = `💰 الفاتورة: ${result.toFixed(2)} DA`;
-        popup.classList.remove("active");
+        display.value = result;
+        document.getElementById("finalPrice").value = result;
+        closeCalculator();
       } catch {
-        alert("⚠️ خطأ في الحساب");
+        alert("⚠️ خطأ في العملية الحسابية");
       }
     };
 
-    // إغلاق عند النقر خارج الآلة
-    popup.addEventListener("click", () => popup.classList.remove("active"));
+    document.getElementById("calculatorPopup").addEventListener("click", closeCalculator);
 
-    fetchWorkerData();
+    loadCounts();
   </script>
 </body>
 </html>
