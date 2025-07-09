@@ -288,11 +288,11 @@
 async function saveSchedule() {
   const date = document.getElementById("execDate").value;
   const time = document.getElementById("execTime").value;
-  const assistantName = document.getElementById("assistantSelect").value;
-  const workerId = localStorage.getItem("workerId"); // ✅ جلب معرف العامل
+  const workerId = document.getElementById("assistantSelect").value; // ✅ ID العامل
+  const assistantName = document.getElementById("assistantSelect").selectedOptions[0]?.textContent; // ✅ الاسم للعرض
 
-  if (!date || !time) {
-    alert("❌ يرجى تحديد التاريخ والوقت");
+  if (!date || !time || !workerId) {
+    alert("❌ يرجى تحديد التاريخ والوقت واختيار المساعد");
     return;
   }
 
@@ -302,7 +302,7 @@ async function saveSchedule() {
     await updateDoc(selectedOrderRef, {
       executionSchedule: Timestamp.fromDate(execDateTime),
       assistantName,
-      assignedTo: workerId // ✅ إضافة هذا السطر لربط الطلب بالعامل
+      assignedTo: workerId
     });
     alert("✅ تم حفظ الجدولة بنجاح");
     closeModal();
@@ -311,6 +311,7 @@ async function saveSchedule() {
     console.error(e);
   }
 }
+
 
 
     loadOrder();
