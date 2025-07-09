@@ -1,89 +1,72 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>📊 لوحة المدير – TopClim</title>
+  <meta charset="UTF-8">
+  <title>🧑‍💼 لوحة المدير – TopClim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
     * { box-sizing: border-box; }
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f1f1f1;
       margin: 0;
       display: flex;
       height: 100vh;
-      color: #333;
     }
     .sidebar {
-      width: 260px;
-      background-color: #343a40;
+      width: 240px;
+      background: #343a40;
       color: white;
       display: flex;
       flex-direction: column;
-      padding: 25px 20px;
+      padding: 20px;
     }
     .sidebar h2 {
-      font-size: 22px;
-      margin-bottom: 30px;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
+      font-size: 20px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #555;
       padding-bottom: 10px;
     }
-    .dropdown {
-      margin-bottom: 20px;
-    }
-    .dropdown select {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
+    .sidebar button {
+      background: none;
       border: none;
-      border-radius: 6px;
-      background-color: #007bff;
       color: white;
-      appearance: none;
+      text-align: right;
+      padding: 12px;
       cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+      border-radius: 5px;
+      margin-bottom: 8px;
     }
-    .dropdown select:hover {
-      background-color: #0056b3;
-    }
-    .content {
-      flex: 1;
-      padding: 0;
-      overflow-y: auto;
-      background: #fafafa;
+    .sidebar button:hover,
+    .sidebar button.active {
+      background: #495057;
     }
     iframe {
-      width: 100%;
-      height: 100vh;
+      flex: 1;
       border: none;
+      height: 100vh;
     }
   </style>
 </head>
 <body>
   <div class="sidebar">
-    <h2>📊 لوحة المدير</h2>
-    <div class="dropdown">
-      <select id="navSelect">
-        <option value="admin-requests.html">📋 الطلبات</option>
-        <option value="admin_upload.html">🎯 تعديل صفحة الهبوط</option>
-        <option value="tools-manager.html">🧰 أدوات العمل</option>
-        <option value="worker-register.html">👷‍♂️ تسجيل العمال</option>
-        <option value="admin-profits.html">💰 الأرباح</option>
-      </select>
-    </div>
+    <h2>🔧 لوحة المدير</h2>
+    <button class="active" onclick="loadPage('admin-requests.html', this)">📋 الطلبات</button>
+    <button onclick="loadPage('admin_upload.html', this)">📤 تعديل الصفحة الرئيسية</button>
+    <button onclick="loadPage('tools-manager.html', this)">🧰 إدارة الأدوات</button>
+    <button onclick="loadPage('worker-register.html', this)">👷 تسجيل العمال</button>
+    <button onclick="loadPage('admin-profits.html', this)">💰 الأرباح</button>
   </div>
 
-  <div class="content">
-    <iframe id="mainView" src="admin-requests.html"></iframe>
-  </div>
+  <iframe id="mainFrame" src="admin-requests.html"></iframe>
 
   <script>
-    const navSelect = document.getElementById("navSelect");
-    const iframe = document.getElementById("mainView");
-
-    navSelect.onchange = function() {
-      const selectedPage = navSelect.value;
-      iframe.src = selectedPage;
-    };
+    function loadPage(page, btn) {
+      document.getElementById("mainFrame").src = page;
+      document.querySelectorAll(".sidebar button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    }
   </script>
 </body>
 </html>
