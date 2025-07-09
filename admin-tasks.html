@@ -2,110 +2,123 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>💼 تأكيد تنفيذ العمل – TopClim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📋 اختيار العمل – لصاحب المشروع</title>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background-color: #f1f1f1;
-      padding: 20px;
+      background: #f1f1f1;
       margin: 0;
+      padding: 20px;
       direction: rtl;
     }
+
     .container {
-      max-width: 750px;
+      max-width: 800px;
       margin: auto;
       background: #fff;
-      padding: 25px;
+      padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+
     h2 {
       text-align: center;
       color: #007BFF;
-      margin-bottom: 25px;
-    }
-    .section {
       margin-bottom: 20px;
     }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 6px;
+
+    .filters {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
-    input[type="number"], textarea {
-      width: 100%;
+
+    .filter-box {
+      flex: 1;
+      text-align: center;
+      background: #e9ecef;
       padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fafafa;
-      font-size: 1rem;
-    }
-    textarea {
-      resize: vertical;
-      min-height: 70px;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 1rem;
-      background: #28a745;
-      color: white;
-      border: none;
       border-radius: 8px;
       cursor: pointer;
+      border: 2px solid transparent;
     }
-    button:hover {
+
+    .filter-box.active {
+      background: #007BFF;
+      color: white;
+      border-color: #0056b3;
+    }
+
+    .task {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      background-color: #fafafa;
+    }
+
+    .task h3 {
+      margin: 0 0 10px;
+    }
+
+    .task a {
+      background-color: #28a745;
+      color: white;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 10px;
+      transition: background-color 0.3s;
+    }
+
+    .task a:hover {
       background-color: #218838;
     }
-    .warning {
-      color: red;
-      font-weight: bold;
+
+    .date-picker {
       margin-top: 10px;
       text-align: center;
+    }
+
+    .date-picker input {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>💼 تأكيد تنفيذ العمل</h2>
+    <h2>📋 الأعمال المجدولة</h2>
 
-    <div class="section">
-      <label>عدد المكيفات الداخلية:</label>
-      <input type="number" id="indoorCount" placeholder="كم مكيف داخلي؟" />
-
-      <label>عدد المكيفات الخارجية:</label>
-      <input type="number" id="outdoorCount" placeholder="كم مكيف خارجي؟" />
-
-      <label>عدد الصيانات:</label>
-      <input type="number" id="maintenanceCount" placeholder="عدد عمليات الصيانة؟" />
+    <div class="filters">
+      <div class="filter-box" id="yesterdayBox">📅 البارحة</div>
+      <div class="filter-box active" id="todayBox">📆 اليوم</div>
+      <div class="filter-box" id="tomorrowBox">📅 الغد</div>
     </div>
 
-    <div class="section">
-      <label>🧮 حساب الفاتورة:</label>
-      <input type="number" id="pricePerIndoor" placeholder="سعر المكيف الداخلي (DA)" />
-      <input type="number" id="pricePerOutdoor" placeholder="سعر المكيف الخارجي (DA)" />
-      <input type="number" id="pricePerMaintenance" placeholder="سعر الصيانة (DA)" />
-      <button onclick="calculateTotal()">📊 حساب الفاتورة</button>
-      <h3 id="totalPriceDisplay">💰 الفاتورة: 0 DA</h3>
+    <div class="date-picker">
+      <input type="date" id="customDate">
     </div>
 
-    <div class="section">
-      <label>ملاحظات:</label>
-      <textarea id="ownerNotes" placeholder="أدخل ملاحظاتك هنا..."></textarea>
-    </div>
-
-    <div id="warning" class="warning"></div>
-
-    <div class="section">
-      <button onclick="submitOwnerConfirmation()">✅ تأكيد العمل وحفظ البيانات</button>
+    <div id="tasksList">
+      <p>🔄 جاري تحميل الأعمال...</p>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, doc, getDoc, updateDoc
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs,
+      Timestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -117,66 +130,90 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const params = new URLSearchParams(window.location.search);
-    const requestId = params.get("id");
+    const tasksList = document.getElementById("tasksList");
+    const todayInput = document.getElementById("customDate");
+    const boxes = {
+      yesterday: document.getElementById("yesterdayBox"),
+      today: document.getElementById("todayBox"),
+      tomorrow: document.getElementById("tomorrowBox")
+    };
 
-    let workerData = {};
-
-    async function fetchWorkerData() {
-      const docRef = doc(db, "requests", requestId);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        workerData = snap.data().workDone || {};
-      }
+    function dateString(offsetDays = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      return d.toISOString().split("T")[0];
     }
 
-    window.calculateTotal = function () {
-      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
-      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
-      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
-      const pi = parseFloat(document.getElementById("pricePerIndoor").value || 0);
-      const po = parseFloat(document.getElementById("pricePerOutdoor").value || 0);
-      const pm = parseFloat(document.getElementById("pricePerMaintenance").value || 0);
-      const total = (indoor * pi) + (outdoor * po) + (maintenance * pm);
-      document.getElementById("totalPriceDisplay").textContent = `💰 الفاتورة: ${total} DA`;
+    let selectedDate = dateString();
+
+    function setActive(key) {
+      Object.values(boxes).forEach(b => b.classList.remove("active"));
+      boxes[key].classList.add("active");
+
+      selectedDate = dateString(
+        key === "yesterday" ? -1 : key === "tomorrow" ? 1 : 0
+      );
+      todayInput.value = selectedDate;
+      loadTasks();
     }
 
-    window.submitOwnerConfirmation = async function () {
-      const indoor = parseInt(document.getElementById("indoorCount").value || 0);
-      const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
-      const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
-      const notes = document.getElementById("ownerNotes").value;
+    boxes.yesterday.onclick = () => setActive("yesterday");
+    boxes.today.onclick = () => setActive("today");
+    boxes.tomorrow.onclick = () => setActive("tomorrow");
 
-      await fetchWorkerData();
+    todayInput.value = selectedDate;
+    todayInput.onchange = e => {
+      Object.values(boxes).forEach(b => b.classList.remove("active"));
+      selectedDate = e.target.value;
+      loadTasks();
+    };
 
-      const mismatch =
-        indoor !== workerData.indoor ||
-        outdoor !== workerData.outdoor ||
-        maintenance !== workerData.maintenance;
+    async function loadTasks() {
+      tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
 
-      if (mismatch) {
-        document.getElementById("warning").textContent = "⚠️ البيانات غير متطابقة مع بيانات العامل! سيتم إرسال إشعار.";
-        // يمكنك هنا إضافة كود لإرسال إشعار لاحقًا
-      } else {
-        document.getElementById("warning").textContent = "✅ البيانات مطابقة."
-      }
+      try {
+        const startDate = new Date(`${selectedDate}T00:00:00`);
+        const endDate = new Date(`${selectedDate}T23:59:59`);
 
-      await updateDoc(doc(db, "requests", requestId), {
-        ownerConfirmation: {
-          indoor,
-          outdoor,
-          maintenance,
-          notes,
-          verified: !mismatch,
-          verifiedAt: new Date()
+        const q = query(
+          collection(db, "requests"),
+          where("executionSchedule", ">=", Timestamp.fromDate(startDate)),
+          where("executionSchedule", "<=", Timestamp.fromDate(endDate))
+        );
+
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          tasksList.innerHTML = "<p>🚫 لا توجد أعمال في هذا التاريخ.</p>";
+          return;
         }
-      });
 
-      alert("✅ تم حفظ البيانات بنجاح.");
-      window.location.href = "admin-requests.html";
+        tasksList.innerHTML = "";
+        snap.forEach(docSnap => {
+          const d = docSnap.data();
+          const execDate = d.executionSchedule?.toDate?.();
+          const dateStr = execDate?.toLocaleDateString("ar-DZ") || "";
+          const timeStr = execDate?.toLocaleTimeString("ar-DZ", { hour: "2-digit", minute: "2-digit" }) || "";
+
+          const el = document.createElement("div");
+          el.className = "task";
+          el.innerHTML = `
+            <h3>👤 ${d.name || "زبون"}</h3>
+            <p>📍 العنوان: ${d.address || "غير محدد"}</p>
+            <p>🕒 ${dateStr} – ${timeStr}</p>
+            <a href="owner-task-details.html?id=${docSnap.id}">📋 مراجعة</a>
+          `;
+          tasksList.appendChild(el);
+        });
+
+      } catch (error) {
+        console.error(error);
+        tasksList.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
+      }
     }
 
-    fetchWorkerData();
+    loadTasks();
   </script>
+
 </body>
 </html>
