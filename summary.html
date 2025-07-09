@@ -2,234 +2,259 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>📊 لوحة تتبع الأعمال</title>
+  <title>📊 سجل الأعمال - ملخص ربحي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
       background: #f4f6f9;
-      padding: 30px;
+      padding: 20px;
+      direction: rtl;
       color: #333;
     }
-
     h2 {
       text-align: center;
       color: #007bff;
-      margin-bottom: 25px;
     }
-
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      justify-content: center;
-      margin-bottom: 25px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    .filters label {
-      display: flex;
-      flex-direction: column;
-      font-size: 14px;
-    }
-
-    .filters input {
-      padding: 8px;
-      font-size: 14px;
+    .worker-info {
+      text-align: center;
       margin-top: 5px;
-      width: 150px;
+      margin-bottom: 15px;
+      font-size: 18px;
     }
-
-    .filters button {
-      background-color: #007bff;
-      color: white;
+    #addBtn {
+      margin: 10px auto;
+      display: block;
       padding: 10px 20px;
-      font-size: 16px;
+      background: #28a745;
+      color: #fff;
       border: none;
+      font-size: 16px;
       border-radius: 4px;
       cursor: pointer;
-      align-self: flex-end;
-      height: 42px;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       background: #fff;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-top: 20px;
-    }
-
-    th, td {
-      padding: 14px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-
-    th {
-      background-color: #007bff;
-      color: white;
-      font-weight: bold;
-    }
-
-    td strong {
-      color: #2c3e50;
-    }
-
-    .worker-info {
-      text-align: center;
-      font-size: 16px;
       margin-top: 10px;
-      color: #444;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: #fff;
+    }
+    input[type="date"], input[type="number"] {
+      width: 100%;
+      padding: 6px;
+      box-sizing: border-box;
+    }
+    .deleteBtn {
+      cursor: pointer;
+      color: #dc3545;
+      font-size: 18px;
+    }
+    .summary {
+      margin-top: 20px;
+      padding: 10px;
+      background: #ffeeba;
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
 
-<h2>📊 ملخص أعمال مساعد حسب التاريخ والأسعار</h2>
+  <h2>📊 سجل الأعمال للموظف</h2>
+  <div class="worker-info" id="workerDisplay">✅ يتم جلب اسم الموظف...</div>
+  <button id="addBtn">＋ إضافة صف جديد</button>
 
-<div class="filters">
-  <label>
-    من تاريخ:
-    <input type="date" id="startDate" />
-  </label>
-  <label>
-    إلى تاريخ:
-    <input type="date" id="endDate" />
-  </label>
-  <label>
-    سعر الداخلي:
-    <input type="number" id="priceIndoor" placeholder="مثلا 500" />
-  </label>
-  <label>
-    سعر الخارجي:
-    <input type="number" id="priceOutdoor" placeholder="مثلا 400" />
-  </label>
-  <label>
-    سعر الصيانة:
-    <input type="number" id="priceMaintenance" placeholder="مثلا 300" />
-  </label>
-  <button id="filterBtn">🔍 بحث</button>
-</div>
+  <table id="mainTable">
+    <thead>
+      <tr>
+        <th>م</th>
+        <th>من تاريخ</th>
+        <th>إلى تاريخ</th>
+        <th>سعر داخلي</th>
+        <th>سعر خارجي</th>
+        <th>سعر صيانة</th>
+        <th>💰 الربح</th>
+        <th>🔧 حذف</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- تُعرض هنا الصفوف -->
+    </tbody>
+  </table>
 
-<div class="worker-info" id="workerDisplay">👷 جاري جلب بيانات العامل...</div>
+  <div class="summary" id="totalSummary">المجموع الكلي: 0 دج</div>
 
-<table>
-  <thead>
-    <tr>
-      <th>📅 من</th>
-      <th>📅 إلى</th>
-      <th>📦 داخلي</th>
-      <th>🔥 خارجي</th>
-      <th>🛠️ صيانة</th>
-      <th>💰 الربح</th>
-    </tr>
-  </thead>
-  <tbody id="summaryBody">
-    <tr><td colspan="6">⏳ الرجاء اختيار الفترة والأسعار، ثم الضغط على "بحث"</td></tr>
-  </tbody>
-</table>
+  <script type="module">
+    // استيراد Firebase SDK v10
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection, getDocs,
+      doc, getDoc,
+      addDoc, updateDoc, deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    getDocs,
-    doc,
-    getDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    // إعداد Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-    authDomain: "topclim-3edfa.firebaseapp.com",
-    projectId: "topclim-3edfa"
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const workerDisplay = document.getElementById("workerDisplay");
-  const filterBtn = document.getElementById("filterBtn");
-  const tbody = document.getElementById("summaryBody");
+    // جمع معلومات DOM
+    const workerDisplay = document.getElementById("workerDisplay");
+    const addBtn = document.getElementById("addBtn");
+    const tableBody = document.getElementById("tableBody");
+    const totalSummary = document.getElementById("totalSummary");
 
-  const workerId = new URLSearchParams(window.location.search).get("workerId");
-  let workerName = "";
-
-  // جلب اسم العامل
-  async function loadWorkerName() {
+    // استخراج workerId من الرابط
+    const workerId = new URLSearchParams(window.location.search).get("workerId");
     if (!workerId) {
-      workerDisplay.textContent = "❌ لم يتم تمرير workerId في الرابط";
-      return;
+      alert("❌ مطلوب workerId في الرابط!");
+      throw new Error("workerId missing");
     }
-    try {
-      const snap = await getDoc(doc(db, "workers", workerId));
-      if (snap.exists()) {
-        workerName = snap.data().name || "غير معروف";
-        workerDisplay.textContent = "👷 اسم العامل: " + workerName;
-      } else {
-        workerDisplay.textContent = "❌ مستخدم غير موجود";
+
+    let totalProfitAll = 0;
+
+    // جلب اسم العامل من Firestore
+    async function loadWorkerName() {
+      try {
+        const snap = await getDoc(doc(db, "workers", workerId));
+        if (snap.exists()) {
+          const name = snap.data().name || "غير معروف";
+          workerDisplay.textContent = `👷 الموظف: ${name}`;
+        } else {
+          workerDisplay.textContent = "❌ العامل غير موجود";
+        }
+      } catch (e) {
+        console.error(e);
+        workerDisplay.textContent = "⚠️ خطأ أثناء جلب اسم العامل";
       }
-    } catch {
-      workerDisplay.textContent = "⚠️ خطأ عند جلب اسم العامل";
-    }
-  }
-
-  // عند الضغط على زر البحث
-  filterBtn.addEventListener("click", async () => {
-    const start = new Date(document.getElementById("startDate").value);
-    const end = new Date(document.getElementById("endDate").value);
-    const priceIndoor = Number(document.getElementById("priceIndoor").value);
-    const priceOutdoor = Number(document.getElementById("priceOutdoor").value);
-    const priceMaintenance = Number(document.getElementById("priceMaintenance").value);
-
-    if (!workerId) return alert("workerId مفقود!");
-    if (isNaN(start) || isNaN(end) || [priceIndoor, priceOutdoor, priceMaintenance].some(isNaN)) {
-      return alert("الرجاء ملء كل الحقول وتحديد الفترة");
     }
 
-    tbody.innerHTML = `<tr><td colspan="6">🔄 جاري المعالجة...</td></tr>`;
+    // حساب الربح حسب فترة وأسعار
+    function computeProfit(row) {
+      const d1 = new Date(row.start);
+      const d2 = new Date(row.end);
+      const days = (d2 - d1) / (1000*3600*24) + 1;
+      const sumPerDay = (row.priceIndoor + row.priceOutdoor + row.priceMaintenance);
+      return Math.max(0, days * sumPerDay);
+    }
 
-    try {
-      const snap = await getDocs(collection(db, "requests"));
-      let sumIndoor = 0, sumOutdoor = 0, sumMaintenance = 0;
+    // تحديث الملخص الكلي
+    function updateTotal() {
+      const rows = tableBody.querySelectorAll("tr");
+      totalProfitAll = 0;
+      rows.forEach(tr => {
+        const cell = tr.cells[6];
+        const value = Number(cell.textContent.replace(/[^\d]/g, "")) || 0;
+        totalProfitAll += value;
+      });
+      totalSummary.textContent = `المجموع الكلي: ${totalProfitAll.toLocaleString()} دج`;
+    }
 
-      snap.docs.forEach(d => {
-        const data = d.data();
-        const done = data.workDone;
-        const fin = done?.finishedAt?.seconds ? new Date(done.finishedAt.seconds * 1000) : null;
-        if (data.status === "تم الإنجاز" &&
-            data.assignedTo === workerId &&
-            fin && fin >= start && fin <= end) {
-          sumIndoor += Number(done.indoor || 0);
-          sumOutdoor += Number(done.outdoor || 0);
-          sumMaintenance += Number(done.maintenance || 0);
+    // إعداد صف جديد أو المحفوظ
+    function appendRow(id, data) {
+      const tr = document.createElement("tr");
+      tr.dataset.id = id;
+
+      tr.innerHTML = `
+        <td>${tableBody.children.length + 1}</td>
+        <td><input type="date" value="${data.start}" /></td>
+        <td><input type="date" value="${data.end}" /></td>
+        <td><input type="number" min="0" value="${data.priceIndoor}" /></td>
+        <td><input type="number" min="0" value="${data.priceOutdoor}" /></td>
+        <td><input type="number" min="0" value="${data.priceMaintenance}" /></td>
+        <td><strong>0 دج</strong></td>
+        <td><span class="deleteBtn">🗑️</span></td>
+      `;
+
+      const inputs = tr.querySelectorAll("input");
+      const profitCell = tr.querySelector("strong");
+      const deleteBtn = tr.querySelector(".deleteBtn");
+
+      const saveAndRecalc = async () => {
+        const newData = {
+          start: inputs[0].value,
+          end: inputs[1].value,
+          priceIndoor: Number(inputs[2].value),
+          priceOutdoor: Number(inputs[3].value),
+          priceMaintenance: Number(inputs[4].value)
+        };
+        try {
+          await updateDoc(doc(db, "summaries", workerId, "entries", id), newData);
+        } catch (e) {
+          console.error(e);
+        }
+        const profit = computeProfit(newData);
+        profitCell.textContent = `${profit.toLocaleString()} دج`;
+        updateTotal();
+      };
+
+      inputs.forEach(i => i.addEventListener("change", saveAndRecalc));
+
+      deleteBtn.addEventListener("click", async () => {
+        if (confirm("هل تريد حذف هذا الصف؟")) {
+          await deleteDoc(doc(db, "summaries", workerId, "entries", id));
+          tr.remove();
+          Array.from(tableBody.children).forEach((r, idx) => r.cells[0].textContent = idx + 1);
+          updateTotal();
         }
       });
 
-      const profit = sumIndoor*priceIndoor + sumOutdoor*priceOutdoor + sumMaintenance*priceMaintenance;
-
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${start.toISOString().split("T")[0]}</td>
-        <td>${end.toISOString().split("T")[0]}</td>
-        <td><strong>${sumIndoor}</strong></td>
-        <td><strong>${sumOutdoor}</strong></td>
-        <td><strong>${sumMaintenance}</strong></td>
-        <td><strong>${profit.toLocaleString()} دج</strong></td>
-      `;
-      tbody.appendChild(row);
-    } catch (e) {
-      console.error(e);
-      tbody.innerHTML = `<tr><td colspan="6">⚠️ حدث خطأ أثناء المعالجة</td></tr>`;
+      tableBody.appendChild(tr);
+      // حساب أولي
+      const initialProfit = computeProfit(data);
+      profitCell.textContent = `${initialProfit.toLocaleString()} دج`;
+      updateTotal();
     }
-  });
 
-  // جلب اسم العامل فوراً عند التحميل
-  loadWorkerName();
-</script>
+    // جلب جميع الصفوف من Firestore
+    async function loadRows() {
+      try {
+        const snap = await getDocs(collection(db, "summaries", workerId, "entries"));
+        tableBody.innerHTML = "";
+        snap.forEach(docSnap => {
+          appendRow(docSnap.id, docSnap.data());
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // إضافة صف جديد افتراضي
+    addBtn.addEventListener("click", async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const data = {
+        start: today,
+        end: today,
+        priceIndoor: 0,
+        priceOutdoor: 0,
+        priceMaintenance: 0
+      };
+      const docRef = await addDoc(collection(db, "summaries", workerId, "entries"), data);
+      appendRow(docRef.id, data);
+    });
+
+    // عند بدء الصفحة
+    (async () => {
+      await loadWorkerName();
+      await loadRows();
+    })();
+
+  </script>
 
 </body>
 </html>
