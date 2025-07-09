@@ -2,67 +2,41 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>💰 تقارير الأرباح – TopClim</title>
+  <title>💰 تقرير الأرباح – TopClim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f4f6f8;
-      padding: 20px;
-      direction: rtl;
-    }
-    h1 {
-      text-align: center;
-      color: #007bff;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background: #007bff;
-      color: white;
-    }
-    .details {
-      background: #eef;
-      display: none;
-    }
-    button {
-      padding: 6px 12px;
-      background: #28a745;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .summary {
-      margin: 20px 0;
-      font-size: 18px;
-      background: #e0f7e9;
-      padding: 10px;
-      border-radius: 5px;
-      text-align: center;
-    }
+    body { font-family: 'Cairo', sans-serif; background: #f4f6f8; padding: 20px; direction: rtl; }
+    h1 { text-align: center; color: #007bff; }
+    .controls { margin: 15px 0; text-align: center; }
+    input[type="date"] { padding: 6px; margin: 0 8px; }
+    button.filter-btn { padding: 6px 16px; background: #17a2b8; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    .filter-btn:hover { background: #138496; }
+    table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background: #007bff; color: white; }
+    .details { background: #eef; display: none; }
+    .summary { margin: 10px 0; font-size: 18px; background: #e0f7e9; padding: 10px; border-radius: 5px; text-align: center; }
+    button.details-btn { padding: 4px 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h1>📊 تقرير الأرباح اليومية</h1>
-<div class="summary" id="totalSummary">📦 جاري التحميل...</div>
+<h1>📊 تقرير الأرباح حسب الفترة</h1>
+
+<div class="controls">
+  من: <input type="date" id="fromDate" />  
+  إلى: <input type="date" id="toDate" />  
+  <button class="filter-btn" onclick="applyFilter()">اعرض</button>
+</div>
+
+<div class="summary" id="rangeSummary">رجاءً اختر فترة...</div>
 
 <table id="profitsTable">
   <thead>
     <tr>
       <th>📅 التاريخ</th>
       <th>عدد الطلبات</th>
-      <th>إجمالي الربح</th>
+      <th>إجمالي الربح (دج)</th>
       <th>📌 تفاصيل</th>
     </tr>
   </thead>
@@ -71,113 +45,86 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore, collection, getDocs
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const app = initializeApp({
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    apiKey: "...",
     authDomain: "topclim-3edfa.firebaseapp.com",
     projectId: "topclim-3edfa"
   });
-
   const db = getFirestore(app);
-  const profitsBody = document.getElementById("profitsBody");
-  const totalSummary = document.getElementById("totalSummary");
 
-  async function loadProfits() {
+  const fromEl = document.getElementById("fromDate");
+  const toEl = document.getElementById("toDate");
+  const summaryEl = document.getElementById("rangeSummary");
+  const bodyEl = document.getElementById("profitsBody");
+
+  window.applyFilter = async function() {
+    const from = fromEl.value;
+    const to = toEl.value;
+    if (!from || !to) { alert("❗ يرجى تحديد فترة صحيحة."); return; }
+    if (from > to) { alert("❗ تاريخ البداية يجب أن يكون قبل النهاية."); return; }
+
     const snap = await getDocs(collection(db, "requests"));
-    const data = {};
+    const grouped = {};
+    let total = 0;
+    snap.docs.forEach(d => {
+      const r = d.data();
+      if (r.status !== "تم الإنجاز") return;
+      const conf = r.ownerConfirmation;
+      if (!conf?.price) return;
+      const dtSec = r.executionSchedule?.seconds || r.createdAt?.seconds;
+      if (!dtSec) return;
+      const dt = new Date(dtSec * 1000);
+      const str = dt.toISOString().split("T")[0];
+      if (str < from || str > to) return;
 
-    let grandTotal = 0;
-
-    snap.docs.forEach(doc => {
-      const d = doc.data();
-      if (d.status !== "تم الإنجاز") return;
-      const conf = d.ownerConfirmation;
-      if (!conf || !conf.price) return;
-
-      const dateObj = d.executionSchedule?.seconds
-        ? new Date(d.executionSchedule.seconds * 1000)
-        : (d.createdAt?.seconds ? new Date(d.createdAt.seconds * 1000) : null);
-
-      if (!dateObj) return;
-
-      const date = dateObj.toISOString().split("T")[0];
-
-      if (!data[date]) data[date] = { total: 0, entries: [] };
-
-      data[date].total += conf.price;
-      grandTotal += conf.price;
-
-      data[date].entries.push({
-        name: d.name || "بدون اسم",
-        address: d.address || "",
+      if (!grouped[str]) grouped[str] = { sum: 0, list: [] };
+      grouped[str].sum += conf.price;
+      total += conf.price;
+      grouped[str].list.push({
+        name: r.name || "بدون اسم",
+        addr: r.address || "",
+        price: conf.price,
         indoor: conf.indoor || 0,
         outdoor: conf.outdoor || 0,
         maintenance: conf.maintenance || 0,
-        price: conf.price || 0,
-        phone: d.phone || ""
+        phone: r.phone || ""
       });
     });
 
-    totalSummary.textContent = `💰 إجمالي الأرباح: ${grandTotal.toLocaleString()} دج`;
+    bodyEl.innerHTML = "";
+    summaryEl.textContent = `🧾 إجمالي الأرباح من ${from} إلى ${to}: ${total.toLocaleString()} دج`;
 
-    Object.entries(data).sort().reverse().forEach(([date, { total, entries }]) => {
+    Object.entries(grouped).sort().forEach(([date, grp]) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${date}</td>
-        <td>${entries.length}</td>
-        <td>${total.toLocaleString()} دج</td>
-        <td><button onclick="toggleDetails(this)">عرض</button></td>
+        <td>${grp.list.length}</td>
+        <td>${grp.sum.toLocaleString()}</td>
+        <td><button class="details-btn" onclick="toggle(event)">عرض</button></td>
       `;
-      profitsBody.appendChild(tr);
-
-      const detailTr = document.createElement("tr");
-      detailTr.classList.add("details");
-      detailTr.innerHTML = `
+      bodyEl.appendChild(tr);
+      const dt = document.createElement("tr");
+      dt.className = "details";
+      dt.innerHTML = `
         <td colspan="4">
-          <table style="width: 100%; background: #f9f9f9; margin-top: 10px;">
-            <thead>
+          <table style="width:100%;background:#f9f9f9">
+            <tr><th>👤 زبون</th><th>📍 عنوان</th><th>داخلي</th><th>خارجي</th><th>صيانة</th><th>📞 هاتف</th><th>💵 سعر</th></tr>
+            ${grp.list.map(e=>`
               <tr>
-                <th>👤 الزبون</th>
-                <th>📍 العنوان</th>
-                <th>داخلي</th>
-                <th>خارجي</th>
-                <th>صيانة</th>
-                <th>📞 الهاتف</th>
-                <th>💵 السعر</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${entries.map(e => `
-                <tr>
-                  <td>${e.name}</td>
-                  <td>${e.address}</td>
-                  <td>${e.indoor}</td>
-                  <td>${e.outdoor}</td>
-                  <td>${e.maintenance}</td>
-                  <td>${e.phone}</td>
-                  <td>${e.price.toLocaleString()} دج</td>
-                </tr>
-              `).join("")}
-            </tbody>
+                <td>${e.name}</td><td>${e.addr}</td><td>${e.indoor}</td><td>${e.outdoor}</td><td>${e.maintenance}</td><td>${e.phone}</td><td>${e.price.toLocaleString()}</td>
+              </tr>`).join("")}
           </table>
-        </td>
-      `;
-      profitsBody.appendChild(detailTr);
+        </td>`;
+      bodyEl.appendChild(dt);
     });
-  }
-
-  window.toggleDetails = function (btn) {
-    const row = btn.closest("tr");
-    const next = row.nextElementSibling;
-    if (next && next.classList.contains("details")) {
-      next.style.display = next.style.display === "none" || !next.style.display ? "table-row" : "none";
-    }
   };
 
-  loadProfits();
+  window.toggle = function(e) {
+    const dt = e.target.closest("tr").nextElementSibling;
+    dt.style.display = dt.style.display === "table-row" ? "none" : "table-row";
+  };
 </script>
 
 </body>
