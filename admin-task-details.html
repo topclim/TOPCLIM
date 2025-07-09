@@ -12,6 +12,7 @@
       margin: 0;
       direction: rtl;
     }
+
     .container {
       max-width: 750px;
       margin: auto;
@@ -20,19 +21,23 @@
       border-radius: 10px;
       box-shadow: 0 0 8px rgba(0,0,0,0.1);
     }
+
     h2 {
       text-align: center;
       color: #007BFF;
       margin-bottom: 25px;
     }
+
     .section {
       margin-bottom: 20px;
     }
+
     label {
       font-weight: bold;
       display: block;
       margin-bottom: 6px;
     }
+
     input[type="number"], textarea {
       width: 100%;
       padding: 10px;
@@ -41,10 +46,12 @@
       background: #fafafa;
       font-size: 1rem;
     }
+
     textarea {
       resize: vertical;
       min-height: 70px;
     }
+
     button {
       width: 100%;
       padding: 12px;
@@ -55,15 +62,51 @@
       border-radius: 8px;
       cursor: pointer;
     }
+
     button:hover {
       background-color: #218838;
     }
+
     .total-display {
       text-align: center;
       font-size: 1.2rem;
       color: green;
       margin-top: 10px;
       font-weight: bold;
+    }
+
+    .calculator {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .calculator input {
+      grid-column: span 4;
+      height: 40px;
+      font-size: 1.2rem;
+      text-align: left;
+    }
+
+    .calculator button {
+      padding: 15px;
+      font-size: 1.1rem;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .calculator button:hover {
+      background: #0056b3;
+    }
+
+    .save-calc {
+      margin-top: 10px;
+      background-color: #ffc107;
+      color: #000;
     }
   </style>
 </head>
@@ -83,12 +126,41 @@
     </div>
 
     <div class="section">
-      <label>🧮 حساب الفاتورة:</label>
+      <label>🧮 حساب الفاتورة تلقائيًا:</label>
       <input type="number" id="priceIndoor" placeholder="سعر المكيف الداخلي (DA)" />
       <input type="number" id="priceOutdoor" placeholder="سعر المكيف الخارجي (DA)" />
       <input type="number" id="priceMaintenance" placeholder="سعر الصيانة (DA)" />
       <button onclick="calculateTotal()">📊 حساب الفاتورة</button>
       <div class="total-display" id="totalDisplay">💰 الفاتورة: 0 DA</div>
+    </div>
+
+    <div class="section">
+      <label>💡 آلة حاسبة يدوية (لحساب السعر بنفسك):</label>
+      <div class="calculator">
+        <input type="text" id="calcInput" readonly />
+        <button onclick="pressCalc('7')">7</button>
+        <button onclick="pressCalc('8')">8</button>
+        <button onclick="pressCalc('9')">9</button>
+        <button onclick="pressCalc('/')">÷</button>
+
+        <button onclick="pressCalc('4')">4</button>
+        <button onclick="pressCalc('5')">5</button>
+        <button onclick="pressCalc('6')">6</button>
+        <button onclick="pressCalc('*')">×</button>
+
+        <button onclick="pressCalc('1')">1</button>
+        <button onclick="pressCalc('2')">2</button>
+        <button onclick="pressCalc('3')">3</button>
+        <button onclick="pressCalc('-')">−</button>
+
+        <button onclick="pressCalc('0')">0</button>
+        <button onclick="pressCalc('.')">.</button>
+        <button onclick="pressCalc('C')">C</button>
+        <button onclick="pressCalc('+')">+</button>
+
+        <button onclick="calculateCalc()" style="grid-column: span 4;">= النتيجة</button>
+      </div>
+      <button class="save-calc" onclick="saveCalcResult()">💾 حفظ المبلغ النهائي من الآلة الحاسبة</button>
     </div>
 
     <div class="section">
@@ -115,11 +187,11 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
     const params = new URLSearchParams(window.location.search);
     const requestId = params.get("id");
 
     let totalPrice = 0;
+    let manualPrice = 0;
 
     window.calculateTotal = function () {
       const indoor = parseInt(document.getElementById("indoorCount").value || 0);
@@ -131,8 +203,32 @@
       const priceMaintenance = parseFloat(document.getElementById("priceMaintenance").value || 0);
 
       totalPrice = (indoor * priceIndoor) + (outdoor * priceOutdoor) + (maintenance * priceMaintenance);
-
       document.getElementById("totalDisplay").textContent = `💰 الفاتورة: ${totalPrice.toLocaleString()} DA`;
+    }
+
+    // آلة الحاسبة
+    let calcBuffer = "";
+    window.pressCalc = function (val) {
+      if (val === "C") {
+        calcBuffer = "";
+        document.getElementById("calcInput").value = "";
+        return;
+      }
+      calcBuffer += val;
+      document.getElementById("calcInput").value = calcBuffer;
+    }
+
+    window.calculateCalc = function () {
+      try {
+        manualPrice = eval(calcBuffer);
+        document.getElementById("calcInput").value = manualPrice.toFixed(2);
+      } catch {
+        document.getElementById("calcInput").value = "خطأ";
+      }
+    }
+
+    window.saveCalcResult = function () {
+      alert(`✅ تم حفظ القيمة: ${manualPrice} DA`);
     }
 
     window.submitData = async function () {
@@ -140,11 +236,6 @@
       const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
       const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
       const notes = document.getElementById("ownerNotes").value;
-
-      if (isNaN(totalPrice) || totalPrice <= 0) {
-        alert("⚠️ الرجاء حساب الفاتورة أولاً قبل الحفظ.");
-        return;
-      }
 
       try {
         await updateDoc(doc(db, "requests", requestId), {
@@ -157,6 +248,7 @@
           ownerConfirmation: {
             notes,
             verified: true,
+            totalManual: manualPrice || 0,
             verifiedAt: new Date()
           }
         });
