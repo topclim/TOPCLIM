@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>💰 تقارير الأرباح – TopClim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+      direction: rtl;
+    }
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    .details {
+      background: #eef;
+      display: none;
+    }
+    button {
+      padding: 6px 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .summary {
+      margin: 20px 0;
+      font-size: 18px;
+      background: #e0f7e9;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>📊 تقرير الأرباح اليومية</h1>
+<div class="summary" id="totalSummary">📦 جاري التحميل...</div>
+
+<table id="profitsTable">
+  <thead>
+    <tr>
+      <th>📅 التاريخ</th>
+      <th>عدد الطلبات</th>
+      <th>إجمالي الربح</th>
+      <th>📌 تفاصيل</th>
+    </tr>
+  </thead>
+  <tbody id="profitsBody"></tbody>
+</table>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore, collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    authDomain: "topclim-3edfa.firebaseapp.com",
+    projectId: "topclim-3edfa"
+  });
+
+  const db = getFirestore(app);
+  const profitsBody = document.getElementById("profitsBody");
+  const totalSummary = document.getElementById("totalSummary");
+
+  async function loadProfits() {
+    const snap = await getDocs(collection(db, "requests"));
+    const data = {};
+
+    let grandTotal = 0;
+
+    snap.docs.forEach(doc => {
+      const d = doc.data();
+      if (d.status !== "تم الإنجاز") return;
+      const conf = d.ownerConfirmation;
+      if (!conf || !conf.price) return;
+
+      const dateObj = d.executionSchedule?.seconds
+        ? new Date(d.executionSchedule.seconds * 1000)
+        : (d.createdAt?.seconds ? new Date(d.createdAt.seconds * 1000) : null);
+
+      if (!dateObj) return;
+
+      const date = dateObj.toISOString().split("T")[0];
+
+      if (!data[date]) data[date] = { total: 0, entries: [] };
+
+      data[date].total += conf.price;
+      grandTotal += conf.price;
+
+      data[date].entries.push({
+        name: d.name || "بدون اسم",
+        address: d.address || "",
+        indoor: conf.indoor || 0,
+        outdoor: conf.outdoor || 0,
+        maintenance: conf.maintenance || 0,
+        price: conf.price || 0,
+        phone: d.phone || ""
+      });
+    });
+
+    totalSummary.textContent = `💰 إجمالي الأرباح: ${grandTotal.toLocaleString()} دج`;
+
+    Object.entries(data).sort().reverse().forEach(([date, { total, entries }]) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${date}</td>
+        <td>${entries.length}</td>
+        <td>${total.toLocaleString()} دج</td>
+        <td><button onclick="toggleDetails(this)">عرض</button></td>
+      `;
+      profitsBody.appendChild(tr);
+
+      const detailTr = document.createElement("tr");
+      detailTr.classList.add("details");
+      detailTr.innerHTML = `
+        <td colspan="4">
+          <table style="width: 100%; background: #f9f9f9; margin-top: 10px;">
+            <thead>
+              <tr>
+                <th>👤 الزبون</th>
+                <th>📍 العنوان</th>
+                <th>داخلي</th>
+                <th>خارجي</th>
+                <th>صيانة</th>
+                <th>📞 الهاتف</th>
+                <th>💵 السعر</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${entries.map(e => `
+                <tr>
+                  <td>${e.name}</td>
+                  <td>${e.address}</td>
+                  <td>${e.indoor}</td>
+                  <td>${e.outdoor}</td>
+                  <td>${e.maintenance}</td>
+                  <td>${e.phone}</td>
+                  <td>${e.price.toLocaleString()} دج</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </td>
+      `;
+      profitsBody.appendChild(detailTr);
+    });
+  }
+
+  window.toggleDetails = function (btn) {
+    const row = btn.closest("tr");
+    const next = row.nextElementSibling;
+    if (next && next.classList.contains("details")) {
+      next.style.display = next.style.display === "none" || !next.style.display ? "table-row" : "none";
+    }
+  };
+
+  loadProfits();
+</script>
+
+</body>
+</html>
