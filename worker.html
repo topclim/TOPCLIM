@@ -47,16 +47,14 @@
     }
     .content {
       flex: 1;
-      padding: 30px;
+      padding: 0;
       overflow-y: auto;
       background: #fafafa;
     }
     iframe {
       width: 100%;
-      height: 1200px;
+      height: 100vh;
       border: none;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
   </style>
 </head>
@@ -65,126 +63,36 @@
     <h2>🔧 لوحة العامل</h2>
     <button id="tasksTab" class="active">📋 الأعمال</button>
     <button id="reportTab">📊 المداخل</button>
-    <button id="detailsTab">📄 تفاصيل الطلب</button>
+    <button id="detailsTab" disabled>✅ إنهاء العمل</button>
   </div>
   <div class="content">
-    <div id="tasksView"></div>
-    <div id="reportView" style="display:none">
-      <iframe src="worker-completed-orders.html"></iframe>
-    </div>
-    <div id="detailsView" style="display:none">
-      <iframe src="worker-task-details.html"></iframe>
-    </div>
+    <iframe id="iframeView" src="worker-tasks.html"></iframe>
   </div>
 
   <script>
     const tasksBtn = document.getElementById("tasksTab");
     const reportBtn = document.getElementById("reportTab");
     const detailsBtn = document.getElementById("detailsTab");
+    const iframeView = document.getElementById("iframeView");
 
-    const tasksView = document.getElementById("tasksView");
-    const reportView = document.getElementById("reportView");
-    const detailsView = document.getElementById("detailsView");
-
-    function setActiveTab(tab) {
+    function setActive(button, src) {
       tasksBtn.classList.remove("active");
       reportBtn.classList.remove("active");
       detailsBtn.classList.remove("active");
-      tasksView.style.display = "none";
-      reportView.style.display = "none";
-      detailsView.style.display = "none";
 
-      tab.classList.add("active");
-      if (tab === tasksBtn) tasksView.style.display = "block";
-      if (tab === reportBtn) reportView.style.display = "block";
-      if (tab === detailsBtn) detailsView.style.display = "block";
+      button.classList.add("active");
+      iframeView.src = src;
     }
 
-    tasksBtn.onclick = () => setActiveTab(tasksBtn);
-    reportBtn.onclick = () => setActiveTab(reportBtn);
-    detailsBtn.onclick = () => setActiveTab(detailsBtn);
-  </script>
+    tasksBtn.onclick = () => setActive(tasksBtn, "worker-tasks.html");
+    reportBtn.onclick = () => setActive(reportBtn, "worker-completed-orders.html");
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      where,
-      getDocs,
-      Timestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const workerId = localStorage.getItem("workerUID");
-    if (!workerId) {
-      window.location.href = "worker-login.html";
-    }
-
-    const tasksViewContainer = document.getElementById("tasksView");
-
-    function dateString(offsetDays = 0) {
-      const d = new Date();
-      d.setDate(d.getDate() + offsetDays);
-      return d.toISOString().split("T")[0];
-    }
-
-    const selectedDate = dateString();
-
-    async function loadTasks() {
-      tasksViewContainer.innerHTML = "<p>⏳ جاري تحميل الأعمال...</p>";
-
-      try {
-        const startDate = new Date(`${selectedDate}T00:00:00`);
-        const endDate = new Date(`${selectedDate}T23:59:59`);
-
-        const q = query(
-          collection(db, "requests"),
-          where("assignedTo", "==", workerId),
-          where("executionSchedule", ">=", Timestamp.fromDate(startDate)),
-          where("executionSchedule", "<=", Timestamp.fromDate(endDate))
-        );
-
-        const snap = await getDocs(q);
-
-        if (snap.empty) {
-          tasksViewContainer.innerHTML = "<p>🚫 لا توجد أعمال اليوم.</p>";
-          return;
-        }
-
-        tasksViewContainer.innerHTML = "";
-        snap.forEach(docSnap => {
-          const d = docSnap.data();
-          const execDate = d.executionSchedule?.toDate?.();
-          const dateStr = execDate?.toLocaleDateString("ar-DZ") || "";
-          const timeStr = execDate?.toLocaleTimeString("ar-DZ", { hour: "2-digit", minute: "2-digit" }) || "";
-
-          const el = document.createElement("div");
-          el.className = "task";
-          el.innerHTML = `
-            <h3>👤 ${d.name || "زبون"}</h3>
-            <p>📍 العنوان: ${d.address || "غير محدد"}</p>
-            <p>🕒 ${dateStr} – ${timeStr}</p>
-            <a href="worker-task-details.html?id=${docSnap.id}" target="_blank">📄 تنفيذ</a>
-          `;
-          tasksViewContainer.appendChild(el);
-        });
-      } catch (error) {
-        console.error(error);
-        tasksViewContainer.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
+    window.addEventListener("message", e => {
+      if (e.data && e.data.type === "openDetails" && e.data.id) {
+        detailsBtn.disabled = false;
+        setActive(detailsBtn, `worker-task-details.html?id=${e.data.id}`);
       }
-    }
-
-    loadTasks();
+    });
   </script>
 </body>
 </html>
