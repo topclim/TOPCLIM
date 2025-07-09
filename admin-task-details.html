@@ -41,10 +41,6 @@
       background: #fafafa;
       font-size: 1rem;
     }
-    input[readonly] {
-      background-color: #eee;
-      color: #666;
-    }
     textarea {
       resize: vertical;
       min-height: 70px;
@@ -75,47 +71,34 @@
     <h2>💼 تأكيد تنفيذ العمل</h2>
 
     <div class="section">
-      <h4>📋 بيانات الزبون (غير قابلة للتعديل)</h4>
       <label>عدد المكيفات الداخلية:</label>
-      <input type="number" id="customerIndoor" readonly />
+      <input type="number" id="indoor" placeholder="أدخل عدد المكيفات الداخلية" />
 
       <label>عدد المكيفات الخارجية:</label>
-      <input type="number" id="customerOutdoor" readonly />
+      <input type="number" id="outdoor" placeholder="أدخل عدد المكيفات الخارجية" />
 
-      <label>عدد الصيانات:</label>
-      <input type="number" id="customerMaintenance" readonly />
-    </div>
-
-    <div class="section">
-      <h4>🔧 تعديل بيانات العامل (ستُعتمد في الفاتورة)</h4>
-      <label>عدد المكيفات الداخلية:</label>
-      <input type="number" id="workerIndoorInput" />
-
-      <label>عدد المكيفات الخارجية:</label>
-      <input type="number" id="workerOutdoorInput" />
-
-      <label>عدد الصيانات:</label>
-      <input type="number" id="workerMaintenanceInput" />
+      <label>عدد عمليات الصيانة:</label>
+      <input type="number" id="maintenance" placeholder="أدخل عدد الصيانات" />
     </div>
 
     <div class="section">
       <label>🧮 حساب الفاتورة:</label>
-      <input type="number" id="pricePerIndoor" placeholder="سعر المكيف الداخلي (DA)" />
-      <input type="number" id="pricePerOutdoor" placeholder="سعر المكيف الخارجي (DA)" />
-      <input type="number" id="pricePerMaintenance" placeholder="سعر الصيانة (DA)" />
+      <input type="number" id="priceIndoor" placeholder="سعر المكيف الداخلي (DA)" />
+      <input type="number" id="priceOutdoor" placeholder="سعر المكيف الخارجي (DA)" />
+      <input type="number" id="priceMaintenance" placeholder="سعر الصيانة (DA)" />
       <button onclick="calculateTotal()">📊 حساب الفاتورة</button>
-      <h3 id="totalPriceDisplay">💰 الفاتورة: 0 DA</h3>
+      <h3 id="totalDisplay">💰 الفاتورة: 0 DA</h3>
     </div>
 
     <div class="section">
       <label>ملاحظات:</label>
-      <textarea id="ownerNotes" placeholder="أدخل ملاحظاتك هنا..."></textarea>
+      <textarea id="notes" placeholder="ملاحظات العمل (اختياري)"></textarea>
     </div>
 
     <div id="warning" class="warning"></div>
 
     <div class="section">
-      <button onclick="submitOwnerConfirmation()">✅ تأكيد العمل وحفظ البيانات</button>
+      <button onclick="submitData()">✅ حفظ وتأكيد العمل</button>
     </div>
   </div>
 
@@ -137,63 +120,57 @@
     const params = new URLSearchParams(window.location.search);
     const requestId = params.get("id");
 
-    async function fetchRequestData() {
-      const docRef = doc(db, "requests", requestId);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        const customer = data.ownerConfirmation || {};
-        const worker = data.workDone || {};
+    let customerData = {};
 
-        // بيانات الزبون
-        document.getElementById("customerIndoor").value = customer.indoor || 0;
-        document.getElementById("customerOutdoor").value = customer.outdoor || 0;
-        document.getElementById("customerMaintenance").value = customer.maintenance || 0;
-
-        // بيانات العامل
-        document.getElementById("workerIndoorInput").value = worker.indoor || 0;
-        document.getElementById("workerOutdoorInput").value = worker.outdoor || 0;
-        document.getElementById("workerMaintenanceInput").value = worker.maintenance || 0;
+    async function fetchCustomerData() {
+      const reqRef = doc(db, "requests", requestId);
+      const reqSnap = await getDoc(reqRef);
+      if (reqSnap.exists()) {
+        const data = reqSnap.data();
+        customerData = data.ownerConfirmation || {};
+        const workDone = data.workDone || {};
+        // تعبئة البيانات الموجودة
+        document.getElementById("indoor").value = workDone.indoor || 0;
+        document.getElementById("outdoor").value = workDone.outdoor || 0;
+        document.getElementById("maintenance").value = workDone.maintenance || 0;
       }
     }
 
     window.calculateTotal = function () {
-      const indoor = parseInt(document.getElementById("workerIndoorInput").value || 0);
-      const outdoor = parseInt(document.getElementById("workerOutdoorInput").value || 0);
-      const maintenance = parseInt(document.getElementById("workerMaintenanceInput").value || 0);
-      const pi = parseFloat(document.getElementById("pricePerIndoor").value || 0);
-      const po = parseFloat(document.getElementById("pricePerOutdoor").value || 0);
-      const pm = parseFloat(document.getElementById("pricePerMaintenance").value || 0);
+      const indoor = parseInt(document.getElementById("indoor").value || 0);
+      const outdoor = parseInt(document.getElementById("outdoor").value || 0);
+      const maintenance = parseInt(document.getElementById("maintenance").value || 0);
+      const pi = parseFloat(document.getElementById("priceIndoor").value || 0);
+      const po = parseFloat(document.getElementById("priceOutdoor").value || 0);
+      const pm = parseFloat(document.getElementById("priceMaintenance").value || 0);
       const total = (indoor * pi) + (outdoor * po) + (maintenance * pm);
-      document.getElementById("totalPriceDisplay").textContent = `💰 الفاتورة: ${total} DA`;
+      document.getElementById("totalDisplay").textContent = `💰 الفاتورة: ${total} DA`;
     }
 
-    window.submitOwnerConfirmation = async function () {
-      const indoor = parseInt(document.getElementById("workerIndoorInput").value || 0);
-      const outdoor = parseInt(document.getElementById("workerOutdoorInput").value || 0);
-      const maintenance = parseInt(document.getElementById("workerMaintenanceInput").value || 0);
-      const notes = document.getElementById("ownerNotes").value;
+    window.submitData = async function () {
+      const indoor = parseInt(document.getElementById("indoor").value || 0);
+      const outdoor = parseInt(document.getElementById("outdoor").value || 0);
+      const maintenance = parseInt(document.getElementById("maintenance").value || 0);
+      const notes = document.getElementById("notes").value;
 
-      const customerIndoor = parseInt(document.getElementById("customerIndoor").value || 0);
-      const customerOutdoor = parseInt(document.getElementById("customerOutdoor").value || 0);
-      const customerMaintenance = parseInt(document.getElementById("customerMaintenance").value || 0);
-
-      const mismatch = (
-        indoor !== customerIndoor ||
-        outdoor !== customerOutdoor ||
-        maintenance !== customerMaintenance
-      );
+      const mismatch =
+        customerData &&
+        (
+          indoor !== customerData.indoor ||
+          outdoor !== customerData.outdoor ||
+          maintenance !== customerData.maintenance
+        );
 
       if (mismatch) {
-        document.getElementById("warning").textContent = "⚠️ البيانات غير متطابقة مع بيانات الزبون! سيتم إرسال إشعار.";
+        document.getElementById("warning").textContent = "⚠️ البيانات غير متطابقة مع بيانات الزبون! سيتم تسجيل إشعار.";
 
         await addDoc(collection(db, "alerts"), {
           requestId,
           type: "اختلاف في بيانات العمل",
           expected: {
-            indoor: customerIndoor,
-            outdoor: customerOutdoor,
-            maintenance: customerMaintenance
+            indoor: customerData.indoor,
+            outdoor: customerData.outdoor,
+            maintenance: customerData.maintenance
           },
           actual: {
             indoor,
@@ -213,20 +190,18 @@
           maintenance
         },
         ownerConfirmation: {
-          indoor: customerIndoor,
-          outdoor: customerOutdoor,
-          maintenance: customerMaintenance,
+          ...customerData,
           notes,
           verified: !mismatch,
           verifiedAt: new Date()
         }
       });
 
-      alert("✅ تم حفظ البيانات بنجاح.");
+      alert("✅ تم حفظ العمل بنجاح.");
       window.location.href = "admin.html";
     }
 
-    fetchRequestData();
+    fetchCustomerData();
   </script>
 </body>
 </html>
