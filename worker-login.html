@@ -129,7 +129,8 @@
   .then(() => localStorage.setItem("workerEmail", user.email))
   .then(() => localStorage.setItem("workerUID", user.uid))
   .then(() => {
-    window.location.href = "worker.html";
+   window.location.href = `worker.html?workerId=${user.uid}`;
+
   });
 
       } catch (error) {
