@@ -125,7 +125,13 @@
         localStorage.setItem("workerUID", user.uid);
 
         // الانتقال للوحة العامل
-        window.location.href = "worker.html";
+        await Promise.resolve()
+  .then(() => localStorage.setItem("workerEmail", user.email))
+  .then(() => localStorage.setItem("workerUID", user.uid))
+  .then(() => {
+    window.location.href = "worker.html";
+  });
+
       } catch (error) {
         console.error(error);
         errorDiv.textContent = "❌ البريد أو كلمة المرور غير صحيحة";
