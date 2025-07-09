@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>📋 لوحة العامل – TopClim</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       font-family: 'Cairo', sans-serif;
       background: #f1f1f1;
@@ -17,7 +14,6 @@
       height: 100vh;
       color: #333;
     }
-
     .sidebar {
       width: 240px;
       background-color: #007BFF;
@@ -27,14 +23,12 @@
       padding: 25px 20px;
       box-shadow: 2px 0 6px rgba(0,0,0,0.1);
     }
-
     .sidebar h2 {
       font-size: 22px;
       margin-bottom: 30px;
       border-bottom: 1px solid rgba(255,255,255,0.3);
       padding-bottom: 10px;
     }
-
     .sidebar button {
       background: none;
       border: none;
@@ -47,54 +41,19 @@
       border-radius: 6px;
       margin-bottom: 8px;
     }
-
     .sidebar button.active,
     .sidebar button:hover {
       background-color: #0056b3;
     }
-
     .content {
       flex: 1;
       padding: 30px;
       overflow-y: auto;
       background: #fafafa;
     }
-
-    .task, .content > p {
-      background: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.07);
-      transition: transform 0.2s;
-    }
-
-    .task:hover {
-      transform: translateY(-2px);
-    }
-
-    .task h3 {
-      margin: 0 0 10px;
-    }
-
-    .task a {
-      display: inline-block;
-      margin-top: 10px;
-      text-decoration: none;
-      background: #007BFF;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 5px;
-      transition: background 0.3s;
-    }
-
-    .task a:hover {
-      background: #0056b3;
-    }
-
     iframe {
       width: 100%;
-      height: 1100px;
+      height: 1200px;
       border: none;
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -106,33 +65,44 @@
     <h2>🔧 لوحة العامل</h2>
     <button id="tasksTab" class="active">📋 الأعمال</button>
     <button id="reportTab">📊 المداخل</button>
+    <button id="detailsTab">📄 تفاصيل الطلب</button>
   </div>
   <div class="content">
     <div id="tasksView"></div>
     <div id="reportView" style="display:none">
       <iframe src="worker-completed-orders.html"></iframe>
     </div>
+    <div id="detailsView" style="display:none">
+      <iframe src="worker-task-details.html"></iframe>
+    </div>
   </div>
 
   <script>
     const tasksBtn = document.getElementById("tasksTab");
     const reportBtn = document.getElementById("reportTab");
+    const detailsBtn = document.getElementById("detailsTab");
+
     const tasksView = document.getElementById("tasksView");
     const reportView = document.getElementById("reportView");
+    const detailsView = document.getElementById("detailsView");
 
-    tasksBtn.onclick = () => {
-      tasksBtn.classList.add("active");
-      reportBtn.classList.remove("active");
-      tasksView.style.display = "block";
-      reportView.style.display = "none";
-    };
-
-    reportBtn.onclick = () => {
-      reportBtn.classList.add("active");
+    function setActiveTab(tab) {
       tasksBtn.classList.remove("active");
+      reportBtn.classList.remove("active");
+      detailsBtn.classList.remove("active");
       tasksView.style.display = "none";
-      reportView.style.display = "block";
-    };
+      reportView.style.display = "none";
+      detailsView.style.display = "none";
+
+      tab.classList.add("active");
+      if (tab === tasksBtn) tasksView.style.display = "block";
+      if (tab === reportBtn) reportView.style.display = "block";
+      if (tab === detailsBtn) detailsView.style.display = "block";
+    }
+
+    tasksBtn.onclick = () => setActiveTab(tasksBtn);
+    reportBtn.onclick = () => setActiveTab(reportBtn);
+    detailsBtn.onclick = () => setActiveTab(detailsBtn);
   </script>
 
   <script type="module">
@@ -204,7 +174,7 @@
             <h3>👤 ${d.name || "زبون"}</h3>
             <p>📍 العنوان: ${d.address || "غير محدد"}</p>
             <p>🕒 ${dateStr} – ${timeStr}</p>
-            <a href="worker-task-details.html?id=${docSnap.id}">📄 تنفيذ</a>
+            <a href="worker-task-details.html?id=${docSnap.id}" target="_blank">📄 تنفيذ</a>
           `;
           tasksViewContainer.appendChild(el);
         });
