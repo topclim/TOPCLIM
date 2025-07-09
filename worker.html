@@ -3,61 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📋 قائمة الأعمال – TopClim</title>
+  <title>📋 لوحة العامل – TopClim</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Cairo', sans-serif;
       background: #f1f1f1;
       margin: 0;
-      padding: 20px;
-      direction: rtl;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      text-align: center;
-      color: #007BFF;
-      margin-bottom: 20px;
-    }
-
-    .filters {
       display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+      height: 100vh;
+      color: #333;
     }
 
-    .filter-box {
-      flex: 1;
-      text-align: center;
-      background: #e9ecef;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      border: 2px solid transparent;
-    }
-
-    .filter-box.active {
-      background: #007BFF;
+    .sidebar {
+      width: 240px;
+      background-color: #007BFF;
       color: white;
-      border-color: #0056b3;
+      display: flex;
+      flex-direction: column;
+      padding: 25px 20px;
+      box-shadow: 2px 0 6px rgba(0,0,0,0.1);
     }
 
-    .task {
-      border: 1px solid #ddd;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      background-color: #fafafa;
+    .sidebar h2 {
+      font-size: 22px;
+      margin-bottom: 30px;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      padding-bottom: 10px;
+    }
+
+    .sidebar button {
+      background: none;
+      border: none;
+      color: white;
+      padding: 12px;
+      text-align: right;
+      cursor: pointer;
+      font-size: 17px;
+      transition: background 0.3s;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar button.active,
+    .sidebar button:hover {
+      background-color: #0056b3;
+    }
+
+    .content {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+
+    .task, .content > p {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+      transition: transform 0.2s;
+    }
+
+    .task:hover {
+      transform: translateY(-2px);
     }
 
     .task h3 {
@@ -65,50 +78,62 @@
     }
 
     .task a {
-      background-color: #007BFF;
-      color: white;
-      text-decoration: none;
-      padding: 8px 15px;
-      border-radius: 5px;
       display: inline-block;
       margin-top: 10px;
-      transition: background-color 0.3s;
+      text-decoration: none;
+      background: #007BFF;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 5px;
+      transition: background 0.3s;
     }
 
     .task a:hover {
-      background-color: #0056b3;
+      background: #0056b3;
     }
 
-    .date-picker {
-      margin-top: 10px;
-      text-align: center;
-    }
-
-    .date-picker input {
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+    iframe {
+      width: 100%;
+      height: 1100px;
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>🛠️ الأعمال الخاصة بك</h2>
-
-    <div class="filters">
-      <div class="filter-box" id="yesterdayBox">📅 البارحة</div>
-      <div class="filter-box active" id="todayBox">📆 اليوم</div>
-      <div class="filter-box" id="tomorrowBox">📅 الغد</div>
-    </div>
-
-    <div class="date-picker">
-      <input type="date" id="customDate">
-    </div>
-
-    <div id="tasksList">
-      <p>🔄 جاري تحميل الأعمال...</p>
+  <div class="sidebar">
+    <h2>🔧 لوحة العامل</h2>
+    <button id="tasksTab" class="active">📋 الأعمال</button>
+    <button id="reportTab">📊 المداخل</button>
+  </div>
+  <div class="content">
+    <div id="tasksView"></div>
+    <div id="reportView" style="display:none">
+      <iframe src="worker-completed-orders.html"></iframe>
     </div>
   </div>
+
+  <script>
+    const tasksBtn = document.getElementById("tasksTab");
+    const reportBtn = document.getElementById("reportTab");
+    const tasksView = document.getElementById("tasksView");
+    const reportView = document.getElementById("reportView");
+
+    tasksBtn.onclick = () => {
+      tasksBtn.classList.add("active");
+      reportBtn.classList.remove("active");
+      tasksView.style.display = "block";
+      reportView.style.display = "none";
+    };
+
+    reportBtn.onclick = () => {
+      reportBtn.classList.add("active");
+      tasksBtn.classList.remove("active");
+      tasksView.style.display = "none";
+      reportView.style.display = "block";
+    };
+  </script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -121,64 +146,32 @@
       Timestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
       authDomain: "topclim-3edfa.firebaseapp.com",
       projectId: "topclim-3edfa"
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // التحقق من تسجيل دخول العامل
-    const uid = localStorage.getItem("workerUID");
-    if (!uid) {
+    const workerId = localStorage.getItem("workerUID");
+    if (!workerId) {
       window.location.href = "worker-login.html";
     }
 
-    // عناصر الصفحة
-    const tasksList = document.getElementById("tasksList");
-    const todayInput = document.getElementById("customDate");
-    const boxes = {
-      yesterday: document.getElementById("yesterdayBox"),
-      today: document.getElementById("todayBox"),
-      tomorrow: document.getElementById("tomorrowBox")
-    };
+    const tasksViewContainer = document.getElementById("tasksView");
 
-    // حساب التاريخ بصيغة YYYY-MM-DD
     function dateString(offsetDays = 0) {
       const d = new Date();
       d.setDate(d.getDate() + offsetDays);
       return d.toISOString().split("T")[0];
     }
 
-    // التاريخ المبدئي هو اليوم
-    let selectedDate = dateString();
+    const selectedDate = dateString();
 
-    function setActive(key) {
-      Object.values(boxes).forEach(b => b.classList.remove("active"));
-      boxes[key].classList.add("active");
-
-      selectedDate = dateString(key === "yesterday" ? -1 : key === "tomorrow" ? 1 : 0);
-      todayInput.value = selectedDate;
-
-      loadTasks();
-    }
-
-    boxes.yesterday.onclick = () => setActive("yesterday");
-    boxes.today.onclick = () => setActive("today");
-    boxes.tomorrow.onclick = () => setActive("tomorrow");
-
-    todayInput.value = selectedDate;
-    todayInput.onchange = e => {
-      Object.values(boxes).forEach(b => b.classList.remove("active"));
-      selectedDate = e.target.value;
-      loadTasks();
-    };
-
-    // تحميل المهام من Firestore
     async function loadTasks() {
-      tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
+      tasksViewContainer.innerHTML = "<p>⏳ جاري تحميل الأعمال...</p>";
 
       try {
         const startDate = new Date(`${selectedDate}T00:00:00`);
@@ -186,7 +179,7 @@
 
         const q = query(
           collection(db, "requests"),
-          where("assignedTo", "==", uid),
+          where("assignedTo", "==", workerId),
           where("executionSchedule", ">=", Timestamp.fromDate(startDate)),
           where("executionSchedule", "<=", Timestamp.fromDate(endDate))
         );
@@ -194,11 +187,11 @@
         const snap = await getDocs(q);
 
         if (snap.empty) {
-          tasksList.innerHTML = "<p>🚫 لا توجد أعمال في هذا التاريخ.</p>";
+          tasksViewContainer.innerHTML = "<p>🚫 لا توجد أعمال اليوم.</p>";
           return;
         }
 
-        tasksList.innerHTML = "";
+        tasksViewContainer.innerHTML = "";
         snap.forEach(docSnap => {
           const d = docSnap.data();
           const execDate = d.executionSchedule?.toDate?.();
@@ -213,16 +206,14 @@
             <p>🕒 ${dateStr} – ${timeStr}</p>
             <a href="worker-task-details.html?id=${docSnap.id}">📄 تنفيذ</a>
           `;
-          tasksList.appendChild(el);
+          tasksViewContainer.appendChild(el);
         });
-
       } catch (error) {
         console.error(error);
-        tasksList.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
+        tasksViewContainer.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
       }
     }
 
-    // تحميل أولي عند فتح الصفحة
     loadTasks();
   </script>
 </body>
