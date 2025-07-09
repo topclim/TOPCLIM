@@ -221,24 +221,27 @@
       });
     }
 
-    window.confirmTask = async function (id) {
-      const workerId = document.getElementById(`worker-${id}`).value;
-      const schedule = document.getElementById(`schedule-${id}`).value;
+    import { Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-      if (!workerId || !schedule) {
-        alert("❗ يرجى اختيار العامل وتحديد وقت التنفيذ.");
-        return;
-      }
+window.confirmTask = async function (id) {
+  const workerId = document.getElementById(`worker-${id}`).value;
+  const schedule = document.getElementById(`schedule-${id}`).value;
 
-      await updateDoc(doc(db, "requests", id), {
-        status: "قيد المعالجة",
-        assignedTo: workerId,
-        schedule: schedule
-      });
+  if (!workerId || !schedule) {
+    alert("❗ يرجى اختيار العامل وتحديد وقت التنفيذ.");
+    return;
+  }
 
-      alert("✅ تم تأكيد الطلب!");
-      loadOrders();
-    };
+  await updateDoc(doc(db, "requests", id), {
+    status: "قيد المعالجة",
+    assignedTo: workerId,
+    executionSchedule: Timestamp.fromDate(new Date(schedule)) // ✅ تعديل مهم
+  });
+
+  alert("✅ تم تأكيد الطلب!");
+  loadOrders();
+};
+
 
     window.filterOrders = function (status) {
       if (status === "الكل") {
