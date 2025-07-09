@@ -2,179 +2,331 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>📊 ملخص الأعمال المنجزة</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📊 لوحة مكيفات – تفاصيل يومية وصيانات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f4f6f8;
+      background: #eef2f5;
       padding: 20px;
+      color: #333;
       direction: rtl;
     }
-    h2 {
-      text-align: center;
-      color: #007BFF;
-      margin-bottom: 20px;
+    h1 { text-align: center; color: #007bff; margin-bottom: 5px; }
+    .info { text-align: center; font-size: 18px; margin-bottom: 20px; }
+    #controls { text-align: center; margin-bottom: 15px; }
+    #addBtn {
+      padding: 8px 16px;
+      background: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      background: #fff;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     th, td {
-      border: 1px solid #dee2e6;
-      padding: 12px;
+      padding: 8px;
+      border: 1px solid #ddd;
       text-align: center;
+      vertical-align: middle;
     }
-    th {
-      background-color: #007BFF;
-      color: white;
-    }
-    input[type="number"],
-    input[type="date"] {
-      width: 100px;
+    th { background: #007bff; color: #fff; }
+    input[type="date"], input[type="number"] {
+      width: 100%;
       padding: 4px;
-      text-align: center;
+      box-sizing: border-box;
     }
-    .price-header {
-      background: #f1f1f1;
-      font-weight: bold;
-      color: #007BFF;
+    button.detailsBtn {
+      background: #17a2b8;
+      color: #fff;
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button.deleteBtn {
+      background: transparent;
+      border: none;
+      color: #dc3545;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    .hidden { display: none; }
+    .sub-table {
+      width: 98%;
+      margin: 10px auto;
+      border-collapse: collapse;
+    }
+    .sub-table th, .sub-table td {
+      padding: 6px;
+      border: 1px solid #ccc;
+    }
+    .summary-box {
+      font-size: 18px;
+      padding: 10px;
+      background: #e9f5ff;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-<h2>📊 ملخص الأعمال المنجزة مع الربح</h2>
+<h1>📊 تقرير مكيفات – فني حسب الفترات</h1>
+<div class="info" id="workerInfo">🔄 جاري جلب بيانات العامل...</div>
 
-<table>
+<div id="controls">
+  <button id="addBtn">＋ إضافة سجل جديد</button>
+</div>
+
+<table id="mainTable">
   <thead>
-    <tr class="price-header">
-      <th colspan="3">⚙️ إعدادات الأسعار لكل وحدة</th>
-      <th colspan="3">⬇️</th>
-      <th rowspan="3">💰 الربح الكلي</th>
-    </tr>
-    <tr class="price-header">
+    <tr>
+      <th>#</th>
+      <th>من تاريخ</th>
+      <th>إلى تاريخ</th>
       <th>سعر داخلي</th>
       <th>سعر خارجي</th>
       <th>سعر صيانة</th>
-      <th colspan="3" rowspan="2">بيانات الطلبات</th>
-    </tr>
-    <tr>
-      <th><input type="number" id="priceIndoor" /></th>
-      <th><input type="number" id="priceOutdoor" /></th>
-      <th><input type="number" id="priceMaintenance" /></th>
-    </tr>
-    <tr>
-      <th>📄 رقم الطلب</th>
-      <th>📆 تاريخ البدء</th>
-      <th>📅 تاريخ الإنجاز</th>
-      <th>❄️ داخلي</th>
-      <th>🔥 خارجي</th>
-      <th>🛠️ صيانة</th>
-      <th>💰 الربح</th>
+      <th>💰 ربح الفترة</th>
+      <th>تفاصيل</th>
+      <th>حذف</th>
     </tr>
   </thead>
-  <tbody id="dataBody">
-    <tr><td colspan="7">⏳ جاري تحميل البيانات...</td></tr>
-  </tbody>
+  <tbody id="mainBody"></tbody>
 </table>
 
+<div class="summary-box" id="totalProfit">🔢 إجمالي الربح: 0 دج</div>
+
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore, collection, doc, getDoc, getDocs,
-  setDoc, updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore, collection, doc,
+    getDocs, getDoc, addDoc,
+    updateDoc, deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {/* ... */};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  const app = initializeApp({
+    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    authDomain: "topclim-3edfa.firebaseapp.com",
+    projectId: "topclim-3edfa"
+  });
+  const db = getFirestore(app);
 
-const tbody = document.getElementById("dataBody");
-const priceInputs = {
-  indoor: document.getElementById("priceIndoor"),
-  outdoor: document.getElementById("priceOutdoor"),
-  maintenance: document.getElementById("priceMaintenance")
-};
+  const workerInfo = document.getElementById("workerInfo");
+  const addBtn = document.getElementById("addBtn");
+  const mainBody = document.getElementById("mainBody");
+  const totalProfitDiv = document.getElementById("totalProfit");
 
-async function loadPrices(){
-  const ref = doc(db,"settings","prices");
-  const snap = await getDoc(ref);
-  let data = snap.exists() ? snap.data() : {};
-  const defaults = {indoor:0,outdoor:0,maintenance:0};
-  data = {...defaults, ...data};
-  Object.entries(priceInputs).forEach(([k,inp]) => inp.value = data[k]);
-}
-Object.entries(priceInputs).forEach(([k,inp])=>{
-  inp.addEventListener("input", async ()=>{
-    await setDoc(doc(db,"settings","prices"), {
-      indoor: +priceInputs.indoor.value || 0,
-      outdoor: +priceInputs.outdoor.value || 0,
-      maintenance: +priceInputs.maintenance.value || 0
+  const workerId = new URLSearchParams(window.location.search).get("workerId");
+  if (!workerId) {
+    alert("الصفحة تتطلب workerId في الرابط");
+    throw new Error("workerId missing");
+  }
+
+  let prices = { indoor: 0, outdoor: 0, maintenance: 0 };
+
+  // حساب الربح الحقيقي بالفترة
+  async function calcRealProfit(start, end) {
+    const snap = await getDocs(collection(db, "requests"));
+    let total = 0;
+    snap.docs.forEach(d => {
+      const dt = d.data();
+      const w = dt.workDone;
+      const fin = w?.finishedAt?.seconds ? new Date(w.finishedAt.seconds * 1000) : null;
+      if (
+        dt.assignedTo === workerId &&
+        dt.status === "تم الإنجاز" &&
+        fin &&
+        new Date(start) <= fin &&
+        fin <= new Date(end)
+      ) {
+        total += (Number(w.indoor || 0) * prices.indoor)
+               + (Number(w.outdoor || 0) * prices.outdoor)
+               + (Number(w.maintenance || 0) * prices.maintenance);
+      }
     });
-    renderTable(); 
-  });
-});
+    return total;
+  }
 
-async function renderTable(){
-  tbody.innerHTML = "";
-  const [reqSnap, priceSnap] = await Promise.all([
-    getDocs(collection(db,"requests")),
-    getDoc(doc(db,"settings","prices"))
-  ]);
-  const prices = priceSnap.exists()?priceSnap.data():{indoor:0,outdoor:0,maintenance:0};
+  function updateTotalProfit() {
+    let sum = 0;
+    mainBody.querySelectorAll("tr.main-row").forEach(tr => {
+      const val = Number(tr.querySelector(".profit-cell").textContent.replace(/[^\d]/g, "")) || 0;
+      sum += val;
+    });
+    totalProfitDiv.textContent = `🔢 إجمالي الربح: ${sum.toLocaleString()} دج`;
+  }
 
-  reqSnap.forEach(docSnap=>{
-    const d = docSnap.data();
-    if(d.status==="تم الإنجاز" && d.workDone){
-      const indoor = +d.workDone.indoor || 0;
-      const outdoor = +d.workDone.outdoor || 0;
-      const maintenance = +d.workDone.maintenance || 0;
-      const profit = indoor*prices.indoor + outdoor*prices.outdoor + maintenance*prices.maintenance;
-      const start = d.executionSchedule instanceof Date 
-        ? d.executionSchedule.toISOString().split("T")[0]
-        : d.executionSchedule?.seconds
-          ? new Date(d.executionSchedule.seconds*1000).toISOString().split("T")[0]
-          : "";
-      const end = d.workDone.finishedAt instanceof Date
-        ? d.workDone.finishedAt.toISOString().split("T")[0]
-        : d.workDone.finishedAt?.seconds
-          ? new Date(d.workDone.finishedAt.seconds*1000).toISOString().split("T")[0]
-          : "";
+  function updateRowIndexes() {
+    mainBody.querySelectorAll("tr.main-row").forEach((tr, idx) => {
+      tr.querySelector(".idx").textContent = idx + 1;
+    });
+  }
 
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${docSnap.id}</td>
-        <td><input type="date" value="${start}" onchange="updateStart('${docSnap.id}', this.value)" /></td>
-        <td><input type="date" value="${end}" onchange="updateEnd('${docSnap.id}', this.value)" /></td>
-        <td>${indoor}</td>
-        <td>${outdoor}</td>
-        <td>${maintenance}</td>
-        <td><strong>${profit} دج</strong></td>`;
-      tbody.appendChild(row);
+  function appendMainRow(id, data) {
+    const tr = document.createElement("tr");
+    tr.classList.add("main-row");
+    tr.dataset.id = id;
+    tr.innerHTML = `
+      <td class="idx"></td>
+      <td><input type="date" class="start"/></td>
+      <td><input type="date" class="end"/></td>
+      <td><input type="number" class="priceIndoor"/></td>
+      <td><input type="number" class="priceOutdoor"/></td>
+      <td><input type="number" class="priceMaintenance"/></td>
+      <td class="profit-cell">0 دج</td>
+      <td><button class="detailsBtn">عرض</button></td>
+      <td><button class="deleteBtn">🗑️</button></td>
+    `;
+    mainBody.appendChild(tr);
+
+    const startInput = tr.querySelector(".start");
+    const endInput = tr.querySelector(".end");
+    const piInput = tr.querySelector(".priceIndoor");
+    const poInput = tr.querySelector(".priceOutdoor");
+    const pmInput = tr.querySelector(".priceMaintenance");
+    const profitCell = tr.querySelector(".profit-cell");
+    const detailBtn = tr.querySelector(".detailsBtn");
+    const delBtn = tr.querySelector(".deleteBtn");
+
+    startInput.value = data.start;
+    endInput.value = data.end;
+    piInput.value = data.priceIndoor;
+    poInput.value = data.priceOutdoor;
+    pmInput.value = data.priceMaintenance;
+
+    const detailTr = document.createElement("tr");
+    detailTr.classList.add("hidden", "detail-row");
+    detailTr.innerHTML = `<td colspan="9"><em>جارٍ تحميل التفاصيل...</em></td>`;
+    tr.after(detailTr);
+
+    async function refreshAndSave() {
+      const newData = {
+        start: startInput.value,
+        end: endInput.value,
+        priceIndoor: Number(piInput.value),
+        priceOutdoor: Number(poInput.value),
+        priceMaintenance: Number(pmInput.value)
+      };
+      await updateDoc(doc(db, "summaries", workerId, "entries", id), newData);
+      const real = await calcRealProfit(newData.start, newData.end);
+      profitCell.textContent = `${real.toLocaleString()} دج`;
+      updateTotalProfit();
     }
-  });
-}
 
-window.updateStart = async (id, date) => {
-  await updateDoc(doc(db,"requests",id), {
-    executionSchedule: new Date(date)
-  });
-  alert("✅ تم تعديل تاريخ البدء");
-};
-window.updateEnd = async (id, date) => {
-  const ref = doc(db,"requests",id);
-  const snap = await getDoc(ref);
-  const wd = snap.data().workDone || {};
-  wd.finishedAt = new Date(date);
-  await updateDoc(ref, { workDone: wd });
-  alert("✅ تم تعديل تاريخ الإنجاز");
-};
+    [startInput, endInput, piInput, poInput, pmInput].forEach(i => {
+      i.addEventListener("change", refreshAndSave);
+    });
 
-await loadPrices();
-await renderTable();
+    detailBtn.addEventListener("click", async () => {
+      if (!detailTr.classList.contains("hidden")) {
+        detailTr.classList.add("hidden");
+        return;
+      }
+      detailTr.innerHTML = `<td colspan="9"><em>جارٍ التحميل...</em></td>`;
+      const snap = await getDocs(collection(db, "requests"));
+      const arr = snap.docs.map(d => d.data()).filter(dt => {
+        const w = dt.workDone;
+        const fin = w?.finishedAt?.seconds ? new Date(w.finishedAt.seconds * 1000) : null;
+        return (
+          dt.assignedTo === workerId &&
+          dt.status === "تم الإنجاز" &&
+          fin &&
+          new Date(startInput.value) <= fin &&
+          fin <= new Date(endInput.value)
+        );
+      });
+      const rows = arr.map(e => {
+        const w = e.workDone;
+        const d = new Date(w.finishedAt.seconds * 1000).toISOString().split("T")[0];
+        return `<tr>
+          <td>${d}</td>
+          <td>${w.indoor || 0}</td>
+          <td>${w.outdoor || 0}</td>
+          <td>${w.maintenance || 0}</td>
+          <td>${e.address || ""}</td>
+        </tr>`;
+      }).join("");
+      detailTr.innerHTML = `
+        <td colspan="9">
+          <table class="sub-table">
+            <thead>
+              <tr>
+                <th>تاريخ</th>
+                <th>داخلي</th>
+                <th>خارجي</th>
+                <th>صيانة</th>
+                <th>عنوان العمل</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || `<tr><td colspan="5"><em>لا توجد بيانات</em></td></tr>`}
+            </tbody>
+          </table>
+        </td>`;
+      detailTr.classList.remove("hidden");
+    });
+
+    delBtn.addEventListener("click", async () => {
+      if (!confirm("هل تريد حذف هذا السجل؟")) return;
+      await deleteDoc(doc(db, "summaries", workerId, "entries", id));
+      detailTr.remove();
+      tr.remove();
+      updateRowIndexes();
+      updateTotalProfit();
+    });
+
+    calcRealProfit(data.start, data.end).then(p => {
+      profitCell.textContent = `${p.toLocaleString()} دج`;
+    });
+
+    updateRowIndexes();
+    updateTotalProfit();
+  }
+
+  async function loadData() {
+    const snap = await getDocs(collection(db, "summaries", workerId, "entries"));
+    mainBody.innerHTML = "";
+    for (const docSnap of snap.docs) {
+      appendMainRow(docSnap.id, docSnap.data());
+    }
+  }
+
+  addBtn.addEventListener("click", async () => {
+    const today = new Date().toISOString().split("T")[0];
+    const data = {
+      start: today,
+      end: today,
+      priceIndoor: prices.indoor,
+      priceOutdoor: prices.outdoor,
+      priceMaintenance: prices.maintenance
+    };
+    const docRef = await addDoc(collection(db, "summaries", workerId, "entries"), data);
+    appendMainRow(docRef.id, data);
+  });
+
+  async function init() {
+    const wSnap = await getDoc(doc(db, "workers", workerId));
+    workerInfo.textContent = wSnap.exists()
+      ? `👷 الموظف: ${wSnap.data().name}`
+      : "اسم العامل غير متوفر";
+
+    const pSnap = await getDoc(doc(db, "settings", "prices"));
+    if (pSnap.exists()) prices = pSnap.data();
+
+    await loadData();
+  }
+
+  init();
 </script>
 
 </body>
