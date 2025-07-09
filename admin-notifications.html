@@ -57,81 +57,78 @@
   </div>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore, collection, getDocs, doc, getDoc, query, orderBy
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, doc, getDoc, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-    authDomain: "topclim-3edfa.firebaseapp.com",
-    projectId: "topclim-3edfa"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const alertsContainer = document.getElementById("alertsContainer");
+    const alertsContainer = document.getElementById("alertsContainer");
 
-  async function loadAlerts() {
-    const q = query(collection(db, "alerts")); // لا يمكن الترتيب حسب timestamp إن لم يكن موجود في كل المستندات
-    const alertSnap = await getDocs(q);
+    async function loadAlerts() {
+      const q = query(collection(db, "alerts"), orderBy("verifiedAt" in db ? "verifiedAt" : "timestamp", "desc"));
+      const alertSnap = await getDocs(q);
 
-    if (alertSnap.empty) {
-      alertsContainer.innerHTML = "<p>📭 لا توجد إشعارات حالياً.</p>";
-      return;
-    }
-
-    alertsContainer.innerHTML = "";
-
-    for (const alertDoc of alertSnap.docs) {
-      const alert = alertDoc.data();
-      const requestId = alert.requestId;
-
-      const requestRef = doc(db, "requests", requestId);
-      const requestSnap = await getDoc(requestRef);
-      let address = "❓ غير معروف";
-      let date = "❓";
-      let customer = "زبون غير معروف";
-
-      if (requestSnap.exists()) {
-        const req = requestSnap.data();
-        address = req.address || "❓ لا يوجد عنوان";
-        try {
-          date = req.executionSchedule?.toDate().toLocaleDateString("ar-DZ", {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }) || "❓";
-        } catch (e) {
-          date = "❓";
-        }
-        customer = req.name || "زبون";
+      if (alertSnap.empty) {
+        alertsContainer.innerHTML = "<p>📭 لا توجد إشعارات حالياً.</p>";
+        return;
       }
 
-      const box = document.createElement("div");
-      box.className = "alert-box";
+      alertsContainer.innerHTML = "";
 
-      const timestamp = alert.timestamp?.toDate
-        ? alert.timestamp.toDate().toLocaleString('ar-DZ')
-        : "❓ لا يوجد وقت";
+      for (const alertDoc of alertSnap.docs) {
+        const alert = alertDoc.data();
+        const requestId = alert.requestId;
 
-      box.innerHTML = `
-        <h3>🚨 ${alert.type || "إشعار عام"}</h3>
-        <p><strong>📍 العنوان:</strong> ${address}</p>
-        <p><strong>🗓️ تاريخ العمل:</strong> ${date}</p>
-        <p><strong>👤 الزبون:</strong> ${customer}</p>
-        <p><strong>📌 وقت الإشعار:</strong> ${timestamp}</p>
-      `;
+        const requestRef = doc(db, "requests", requestId);
+        const requestSnap = await getDoc(requestRef);
 
-      alertsContainer.appendChild(box);
+        let address = "❓ غير معروف";
+        let date = "❓";
+        let customer = "زبون غير معروف";
+
+        if (requestSnap.exists()) {
+          const req = requestSnap.data();
+          address = req.address || "❓ لا يوجد عنوان";
+          date = req.executionSchedule?.toDate()?.toLocaleDateString("ar-DZ", {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+          }) || "❓";
+          customer = req.name || "زبون";
+        }
+
+        const box = document.createElement("div");
+        box.className = "alert-box";
+
+        const missingSmall = alert.missingSmall || [];
+        const missingLarge = alert.missingLarge || [];
+        const hasMissingTools = missingSmall.length > 0 || missingLarge.length > 0;
+
+        const alertTime = alert.verifiedAt?.toDate?.() || alert.timestamp?.toDate?.();
+        const timeStr = alertTime ? alertTime.toLocaleString("ar-DZ") : "❓";
+
+        box.innerHTML = `
+          <h3>🚨 إشعار: ${hasMissingTools ? "فقدان أدوات" : (alert.type || "إشعار عام")}</h3>
+          <p><strong>📍 العنوان:</strong> ${address}</p>
+          <p><strong>🗓️ تاريخ العمل:</strong> ${date}</p>
+          <p><strong>👤 الزبون:</strong> ${customer}</p>
+          <p><strong>⏰ وقت الإشعار:</strong> ${timeStr}</p>
+          ${missingSmall.length > 0 ? `<p><strong>🧰 أدوات صغيرة مفقودة:</strong> ${missingSmall.join(", ")}</p>` : ""}
+          ${missingLarge.length > 0 ? `<p><strong>📦 أدوات كبيرة مفقودة:</strong> ${missingLarge.join(", ")}</p>` : ""}
+        `;
+
+        alertsContainer.appendChild(box);
+      }
     }
-  }
 
-  loadAlerts();
-</script>
-
-
+    loadAlerts();
+  </script>
 </body>
 </html>
