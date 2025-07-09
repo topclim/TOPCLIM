@@ -2,197 +2,107 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>📊 ملخص الأعمال المنجزة</title>
+  <title>📊 تقارير الأعمال المنجزة</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f4f6f8;
-      padding: 20px;
-      direction: rtl;
-    }
-    h2 {
-      text-align: center;
-      color: #007BFF;
-      margin-bottom: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-    th, td {
-      border: 1px solid #dee2e6;
-      padding: 12px;
-      text-align: center;
-    }
-    th {
-      background-color: #007BFF;
-      color: white;
-    }
-    input[type="number"],
-    input[type="date"] {
-      width: 100px;
-      padding: 4px;
-      text-align: center;
-    }
-    .price-header {
-      background: #f1f1f1;
-      font-weight: bold;
-      color: #007BFF;
-    }
+    body { font-family: 'Cairo'; background: #f5f5f5; padding:20px }
+    table { width:100%; border-collapse:collapse; background:white; margin-top:20px }
+    th, td { border:1px solid #ddd; padding:8px; text-align:center }
+    th { background:#007bff; color:#fff }
+    input.number, input.date { width:100px; padding:4px }
+    .prices { display:flex; gap:10px; margin-bottom:10px }
   </style>
 </head>
 <body>
 
-<h2>📊 ملخص الأعمال المنجزة مع الربح</h2>
+<h2>📊 جدول الأعمال المنجزة</h2>
+
+<div class="prices">
+  داخلي: <input class="number" id="priceIndoor" type="number" /> |
+  خارجي: <input class="number" id="priceOutdoor" type="number" /> |
+  صيانة: <input class="number" id="priceMaintenance" type="number" />
+</div>
 
 <table>
   <thead>
-    <tr class="price-header">
-      <th colspan="3">⚙️ إعدادات الأسعار لكل وحدة</th>
-      <th colspan="3">⬇️</th>
-      <th rowspan="3">💰 الربح الكلي</th>
-    </tr>
-    <tr class="price-header">
-      <th>سعر داخلي</th>
-      <th>سعر خارجي</th>
-      <th>سعر صيانة</th>
-      <th colspan="3" rowspan="2">بيانات الطلبات</th>
-    </tr>
     <tr>
-      <th><input type="number" id="priceIndoor" /></th>
-      <th><input type="number" id="priceOutdoor" /></th>
-      <th><input type="number" id="priceMaintenance" /></th>
-    </tr>
-    <tr>
-      <th>📄 رقم الطلب</th>
-      <th>📆 تاريخ البدء</th>
-      <th>📅 تاريخ الإنجاز</th>
-      <th>❄️ داخلي</th>
-      <th>🔥 خارجي</th>
-      <th>🛠️ صيانة</th>
-      <th>💰 الربح</th>
+      <th>📅 من</th><th>📅 إلى</th><th>❄ داخلي</th><th>🌬 خارجي</th><th>🔧 صيانة</th><th>💰 أرباح</th>
     </tr>
   </thead>
-  <tbody id="dataBody">
-    <tr><td colspan="7">⏳ جاري تحميل البيانات...</td></tr>
+  <tbody id="reportTable">
+    <tr><td colspan="6">⏳ جاري التحميل...</td></tr>
   </tbody>
 </table>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-    authDomain: "topclim-3edfa.firebaseapp.com",
-    projectId: "topclim-3edfa"
-  };
+const app = initializeApp({
+  apiKey: "...",
+  authDomain: "topclim-3edfa.firebaseapp.com",
+  projectId: "topclim-3edfa"
+});
+const db = getFirestore(app);
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const tbody = document.getElementById("dataBody");
+const pIndoor = document.getElementById("priceIndoor");
+const pOutdoor = document.getElementById("priceOutdoor");
+const pMaintenance = document.getElementById("priceMaintenance");
+const table = document.getElementById("reportTable");
 
-  const priceInputs = {
-    indoor: document.getElementById("priceIndoor"),
-    outdoor: document.getElementById("priceOutdoor"),
-    maintenance: document.getElementById("priceMaintenance")
-  };
-
-  // 🔄 تحميل الأسعار من قاعدة البيانات
-  async function loadPrices() {
-    const priceRef = doc(db, "settings", "prices");
-    const snap = await getDoc(priceRef);
-    if (snap.exists()) {
-      const data = snap.data();
-      priceInputs.indoor.value = data.indoor || 0;
-      priceInputs.outdoor.value = data.outdoor || 0;
-      priceInputs.maintenance.value = data.maintenance || 0;
-    } else {
-      await setDoc(priceRef, { indoor: 500, outdoor: 400, maintenance: 300 });
-      loadPrices(); // إعادة التحميل
-    }
-  }
-
-  // حفظ الأسعار عند التغيير
-  Object.entries(priceInputs).forEach(([key, input]) => {
-    input.addEventListener("input", async () => {
-      await setDoc(doc(db, "settings", "prices"), {
-        indoor: parseInt(priceInputs.indoor.value),
-        outdoor: parseInt(priceInputs.outdoor.value),
-        maintenance: parseInt(priceInputs.maintenance.value)
-      });
-      loadData(); // تحديث الجدول
-    });
+// استرجاع الأسعار من localStorage
+[pIndoor, pOutdoor, pMaintenance].forEach(inp => {
+  inp.value = localStorage.getItem(inp.id) || "";
+  inp.addEventListener("input", () => {
+    localStorage.setItem(inp.id, inp.value);
+    loadData();
   });
+});
 
-  // تحميل وإنشاء صفوف الجدول
-  async function loadData() {
-    const snap = await getDocs(collection(db, "requests"));
-    const priceSnap = await getDoc(doc(db, "settings", "prices"));
-    const prices = priceSnap.data();
+async function loadData() {
+  const snap = await getDocs(collection(db, "requests"));
+  table.innerHTML = "";
+  
+  snap.forEach(docSnap => {
+    const d = docSnap.data();
+    if (d.status !== "تم الإنجاز" || !d.workDone) return;
+    
+    const w = d.workDone;
+    const indoor = w.indoor || 0;
+    const outdoor = w.outdoor || 0;
+    const maintenance = w.maintenance || 0;
 
-    tbody.innerHTML = "";
+    const from = d.startedAt?.toDate?.().toISOString().split("T")[0] || "";
+    const to = w.finishedAt?.toDate?.().toISOString().split("T")[0] || "";
 
-    snap.forEach(docSnap => {
-      const d = docSnap.data();
-      const id = docSnap.id;
+    const total = indoor*(+pIndoor.value || 0)
+                + outdoor*(+pOutdoor.value || 0)
+                + maintenance*(+pMaintenance.value || 0);
 
-      if (d.status === "تم الإنجاز" && d.workDone) {
-        const start = d.executionSchedule?.seconds ? new Date(d.executionSchedule.seconds * 1000) : null;
-        const end = d.workDone.finishedAt?.seconds ? new Date(d.workDone.finishedAt.seconds * 1000) : null;
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td><input class="date" type="date" value="${from}" onchange="updDate('${docSnap.id}','startedAt',this.value)"></td>
+      <td><input class="date" type="date" value="${to}" onchange="updDate('${docSnap.id}','finishedAt',this.value)"></td>
+      <td>${indoor}</td><td>${outdoor}</td><td>${maintenance}</td>
+      <td>${total.toLocaleString()} د.ج</td>
+    `;
+    table.appendChild(row);
+  });
+}
 
-        const indoor = d.workDone.indoor || 0;
-        const outdoor = d.workDone.outdoor || 0;
-        const maintenance = d.workDone.maintenance || 0;
-
-        const total = (indoor * prices.indoor) + (outdoor * prices.outdoor) + (maintenance * prices.maintenance);
-
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-          <td>${id}</td>
-          <td><input type="date" value="${start ? start.toISOString().split('T')[0] : ''}" onchange="updateStartDate('${id}', this.value)" /></td>
-          <td><input type="date" value="${end ? end.toISOString().split('T')[0] : ''}" onchange="updateEndDate('${id}', this.value)" /></td>
-          <td>${indoor}</td>
-          <td>${outdoor}</td>
-          <td>${maintenance}</td>
-          <td><strong>${total} دج</strong></td>
-        `;
-
-        tbody.appendChild(row);
-      }
-    });
+// تحديث التواريخ في قاعدة البيانات
+window.updDate = async (id, field, val) => {
+  const ref = doc(db, "requests", id);
+  const obj = {};
+  if (field === "startedAt") obj["startedAt"] = new Date(val);
+  else {
+    obj["workDone.finishedAt"] = new Date(val);
   }
+  await updateDoc(ref, obj);
+  alert("تم التعديل ✅");
+};
 
-  // ✅ تحديث تاريخ البداية
-  window.updateStartDate = async (id, date) => {
-    const timestamp = new Date(date);
-    await updateDoc(doc(db, "requests", id), {
-      executionSchedule: timestamp
-    });
-    alert("✅ تم تحديث تاريخ البداية");
-  };
-
-  // ✅ تحديث تاريخ الإنجاز
-  window.updateEndDate = async (id, date) => {
-    const timestamp = new Date(date);
-    const currentData = await getDoc(doc(db, "requests", id));
-    const workDone = currentData.data().workDone || {};
-    workDone.finishedAt = timestamp;
-
-    await updateDoc(doc(db, "requests", id), {
-      workDone: workDone
-    });
-    alert("✅ تم تحديث تاريخ الإنجاز");
-  };
-
-  await loadPrices();
-  await loadData();
+loadData();
 
 </script>
 
