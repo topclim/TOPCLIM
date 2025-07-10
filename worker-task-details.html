@@ -260,6 +260,41 @@
     return date.toLocaleDateString("ar-EG");
   }
 
+  async function loadPreviousWork() {
+  try {
+    const requestRef = doc(db, "requests", requestId);
+    const requestSnap = await getDoc(requestRef);
+
+    if (!requestSnap.exists()) {
+      console.error("🔴 لم يتم العثور على الطلب");
+      return;
+    }
+
+    const requestData = requestSnap.data();
+    const workDoneArray = Array.isArray(requestData.workDone) ? requestData.workDone : [];
+
+    if (workDoneArray.length === 0) return;
+
+    // 🧮 نجمع كل الأعمال السابقة
+    let totalIndoor = 0, totalOutdoor = 0, totalMaintenance = 0;
+
+    workDoneArray.forEach(work => {
+      totalIndoor += work.indoor || 0;
+      totalOutdoor += work.outdoor || 0;
+      totalMaintenance += work.maintenance || 0;
+    });
+
+    // 📝 نملأ الحقول مع إمكانية التعديل
+    document.getElementById("indoorCount").value = totalIndoor;
+    document.getElementById("outdoorCount").value = totalOutdoor;
+    document.getElementById("maintenanceCount").value = totalMaintenance;
+
+    console.log("✅ تم تحميل البيانات السابقة");
+  } catch (error) {
+    console.error("❌ خطأ في تحميل الأعمال السابقة:", error);
+  }
+}
+
   // تحميل الأدوات الصغيرة والكبيرة وعرضها
   async function loadTools() {
     try {
@@ -576,6 +611,7 @@
     await loadTools();
     await loadAdmins();
     await loadRequestData();
+    await loadPreviousWork(); // ⬅️ أضف هذا
     setupPreviousWorksListeners();
   })();
 
