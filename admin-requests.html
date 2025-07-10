@@ -2,308 +2,181 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>🧑‍💼 إدارة الطلبات – TopClim</title>
+  <title>📋 إدارة الطلبات – TopClim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap');
-    * { box-sizing: border-box; margin:0; padding:0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Cairo', sans-serif;
       background: #f4f7fc;
-      color: #333;
       direction: rtl;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
     header {
       background: #007bff;
       color: #fff;
-      padding:20px;
-      display:flex;
-      align-items:center;
-      box-shadow:0 2px 5px rgba(0,0,0,0.1);
-    }
-    header img#logo {
-      height:40px;
-      margin-left:10px;
-    }
-    header h1 {
-      font-size:24px;
-      flex:1;
-      text-align:center;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .container {
-      flex:1;
-      padding:20px;
-      max-width:1200px;
-      margin:auto;
-      width:100%;
+      padding: 20px;
+      max-width: 1200px;
+      margin: auto;
     }
-    .filter-bar {
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-bottom:15px;
-      justify-content: space-between;
-    }
-    .filter-bar select,
-    .filter-bar input[type="date"] {
-      padding:8px;
-      font-size:15px;
-      border:1px solid #ccc;
-      border-radius:5px;
-      min-width:150px;
-    }
-    .filter-bar button {
-      background:#28a745;
-      color:#fff;
-      border:none;
-      padding:8px 16px;
-      border-radius:5px;
-      cursor:pointer;
-      font-size:15px;
-      transition:.2s;
-    }
-    .filter-bar button:hover {
-      background:#218838;
-    }
-    .status-boxes {
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
+    .date-strip {
+      display: flex;
       justify-content: center;
-      margin-bottom:20px;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
     }
-    .status-box {
-      background:#fff;
-      border:2px solid #007bff;
-      border-radius:8px;
-      padding:10px;
-      width:120px;
-      text-align:center;
-      cursor:pointer;
-      transition:.2s;
-      position:relative;
+    .date-box {
+      flex: 1;
+      padding: 15px;
+      background: #fff;
+      border: 2px solid #007bff;
+      border-radius: 8px;
+      text-align: center;
+      transition: 0.3s;
     }
-    .status-box.active,
-    .status-box:hover {
-      background:#007bff;
-      color:#fff;
+    .date-box.today {
+      background: #007bff;
+      color: #fff;
     }
-    .status-box span.count {
-      display:block;
-      font-size:20px;
-      margin-top:5px;
-      font-weight:bold;
+    .custom-date {
+      margin: 10px auto;
+      text-align: center;
     }
-    #orders { overflow-x:auto; }
-    table {
-      width:100%;
-      border-collapse:collapse;
-      background:#fff;
-      border-radius:8px;
-      box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    .custom-date input[type="date"] {
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
-    th,td {
-      padding:10px;
-      border:1px solid #ddd;
-      text-align:center;
+    .orders-area {
+      margin-top: 30px;
     }
-    th {
-      background:#007bff;
-      color:#fff;
+    .order-card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 15px;
     }
-    td select, td input[type="datetime-local"] {
-      padding:6px;
-      border:1px solid #ccc;
-      border-radius:4px;
-      font-size:14px;
+    .order-card h4 {
+      margin-bottom: 10px;
+      color: #007bff;
     }
-    td button {
-      padding:6px 10px;
-      border:none;
-      border-radius:4px;
-      cursor:pointer;
-      color:#fff;
-      transition:.2s;
-      margin:0 2px;
-      font-size:14px;
-    }
-    .btn-confirm { background:#28a745; }
-    .btn-confirm:hover { background:#218838; }
-    .btn-details { background:#17a2b8; }
-    .btn-details:hover { background:#138496; }
-    .btn-delete { background:#dc3545; }
-    .btn-delete:hover { background:#bd2130; }
-    @media(max-width:768px) {
-      table th,table td { font-size:12px; padding:6px; }
-      .filter-bar { flex-direction:column; align-items:start; }
+    .order-card p {
+      margin: 5px 0;
     }
   </style>
-
-
 </head>
 <body>
+  <header>
+    <h1>📋 إدارة الطلبات – TopClim</h1>
+  </header>
 
-<header>
-  <img id="logo" src="https://via.placeholder.com/120x40?text=TopClim" alt="شعار الشركة">
-  <h1>📋 إدارة الطلبات – TopClim</h1>
-  <img id="logo2" src="https://via.placeholder.com/40x40?text=App" alt="شعار التطبيق">
-</header>
+  <div class="container">
+    <div class="date-strip" id="dateStrip">
+      <div class="date-box" id="yesterdayBox"></div>
+      <div class="date-box today" id="todayBox"></div>
+      <div class="date-box" id="tomorrowBox"></div>
+    </div>
 
-<div class="container">
+    <div class="custom-date">
+      <label>اختيار تاريخ مخصص: <input type="date" id="customDate" /></label>
+    </div>
 
-  <div class="filter-bar">
-    <select id="statusFilter">
-      <option value="الكل">🔄 الكل</option>
-      <option value="مبدئي">📄 مبدئي</option>
-      <option value="قيد المعالجة">✅ قيد المعالجة</option>
-      <option value="تم الإنجاز">📦 تم الإنجاز</option>
-      <option value="تم الدفع">💰 تم الدفع</option>
-      <option value="متروك">🕓 متروك</option>
-      <option value="محذوف">🗑️ محذوف</option>
-    </select>
-
-    <label>من: <input type="date" id="dateFrom"></label>
-    <label>إلى: <input type="date" id="dateTo"></label>
-
-    <button id="btnFilter">تطبيق الفلتر</button>
+    <div class="orders-area" id="ordersContainer">
+      ⏳ جاري تحميل الطلبات...
+    </div>
   </div>
 
-  <div class="status-boxes" id="statusBoxesContainer">
-    <!-- عدادات حسب الحالة -->
-  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <div id="orders">⏳ جاري تحميل الطلبات...</div>
-</div>
+    const firebaseConfig = {
+      apiKey: "AIza...mbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
+    };
 
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore, collection, getDocs, getDoc, updateDoc, doc
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    const ordersContainer = document.getElementById("ordersContainer");
+    const todayBox = document.getElementById("todayBox");
+    const yesterdayBox = document.getElementById("yesterdayBox");
+    const tomorrowBox = document.getElementById("tomorrowBox");
+    const customDateInput = document.getElementById("customDate");
 
-  const firebaseConfig = { apiKey:"AIza...mbRI", authDomain:"topclim-3edfa.firebaseapp.com", projectId:"topclim-3edfa" };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const today = new Date();
+    const yesterday = new Date(today);
+    const tomorrow = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    tomorrow.setDate(today.getDate() + 1);
 
-  const statusFilter = document.getElementById("statusFilter");
-  const dateFrom = document.getElementById("dateFrom");
-  const dateTo = document.getElementById("dateTo");
-  const btnFilter = document.getElementById("btnFilter");
-  const statusBoxes = document.getElementById("statusBoxesContainer");
-  const ordersDiv = document.getElementById("orders");
+    todayBox.textContent = formatDate(today);
+    yesterdayBox.textContent = formatDate(yesterday);
+    tomorrowBox.textContent = formatDate(tomorrow);
 
-  let allOrders = [], workersList = [];
-  const statuses = ["الكل","مبدئي","قيد المعالجة","تم الإنجاز","تم الدفع","متروك","محذوف"];
+    todayBox.onclick = () => fetchByDate(today);
+    yesterdayBox.onclick = () => fetchByDate(yesterday);
+    tomorrowBox.onclick = () => fetchByDate(tomorrow);
 
-  async function loadWorkers() {
-    const snap = await getDocs(collection(db,"workers"));
-    workersList = snap.docs.map(d=>({ id:d.id, name:d.data().name || d.id }));
-  }
+    customDateInput.onchange = () => {
+      const selected = new Date(customDateInput.value);
+      fetchByDate(selected);
+    };
 
-  async function loadOrders() {
-    ordersDiv.innerHTML = "⏳ جاري تحميل الطلبات...";
-    const snap = await getDocs(collection(db,"requests"));
-    allOrders = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-    renderStatusBoxes();
-    applyFilter();
-  }
+    function formatDate(date) {
+      return date.toISOString().split("T")[0];
+    }
 
-  function renderStatusBoxes() {
-    const counts = {};
-    statuses.forEach(s=>counts[s]=0);
-    allOrders.forEach(o=>{
-      const st = o.status||"مبدئي";
-      counts[st] = (counts[st]||0)+1;
-      counts["الكل"]++;
-    });
-    statusBoxes.innerHTML = statuses.map(s=>`
-      <div class="status-box" data-status="${s}">
-        ${s}<span class="count">${counts[s]}</span>
-      </div>`).join("");
-    document.querySelectorAll(".status-box").forEach(b=>{
-      b.onclick=()=>{ statusFilter.value=b.dataset.status; applyFilter(); };
-    });
-  }
+    function sameDay(d1, d2) {
+      return d1.getFullYear() === d2.getFullYear() &&
+             d1.getMonth() === d2.getMonth() &&
+             d1.getDate() === d2.getDate();
+    }
 
-  btnFilter.onclick = applyFilter;
+    async function fetchByDate(targetDate) {
+      ordersContainer.innerHTML = "⏳ جاري تحميل الطلبات...";
+      const snap = await getDocs(collection(db, "requests"));
+      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-  function applyFilter() {
-    const st = statusFilter.value;
-    const from = dateFrom.value ? new Date(dateFrom.value) : null;
-    const to = dateTo.value ? new Date(dateTo.value) : null;
-    const filtered = allOrders.filter(o=>{
-      const d = o.executionSchedule?.toDate?.()?.toISOString().split("T")[0] || o.executionSchedule;
-      const dt = d ? new Date(d) : null;
-      return (st==="الكل"|| (o.status||"مبدئي")===st)
-        && (!from || (dt && dt>=from))
-        && (!to || (dt && dt<=to));
-    });
-    renderTable(filtered);
-  }
+      const filtered = list.filter(o => {
+        const ts = o.createdAt?.seconds ? new Date(o.createdAt.seconds * 1000) : null;
+        return ts && sameDay(ts, targetDate);
+      });
 
-  function renderTable(list) {
-    if(list.length===0) return ordersDiv.innerHTML="<p>لا توجد نتائج</p>";
-    const header = `<thead><tr>
-      <th>الطلب</th><th>الاسم</th><th>العنوان</th><th>الهاتف</th><th>الحالة</th>
-      <th>الفني</th><th>📌 صاحب العمل</th><th>الجدولة</th><th>خيارات</th>
-    </tr></thead>`;
-    const rows = list.map(o=>{
-      const schedule = o.executionSchedule?.toDate?.().toISOString().slice(0,16) || "";
-      const assignedTo = o.assignedTo||"";
-      const admin = o.adminId || "";
-      const selectWorker = `
-        <select id="wk_${o.id}">
-          <option value="">اختيار</option>
-          ${workersList.map(w=>`<option ${w.id===assignedTo?'selected':''} value="${w.id}">${w.name}</option>`).join("")}
-        </select>`;
-      return `<tr>
-        <td>${o.id}</td><td>${o.name||""}</td><td>${o.address||""}</td><td>${o.phone||""}</td>
-        <td>${o.status||"مبدئي"}</td>
-        <td>${selectWorker}</td>
-        <td><input type="text" id="admin_${o.id}" placeholder="فرعي" value="${admin}"></td>
-        <td><input type="datetime-local" id="sch_${o.id}" value="${schedule}"></td>
-        <td>
-          <button class="btn-confirm" onclick="confirmOrder('${o.id}')">✔ تأكيد</button>
-          <button class="btn-details" onclick="viewDetail('${o.id}')">📄 التفاصيل</button>
-          <button class="btn-delete" onclick="deleteOrder('${o.id}')">🗑️</button>
-        </td>
-      </tr>`;
-    }).join("");
-    ordersDiv.innerHTML = `<table>${header}<tbody>${rows}</tbody></table>`;
-  }
+      renderOrders(filtered);
+    }
 
-  window.confirmOrder = async function(id) {
-    const w = document.getElementById(`wk_${id}`).value;
-    const a = document.getElementById(`admin_${id}`).value;
-    const s = document.getElementById(`sch_${id}`).value;
-    if(!w||!a||!s){return alert("اختر الفني، وصاحب العمل، وحدد التاريخ");}
-    await updateDoc(doc(db,"requests",id), {
-      status:"قيد المعالجة",
-      assignedTo:w,
-      adminId:a,
-      executionSchedule: Timestamp.fromDate(new Date(s))
-    });
-    alert("✅ تم التحديث!");
-    loadOrders();
-  };
+    function renderOrders(orders) {
+      if (orders.length === 0) {
+        ordersContainer.innerHTML = "<p>🚫 لا توجد طلبات في هذا اليوم.</p>";
+        return;
+      }
 
-  window.viewDetail = id => location.href = `order-details.html?id=${id}&admin=${encodeURIComponent(document.getElementById(`admin_${id}`).value)}`;
+      ordersContainer.innerHTML = orders.map(o => `
+        <div class="order-card">
+          <h4>الطلب: ${o.id}</h4>
+          <p>👤 الاسم: ${o.name || "—"}</p>
+          <p>📞 الهاتف: ${o.phone || "—"}</p>
+          <p>📍 العنوان: ${o.address || "—"}</p>
+          <p>📆 التاريخ: ${formatDate(new Date(o.createdAt.seconds * 1000))}</p>
+          <p>📦 الحالة: ${o.status || "—"}</p>
+        </div>`).join("");
+    }
 
-  window.deleteOrder = async id => {
-    if(!confirm("هل تريد حذف الطلب؟")) return;
-    await updateDoc(doc(db,"requests",id), { status:"محذوف" });
-    loadOrders();
-  };
-
-  // تحميل أولي
-  (async()=>{ await loadWorkers(); await loadOrders(); })();
-
-</script>
-
+    // تحميل الطلبات لليوم الحالي
+    fetchByDate(today);
+  </script>
 </body>
 </html>
