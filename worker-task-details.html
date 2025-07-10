@@ -409,7 +409,7 @@
         previousWorksContainer.innerHTML += "<p>لا توجد أعمال سابقة.</p>";
       } else {
         // فرز الأعمال حسب التاريخ تنازلياً (الأحدث أولاً)
-        workDoneArray.sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt));
+        workDoneArray.sort((a, b) => b.finishedAt.toDate() - a.finishedAt.toDate());
 
         // نعرض آخر 5 أيام عمل فقط (يمكن تعديل الرقم)
         const recentWorks = workDoneArray.slice(0, 5);
@@ -418,7 +418,7 @@
           const div = document.createElement("div");
           div.className = "work-entry";
 
-          const dateLabel = formatDateLabel(new Date(work.finishedAt));
+          const dateLabel = formatDateLabel(work.finishedAt.toDate());
           div.innerHTML = `
             <div class="work-date">${dateLabel}</div>
             <div>🧊 داخلي: <input type="number" class="prev-indoor" value="${work.indoor}" data-id="${work.finishedAt}" /></div>
