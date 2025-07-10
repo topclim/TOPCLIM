@@ -608,12 +608,13 @@
 
   // بدء التحميل
   (async () => {
-    await loadTools();
-    await loadAdmins();
-    await loadRequestData();
-    await loadPreviousWork(); // ⬅️ أضف هذا
-    setupPreviousWorksListeners();
-  })();
+  await loadTools();
+  await loadAdmins();
+  await loadRequestData();
+  await loadPreviousWork();
+  setupPreviousWorksListeners();
+})();
+
 
 </script>
 </body>
