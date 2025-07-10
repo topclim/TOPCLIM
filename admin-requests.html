@@ -40,6 +40,7 @@
       border-radius: 8px;
       text-align: center;
       transition: 0.3s;
+      cursor: pointer;
     }
     .date-box.today {
       background: #007bff;
@@ -64,13 +65,60 @@
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       margin-bottom: 15px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 10px;
     }
     .order-card h4 {
-      margin-bottom: 10px;
+      grid-column: 1/-1;
       color: #007bff;
     }
     .order-card p {
       margin: 5px 0;
+    }
+    .order-image {
+      grid-column: 1/-1;
+      text-align: center;
+    }
+    .order-image img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .order-footer {
+      grid-column: 1 / -1;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      font-size: 14px;
+      color: #555;
+    }
+    .badge {
+      background: #28a745;
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 12px;
+      margin: 2px;
+    }
+    .print-btn {
+      display: block;
+      width: fit-content;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .print-btn:hover {
+      background: #0056b3;
     }
   </style>
 </head>
@@ -78,23 +126,20 @@
   <header>
     <h1>📋 إدارة الطلبات – TopClim</h1>
   </header>
-
   <div class="container">
     <div class="date-strip" id="dateStrip">
       <div class="date-box" id="yesterdayBox"></div>
       <div class="date-box today" id="todayBox"></div>
       <div class="date-box" id="tomorrowBox"></div>
     </div>
-
     <div class="custom-date">
       <label>اختيار تاريخ مخصص: <input type="date" id="customDate" /></label>
     </div>
-
+    <button class="print-btn" onclick="window.print()">🖨️ طباعة الصفحة</button>
     <div class="orders-area" id="ordersContainer">
       ⏳ جاري تحميل الطلبات...
     </div>
   </div>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
@@ -106,7 +151,6 @@
       authDomain: "topclim-3edfa.firebaseapp.com",
       projectId: "topclim-3edfa"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -129,7 +173,6 @@
     todayBox.onclick = () => fetchByDate(today);
     yesterdayBox.onclick = () => fetchByDate(yesterday);
     tomorrowBox.onclick = () => fetchByDate(tomorrow);
-
     customDateInput.onchange = () => {
       const selected = new Date(customDateInput.value);
       fetchByDate(selected);
@@ -149,12 +192,10 @@
       ordersContainer.innerHTML = "⏳ جاري تحميل الطلبات...";
       const snap = await getDocs(collection(db, "requests"));
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
       const filtered = list.filter(o => {
         const ts = o.createdAt?.seconds ? new Date(o.createdAt.seconds * 1000) : null;
         return ts && sameDay(ts, targetDate);
       });
-
       renderOrders(filtered);
     }
 
@@ -163,19 +204,25 @@
         ordersContainer.innerHTML = "<p>🚫 لا توجد طلبات في هذا اليوم.</p>";
         return;
       }
-
       ordersContainer.innerHTML = orders.map(o => `
         <div class="order-card">
           <h4>الطلب: ${o.id}</h4>
           <p>👤 الاسم: ${o.name || "—"}</p>
           <p>📞 الهاتف: ${o.phone || "—"}</p>
           <p>📍 العنوان: ${o.address || "—"}</p>
-          <p>📆 التاريخ: ${formatDate(new Date(o.createdAt.seconds * 1000))}</p>
-          <p>📦 الحالة: ${o.status || "—"}</p>
+          <p>📆 التاريخ: ${o.createdAt?.seconds ? formatDate(new Date(o.createdAt.seconds * 1000)) : "—"}</p>
+          <p>📦 الحالة: <span class="badge">${o.status || "—"}</span></p>
+          <p>🧑‍🔧 الفني: ${o.assistantName || "—"}</p>
+          <p>📝 ملاحظات: ${o.notes || "—"}</p>
+          ${o.imageUrl ? `<div class="order-image"><img src="${o.imageUrl}" alt="صورة الطلب" /></div>` : ""}
+          <div class="order-footer">
+            <div>👨‍💼 المسؤول: ${o.adminId || "—"}</div>
+            <div>🕒 الوقت المفضل: ${o.preferredTime || "—"}</div>
+            <div>💵 السعر: ${o.price || 0} دج</div>
+          </div>
         </div>`).join("");
     }
 
-    // تحميل الطلبات لليوم الحالي
     fetchByDate(today);
   </script>
 </body>
