@@ -2,116 +2,252 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>📊 لوحة مكيفات – تفاصيل يومية وصيانات</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📊 تقرير الأرباح – TopClim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap');
+
     body {
       font-family: 'Cairo', sans-serif;
-      background: #eef2f5;
-      padding: 20px;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7fc;
       color: #333;
       direction: rtl;
     }
-    h1 { text-align: center; color: #007bff; margin-bottom: 5px; }
-    .info { text-align: center; font-size: 18px; margin-bottom: 20px; }
-    #controls { text-align: center; margin-bottom: 15px; }
-    #addBtn {
-      padding: 8px 16px;
-      background: #28a745;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
+
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 20px 10px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+
+    .info {
+      background-color: #fff;
+      padding: 15px;
+      font-size: 18px;
+      text-align: center;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    #controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    #addBtn {
+      background-color: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #addBtn:hover {
+      background-color: #218838;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      background: #fff;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
     }
+
     th, td {
-      padding: 8px;
       border: 1px solid #ddd;
-      text-align: center;
-      vertical-align: middle;
-    }
-    th { background: #007bff; color: #fff; }
-    input[type="date"], input[type="number"] {
-      width: 100%;
-      padding: 4px;
-      box-sizing: border-box;
-    }
-    button.detailsBtn {
-      background: #17a2b8;
-      color: #fff;
-      padding: 4px 8px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button.deleteBtn {
-      background: transparent;
-      border: none;
-      color: #dc3545;
-      cursor: pointer;
-      font-size: 18px;
-    }
-    .hidden { display: none; }
-    .sub-table {
-      width: 98%;
-      margin: 10px auto;
-      border-collapse: collapse;
-    }
-    .sub-table th, .sub-table td {
-      padding: 6px;
-      border: 1px solid #ccc;
-    }
-    .summary-box {
-      font-size: 18px;
       padding: 10px;
-      background: #e9f5ff;
-      border-radius: 4px;
-      margin-bottom: 20px;
       text-align: center;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    input[type="date"],
+    input[type="number"] {
+      padding: 5px;
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .profit-cell {
+      font-weight: bold;
+      color: #28a745;
+    }
+
+    .detailsBtn {
+      background-color: #17a2b8;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .detailsBtn:hover {
+      background-color: #138496;
+    }
+
+    .deleteBtn {
+      background: transparent;
+      color: #dc3545;
+      font-size: 20px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .deleteBtn:hover {
+      color: #bd2130;
+    }
+
+    .summary-box {
+      font-size: 20px;
+      background-color: #e9f5ff;
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+      color: #004085;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .sub-table {
+      margin-top: 10px;
+      width: 98%;
+      border-collapse: collapse;
+      background-color: #fdfdfd;
+    }
+
+    .sub-table th {
+      background-color: #f1f1f1;
+    }
+
+    .sub-table th,
+    .sub-table td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      table, th, td {
+        font-size: 14px;
+      }
+
+      .container {
+        padding: 10px;
+      }
+
+      header h1 {
+        font-size: 24px;
+      }
     }
   </style>
 </head>
 <body>
+  <header>
+    <h1>📊 تقرير الأرباح – فني حسب الفترات</h1>
+  </header>
 
-<h1>📊 تقرير مكيفات – فني حسب الفترات</h1>
-<div class="info" id="workerInfo">🔄 جاري جلب بيانات العامل...</div>
+  <div class="container">
+    <div class="info" id="workerInfo">🔄 جاري تحميل بيانات الفني...</div>
 
-<div id="controls">
-  <button id="addBtn">＋ إضافة سجل جديد</button>
-</div>
+    <div id="controls">
+      <button id="addBtn">＋ إضافة فترة جديدة</button>
+      <!-- يمكن إضافة المزيد من الأزرار لاحقًا -->
+    </div>
 
-<table id="mainTable">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>من تاريخ</th>
-      <th>إلى تاريخ</th>
-      <th>سعر داخلي</th>
-      <th>سعر خارجي</th>
-      <th>سعر صيانة</th>
-      <th>💰 ربح الفترة</th>
-      <th>تفاصيل</th>
-      <th>حذف</th>
-    </tr>
-  </thead>
-  <tbody id="mainBody"></tbody>
-</table>
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>من تاريخ</th>
+          <th>إلى تاريخ</th>
+          <th>سعر داخلي</th>
+          <th>سعر خارجي</th>
+          <th>سعر صيانة</th>
+          <th>💰 الربح</th>
+          <th>📄 تفاصيل</th>
+          <th>🗑️ حذف</th>
+        </tr>
+      </thead>
+      <tbody id="mainBody"></tbody>
+    </table>
 
-<div class="summary-box" id="totalProfit">🔢 إجمالي الربح: 0 دج</div>
+    <div class="summary-box" id="totalProfit">💰 إجمالي الأرباح: 0 دج</div>
+  </div>
 
-<script type="module">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
-    getFirestore, collection, doc,
-    getDocs, getDoc, addDoc,
-    updateDoc, deleteDoc
+    getFirestore,
+    collection,
+    doc,
+    getDocs,
+    getDoc,
+    addDoc,
+    updateDoc,
+    deleteDoc
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const app = initializeApp({
@@ -119,6 +255,7 @@
     authDomain: "topclim-3edfa.firebaseapp.com",
     projectId: "topclim-3edfa"
   });
+
   const db = getFirestore(app);
 
   const workerInfo = document.getElementById("workerInfo");
@@ -128,172 +265,186 @@
 
   const workerId = new URLSearchParams(window.location.search).get("workerId");
   if (!workerId) {
-    alert("الصفحة تتطلب workerId في الرابط");
-    throw new Error("workerId missing");
+    alert("❗️ هذه الصفحة تتطلب معرف العامل (workerId) في الرابط");
+    throw new Error("Missing workerId");
   }
 
   let prices = { indoor: 0, outdoor: 0, maintenance: 0 };
 
-  // حساب الربح الحقيقي بالفترة
-  async function calcRealProfit(start, end) {
-    const snap = await getDocs(collection(db, "requests"));
-    let total = 0;
-    snap.docs.forEach(d => {
-      const dt = d.data();
-      const w = dt.workDone;
-      const fin = w?.finishedAt?.seconds ? new Date(w.finishedAt.seconds * 1000) : null;
-      if (
-        dt.assignedTo === workerId &&
-        dt.status === "تم الإنجاز" &&
-        fin &&
-        new Date(start) <= fin &&
-        fin <= new Date(end)
-      ) {
-        total += (Number(w.indoor || 0) * prices.indoor)
-               + (Number(w.outdoor || 0) * prices.outdoor)
-               + (Number(w.maintenance || 0) * prices.maintenance);
-      }
-    });
-    return total;
-  }
-
-  function updateTotalProfit() {
-    let sum = 0;
-    mainBody.querySelectorAll("tr.main-row").forEach(tr => {
-      const val = Number(tr.querySelector(".profit-cell").textContent.replace(/[^\d]/g, "")) || 0;
-      sum += val;
-    });
-    totalProfitDiv.textContent = `🔢 إجمالي الربح: ${sum.toLocaleString()} دج`;
+  async function fetchPrices() {
+    const snap = await getDoc(doc(db, "settings", "prices"));
+    if (snap.exists()) {
+      prices = snap.data();
+    }
   }
 
   function updateRowIndexes() {
-    mainBody.querySelectorAll("tr.main-row").forEach((tr, idx) => {
-      tr.querySelector(".idx").textContent = idx + 1;
+    const rows = mainBody.querySelectorAll("tr.main-row");
+    rows.forEach((tr, i) => {
+      tr.querySelector(".idx").textContent = i + 1;
     });
+  }
+
+  function updateTotalProfit() {
+    let total = 0;
+    mainBody.querySelectorAll(".profit-cell").forEach(cell => {
+      const num = parseInt(cell.textContent.replace(/[^\d]/g, ""));
+      if (!isNaN(num)) total += num;
+    });
+    totalProfitDiv.textContent = `💰 إجمالي الأرباح: ${total.toLocaleString()} دج`;
+  }
+
+  async function calcProfit(startDate, endDate) {
+    const snap = await getDocs(collection(db, "requests"));
+    let total = 0;
+    for (const doc of snap.docs) {
+      const data = doc.data();
+      const w = data.workDone;
+      const finish = w?.finishedAt?.seconds ? new Date(w.finishedAt.seconds * 1000) : null;
+
+      if (
+        data.assignedTo === workerId &&
+        data.status === "تم الإنجاز" &&
+        finish &&
+        new Date(startDate) <= finish &&
+        finish <= new Date(endDate)
+      ) {
+        const indoor = parseInt(w.indoor || 0);
+        const outdoor = parseInt(w.outdoor || 0);
+        const maintenance = parseInt(w.maintenance || 0);
+
+        total += (indoor * prices.indoor)
+              + (outdoor * prices.outdoor)
+              + (maintenance * prices.maintenance);
+      }
+    }
+    return total;
+  }
+
+  function createDetailRow() {
+    const tr = document.createElement("tr");
+    tr.classList.add("detail-row", "hidden");
+    tr.innerHTML = `<td colspan="9"><em>🔄 جاري تحميل التفاصيل...</em></td>`;
+    return tr;
   }
 
   function appendMainRow(id, data) {
     const tr = document.createElement("tr");
     tr.classList.add("main-row");
     tr.dataset.id = id;
+
     tr.innerHTML = `
-      <td class="idx"></td>
-      <td><input type="date" class="start"/></td>
-      <td><input type="date" class="end"/></td>
-      <td><input type="number" class="priceIndoor"/></td>
-      <td><input type="number" class="priceOutdoor"/></td>
-      <td><input type="number" class="priceMaintenance"/></td>
+      <td class="idx">-</td>
+      <td><input type="date" class="start" value="${data.start || ''}"/></td>
+      <td><input type="date" class="end" value="${data.end || ''}"/></td>
+      <td><input type="number" class="pi" value="${data.priceIndoor || 0}"/></td>
+      <td><input type="number" class="po" value="${data.priceOutdoor || 0}"/></td>
+      <td><input type="number" class="pm" value="${data.priceMaintenance || 0}"/></td>
       <td class="profit-cell">0 دج</td>
-      <td><button class="detailsBtn">عرض</button></td>
+      <td><button class="detailsBtn">📄</button></td>
       <td><button class="deleteBtn">🗑️</button></td>
     `;
+
+    const detailTr = createDetailRow();
     mainBody.appendChild(tr);
+    mainBody.appendChild(detailTr);
 
     const startInput = tr.querySelector(".start");
     const endInput = tr.querySelector(".end");
-    const piInput = tr.querySelector(".priceIndoor");
-    const poInput = tr.querySelector(".priceOutdoor");
-    const pmInput = tr.querySelector(".priceMaintenance");
+    const pi = tr.querySelector(".pi");
+    const po = tr.querySelector(".po");
+    const pm = tr.querySelector(".pm");
     const profitCell = tr.querySelector(".profit-cell");
-    const detailBtn = tr.querySelector(".detailsBtn");
-    const delBtn = tr.querySelector(".deleteBtn");
 
-    startInput.value = data.start;
-    endInput.value = data.end;
-    piInput.value = data.priceIndoor;
-    poInput.value = data.priceOutdoor;
-    pmInput.value = data.priceMaintenance;
-
-    const detailTr = document.createElement("tr");
-    detailTr.classList.add("hidden", "detail-row");
-    detailTr.innerHTML = `<td colspan="9"><em>جارٍ تحميل التفاصيل...</em></td>`;
-    tr.after(detailTr);
-
-    async function refreshAndSave() {
+    async function refreshProfitAndSave() {
       const newData = {
         start: startInput.value,
         end: endInput.value,
-        priceIndoor: Number(piInput.value),
-        priceOutdoor: Number(poInput.value),
-        priceMaintenance: Number(pmInput.value)
+        priceIndoor: parseInt(pi.value) || 0,
+        priceOutdoor: parseInt(po.value) || 0,
+        priceMaintenance: parseInt(pm.value) || 0
       };
+
       await updateDoc(doc(db, "summaries", workerId, "entries", id), newData);
-      const real = await calcRealProfit(newData.start, newData.end);
-      profitCell.textContent = `${real.toLocaleString()} دج`;
+
+      const newProfit = await calcProfit(newData.start, newData.end);
+      profitCell.textContent = `${newProfit.toLocaleString()} دج`;
+
       updateTotalProfit();
     }
 
-    [startInput, endInput, piInput, poInput, pmInput].forEach(i => {
-      i.addEventListener("change", refreshAndSave);
-    });
+    [startInput, endInput, pi, po, pm].forEach(input =>
+      input.addEventListener("change", refreshProfitAndSave)
+    );
 
-    detailBtn.addEventListener("click", async () => {
+    tr.querySelector(".detailsBtn").addEventListener("click", async () => {
       if (!detailTr.classList.contains("hidden")) {
         detailTr.classList.add("hidden");
         return;
       }
-      detailTr.innerHTML = `<td colspan="9"><em>جارٍ التحميل...</em></td>`;
+
+      detailTr.innerHTML = `<td colspan="9"><em>🔄 تحميل...</em></td>`;
       const snap = await getDocs(collection(db, "requests"));
-      const arr = snap.docs.map(d => d.data()).filter(dt => {
-        const w = dt.workDone;
-        const fin = w?.finishedAt?.seconds ? new Date(w.finishedAt.seconds * 1000) : null;
+
+      const rows = snap.docs.map(doc => doc.data()).filter(data => {
+        const w = data.workDone;
+        const finish = w?.finishedAt?.seconds ? new Date(w.finishedAt.seconds * 1000) : null;
         return (
-          dt.assignedTo === workerId &&
-          dt.status === "تم الإنجاز" &&
-          fin &&
-          new Date(startInput.value) <= fin &&
-          fin <= new Date(endInput.value)
+          data.assignedTo === workerId &&
+          data.status === "تم الإنجاز" &&
+          finish &&
+          new Date(startInput.value) <= finish &&
+          finish <= new Date(endInput.value)
         );
       });
-      const rows = arr.map(e => {
-        const w = e.workDone;
-        const d = new Date(w.finishedAt.seconds * 1000).toISOString().split("T")[0];
+
+      const htmlRows = rows.map(data => {
+        const w = data.workDone;
+        const date = new Date(w.finishedAt.seconds * 1000).toISOString().split("T")[0];
         return `<tr>
-          <td>${d}</td>
+          <td>${date}</td>
           <td>${w.indoor || 0}</td>
           <td>${w.outdoor || 0}</td>
           <td>${w.maintenance || 0}</td>
-          <td>${e.address || ""}</td>
+          <td>${data.address || ""}</td>
         </tr>`;
       }).join("");
+
       detailTr.innerHTML = `
         <td colspan="9">
           <table class="sub-table">
             <thead>
-              <tr>
-                <th>تاريخ</th>
-                <th>داخلي</th>
-                <th>خارجي</th>
-                <th>صيانة</th>
-                <th>عنوان العمل</th>
-              </tr>
+              <tr><th>تاريخ</th><th>داخلي</th><th>خارجي</th><th>صيانة</th><th>العنوان</th></tr>
             </thead>
             <tbody>
-              ${rows || `<tr><td colspan="5"><em>لا توجد بيانات</em></td></tr>`}
+              ${htmlRows || `<tr><td colspan="5">لا توجد نتائج</td></tr>`}
             </tbody>
           </table>
-        </td>`;
+        </td>
+      `;
       detailTr.classList.remove("hidden");
     });
 
-    delBtn.addEventListener("click", async () => {
-      if (!confirm("هل تريد حذف هذا السجل؟")) return;
-      await deleteDoc(doc(db, "summaries", workerId, "entries", id));
-      detailTr.remove();
-      tr.remove();
-      updateRowIndexes();
+    tr.querySelector(".deleteBtn").addEventListener("click", async () => {
+      if (confirm("❗️ هل أنت متأكد من حذف هذا السجل؟")) {
+        await deleteDoc(doc(db, "summaries", workerId, "entries", id));
+        tr.remove();
+        detailTr.remove();
+        updateRowIndexes();
+        updateTotalProfit();
+      }
+    });
+
+    // أول حساب للربح
+    calcProfit(startInput.value, endInput.value).then(p => {
+      profitCell.textContent = `${p.toLocaleString()} دج`;
       updateTotalProfit();
     });
 
-    calcRealProfit(data.start, data.end).then(p => {
-      profitCell.textContent = `${p.toLocaleString()} دج`;
-    });
-
     updateRowIndexes();
-    updateTotalProfit();
   }
 
-  async function loadData() {
+  async function loadEntries() {
     const snap = await getDocs(collection(db, "summaries", workerId, "entries"));
     mainBody.innerHTML = "";
     for (const docSnap of snap.docs) {
@@ -303,31 +454,169 @@
 
   addBtn.addEventListener("click", async () => {
     const today = new Date().toISOString().split("T")[0];
-    const data = {
+    const newEntry = {
       start: today,
       end: today,
       priceIndoor: prices.indoor,
       priceOutdoor: prices.outdoor,
       priceMaintenance: prices.maintenance
     };
-    const docRef = await addDoc(collection(db, "summaries", workerId, "entries"), data);
-    appendMainRow(docRef.id, data);
+    const docRef = await addDoc(collection(db, "summaries", workerId, "entries"), newEntry);
+    appendMainRow(docRef.id, newEntry);
   });
 
   async function init() {
-    const wSnap = await getDoc(doc(db, "workers", workerId));
-    workerInfo.textContent = wSnap.exists()
-      ? `👷 الموظف: ${wSnap.data().name}`
-      : "اسم العامل غير متوفر";
+    const snap = await getDoc(doc(db, "workers", workerId));
+    workerInfo.textContent = snap.exists()
+      ? `👷 الفني: ${snap.data().name || "غير معروف"}`
+      : "❗️ لم يتم العثور على الفني";
 
-    const pSnap = await getDoc(doc(db, "settings", "prices"));
-    if (pSnap.exists()) prices = pSnap.data();
-
-    await loadData();
+    await fetchPrices();
+    await loadEntries();
   }
 
   init();
 </script>
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- إضافة مكتبة Excel Export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+  // زر الفلترة بالتاريخ
+  const filterBtn = document.createElement("button");
+  filterBtn.textContent = "🗓️ تصفية بالتاريخ";
+  filterBtn.style.marginLeft = "10px";
+  filterBtn.style.background = "#ffc107";
+  filterBtn.style.border = "none";
+  filterBtn.style.padding = "8px 14px";
+  filterBtn.style.cursor = "pointer";
+  filterBtn.style.borderRadius = "4px";
+  document.getElementById("controls").appendChild(filterBtn);
+
+  const exportBtn = document.createElement("button");
+  exportBtn.textContent = "📥 تصدير Excel";
+  exportBtn.style.marginLeft = "10px";
+  exportBtn.style.background = "#007bff";
+  exportBtn.style.border = "none";
+  exportBtn.style.color = "#fff";
+  exportBtn.style.padding = "8px 14px";
+  exportBtn.style.cursor = "pointer";
+  exportBtn.style.borderRadius = "4px";
+  document.getElementById("controls").appendChild(exportBtn);
+
+  const printBtn = document.createElement("button");
+  printBtn.textContent = "🖨️ طباعة التقرير";
+  printBtn.style.marginLeft = "10px";
+  printBtn.style.background = "#6c757d";
+  printBtn.style.border = "none";
+  printBtn.style.color = "#fff";
+  printBtn.style.padding = "8px 14px";
+  printBtn.style.cursor = "pointer";
+  printBtn.style.borderRadius = "4px";
+  document.getElementById("controls").appendChild(printBtn);
+
+  filterBtn.addEventListener("click", () => {
+    const from = prompt("📅 أدخل تاريخ البداية (YYYY-MM-DD):");
+    const to = prompt("📅 أدخل تاريخ النهاية (YYYY-MM-DD):");
+    if (!from || !to) return alert("❗ كلا التاريخين مطلوبان");
+
+    document.querySelectorAll("tr.main-row").forEach(row => {
+      const s = row.querySelector(".start").value;
+      const e = row.querySelector(".end").value;
+      const visible = new Date(s) >= new Date(from) && new Date(e) <= new Date(to);
+      row.style.display = visible ? "" : "none";
+      const nextRow = row.nextElementSibling;
+      if (nextRow && nextRow.classList.contains("detail-row")) {
+        nextRow.style.display = visible ? "" : "none";
+      }
+    });
+
+    updateTotalProfit();
+  });
+
+  exportBtn.addEventListener("click", () => {
+    const rows = [["#", "من", "إلى", "داخلي", "خارجي", "صيانة", "الربح"]];
+    document.querySelectorAll("tr.main-row").forEach((row, i) => {
+      const s = row.querySelector(".start").value;
+      const e = row.querySelector(".end").value;
+      const pi = row.querySelector(".pi").value;
+      const po = row.querySelector(".po").value;
+      const pm = row.querySelector(".pm").value;
+      const profit = row.querySelector(".profit-cell").textContent;
+      rows.push([i + 1, s, e, pi, po, pm, profit]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "الأرباح");
+    XLSX.writeFile(wb, "تقارير_الأرباح.xlsx");
+  });
+
+  printBtn.addEventListener("click", () => {
+    const printContent = document.body.innerHTML;
+    const original = document.body.cloneNode(true);
+
+    // إخفاء الأزرار قبل الطباعة
+    document.querySelectorAll("button").forEach(btn => btn.style.display = "none");
+
+    window.print();
+
+    // إرجاع الصفحة كما كانت بعد الطباعة
+    document.body.innerHTML = "";
+    document.body.appendChild(original);
+    window.location.reload();
+  });
+</script>
+
+
+
 
 </body>
 </html>
