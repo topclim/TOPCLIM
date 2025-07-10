@@ -252,6 +252,7 @@
     }
 
     try {
+      document.getElementById("finishBtn").disabled = true;
       const requestRef = doc(db, "requests", requestId);
       const requestSnap = await getDoc(requestRef);
       const requestData = requestSnap.data();
