@@ -1,8 +1,8 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل دخول العامل</title>
+  <title>تسجيل الدخول – TopClim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
     body {
@@ -13,7 +13,6 @@
       align-items: center;
       height: 100vh;
     }
-
     .login-box {
       background: #fff;
       padding: 30px;
@@ -21,18 +20,15 @@
       width: 350px;
       box-shadow: 0 0 10px rgba(0,0,0,0.15);
     }
-
     h2 {
       text-align: center;
       color: #007bff;
     }
-
     label {
       display: block;
       margin-top: 15px;
       font-weight: bold;
     }
-
     input {
       width: 100%;
       padding: 10px;
@@ -40,7 +36,6 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
     button {
       width: 100%;
       margin-top: 20px;
@@ -52,22 +47,18 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
     button:hover {
       background: #218838;
     }
-
     .error {
       color: red;
       margin-top: 10px;
       text-align: center;
     }
-
     .link {
       text-align: center;
       margin-top: 15px;
     }
-
     .link a {
       color: #007bff;
       text-decoration: none;
@@ -76,7 +67,7 @@
 </head>
 <body>
   <div class="login-box">
-    <h2>👷 تسجيل دخول العامل</h2>
+    <h2>🔐 تسجيل دخول</h2>
     <label for="email">📧 البريد الإلكتروني:</label>
     <input type="email" id="email" placeholder="example@email.com" required>
 
@@ -87,13 +78,22 @@
     <div class="error" id="error"></div>
 
     <div class="link">
-      <p>ليس لديك حساب؟ <a href="worker-register.html">سجل هنا</a></p>
+      <p>ليس لديك حساب؟ <a href="worker-register.html">👷 سجل كعامل</a></p>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
@@ -103,6 +103,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
     const loginBtn = document.getElementById("loginBtn");
     const errorDiv = document.getElementById("error");
@@ -120,18 +121,29 @@
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // حفظ بيانات المستخدم
-        localStorage.setItem("workerEmail", user.email);
-        localStorage.setItem("workerUID", user.uid);
+        const uid = user.uid;
+        const email = user.email;
 
-        // الانتقال للوحة العامل
-        await Promise.resolve()
-  .then(() => localStorage.setItem("workerEmail", user.email))
-  .then(() => localStorage.setItem("workerUID", user.uid))
-  .then(() => {
-   window.location.href = `worker.html?workerId=${user.uid}`;
+        // 🔍 تحقق إن كان Admin
+        const adminDoc = await getDoc(doc(db, "admins", uid));
+        if (adminDoc.exists()) {
+          localStorage.setItem("adminEmail", email);
+          localStorage.setItem("adminUID", uid);
+          window.location.href = "admin.html";
+          return;
+        }
 
-  });
+        // 🔍 تحقق إن كان Worker
+        const workerDoc = await getDoc(doc(db, "workers", uid));
+        if (workerDoc.exists()) {
+          localStorage.setItem("workerEmail", email);
+          localStorage.setItem("workerUID", uid);
+          window.location.href = `worker.html?workerId=${uid}`;
+          return;
+        }
+
+        // 🚫 ليس مسجلاً في admins ولا workers
+        errorDiv.textContent = "❌ ليس لديك صلاحية الدخول، اتصل بالمسؤول";
 
       } catch (error) {
         console.error(error);
