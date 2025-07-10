@@ -40,6 +40,7 @@
     }
 
     input[type="number"],
+    select,
     textarea {
       width: 100%;
       padding: 10px;
@@ -117,6 +118,11 @@
   </div>
 
   <div class="section">
+    <label>👷‍♂️ صاحب العمل:</label>
+    <select id="adminSelector"><option>⏳ تحميل...</option></select>
+  </div>
+
+  <div class="section">
     <label>🧰 الأدوات الصغيرة:</label>
     <div id="smallToolsContainer"><p>⏳ تحميل...</p></div>
   </div>
@@ -125,10 +131,10 @@
     <label>📦 الأدوات الكبيرة:</label>
     <div id="largeToolsContainer"><p>⏳ تحميل...</p></div>
   </div>
-  
+
   <div class="section">
-  <button type="button" onclick="selectAllTools()">📌 تحديد كل الأدوات</button>
-</div>
+    <button type="button" onclick="selectAllTools()">📌 تحديد كل الأدوات</button>
+  </div>
 
   <div class="section">
     <label>📷 صورة بعد الإنجاز:</label>
@@ -177,8 +183,8 @@
 
   let toolsSmall = [];
   let toolsLarge = [];
+  let admins = [];
 
-  // 🔄 تحميل الأدوات
   async function loadTools() {
     try {
       const smallSnap = await getDocs(collection(db, "smallTools"));
@@ -212,7 +218,25 @@
     }
   }
 
-  // ✅ رفع الصورة إلى Cloudinary
+  async function loadAdmins() {
+    const adminSelect = document.getElementById("adminSelector");
+    adminSelect.innerHTML = "<option disabled selected>اختر صاحب العمل</option>";
+
+    try {
+      const adminSnap = await getDocs(collection(db, "admins"));
+      adminSnap.forEach(docSnap => {
+        const admin = docSnap.data();
+        admins.push({ id: docSnap.id, ...admin });
+        const option = document.createElement("option");
+        option.value = docSnap.id;
+        option.textContent = `${admin.name} (${admin.phone})`;
+        adminSelect.appendChild(option);
+      });
+    } catch (e) {
+      console.error("❌ فشل تحميل قائمة الأدمنز:", e);
+    }
+  }
+
   async function uploadImageToCloudinary(file) {
     const formData = new FormData();
     formData.append("file", file);
@@ -228,7 +252,6 @@
     return data.secure_url;
   }
 
-  // ✅ إنهاء العمل
   document.getElementById("finishBtn").addEventListener("click", async () => {
     const indoor = document.getElementById("indoorCount").value || "0";
     const outdoor = document.getElementById("outdoorCount").value || "0";
@@ -237,6 +260,7 @@
     const privateNotes = document.getElementById("privateNotes").value;
     const opportunityNote = document.getElementById("opportunityNote").value;
     const imageFile = document.getElementById("finishImage").files[0];
+    const adminId = document.getElementById("adminSelector").value;
 
     const selectedSmall = Array.from(document.querySelectorAll("#smallToolsContainer input:checked")).map(el => el.value);
     const selectedLarge = Array.from(document.querySelectorAll("#largeToolsContainer input:checked")).map(el => el.value);
@@ -252,7 +276,6 @@
     }
 
     try {
-      document.getElementById("finishBtn").disabled = true;
       const requestRef = doc(db, "requests", requestId);
       const requestSnap = await getDoc(requestRef);
       const requestData = requestSnap.data();
@@ -274,7 +297,8 @@
           small: missingSmall,
           large: missingLarge
         },
-        finishedAt: new Date()
+        finishedAt: new Date(),
+        adminId: adminId || null
       };
 
       await updateDoc(requestRef, {
@@ -294,24 +318,19 @@
 
       alert("✅ تم إنهاء العمل بنجاح");
       window.location.href = "worker-tasks.html";
-
     } catch (e) {
       console.error("❌ خطأ في إنهاء العمل:", e);
       alert("❌ حدث خطأ أثناء حفظ العمل");
     }
   });
 
-  // ✅ زر تحديد الكل
   window.selectAllTools = function () {
     const allCheckboxes = document.querySelectorAll('#smallToolsContainer input[type="checkbox"], #largeToolsContainer input[type="checkbox"]');
     allCheckboxes.forEach(cb => cb.checked = true);
   }
 
-  // ⏳ بدء التحميل
   loadTools();
+  loadAdmins();
 </script>
-
-
 </body>
 </html>
-
