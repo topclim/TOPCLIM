@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل الدخول – TopClim</title>
+  <title>تسجيل دخول العامل</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
     body {
@@ -13,6 +13,7 @@
       align-items: center;
       height: 100vh;
     }
+
     .login-box {
       background: #fff;
       padding: 30px;
@@ -20,15 +21,18 @@
       width: 350px;
       box-shadow: 0 0 10px rgba(0,0,0,0.15);
     }
+
     h2 {
       text-align: center;
       color: #007bff;
     }
+
     label {
       display: block;
       margin-top: 15px;
       font-weight: bold;
     }
+
     input {
       width: 100%;
       padding: 10px;
@@ -36,6 +40,7 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+
     button {
       width: 100%;
       margin-top: 20px;
@@ -47,18 +52,22 @@
       border-radius: 6px;
       cursor: pointer;
     }
+
     button:hover {
       background: #218838;
     }
+
     .error {
       color: red;
       margin-top: 10px;
       text-align: center;
     }
+
     .link {
       text-align: center;
       margin-top: 15px;
     }
+
     .link a {
       color: #007bff;
       text-decoration: none;
@@ -67,7 +76,7 @@
 </head>
 <body>
   <div class="login-box">
-    <h2>🔐 تسجيل دخول</h2>
+    <h2>👷 تسجيل دخول العامل</h2>
     <label for="email">📧 البريد الإلكتروني:</label>
     <input type="email" id="email" placeholder="example@email.com" required>
 
@@ -78,78 +87,78 @@
     <div class="error" id="error"></div>
 
     <div class="link">
-      <p>ليس لديك حساب؟ <a href="worker-register.html">👷 سجل كعامل</a></p>
+      <p>ليس لديك حساب؟ <a href="worker-register.html">سجل هنا</a></p>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    import {
-      getFirestore,
-      doc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+    authDomain: "topclim-3edfa.firebaseapp.com",
+    projectId: "topclim-3edfa"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    const loginBtn = document.getElementById("loginBtn");
-    const errorDiv = document.getElementById("error");
+  const loginBtn = document.getElementById("loginBtn");
+  const errorDiv = document.getElementById("error");
 
-    loginBtn.onclick = async () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
+  loginBtn.onclick = async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-      if (!email || !password) {
-        errorDiv.textContent = "❗ الرجاء إدخال البريد وكلمة المرور";
+    if (!email || !password) {
+      errorDiv.textContent = "❗ الرجاء إدخال البريد وكلمة المرور";
+      return;
+    }
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      const uid = user.uid;
+
+      // ✅ التحقق أولًا إن كان صاحب عمل (admin)
+      const adminDoc = await getDoc(doc(db, "admins", uid));
+      if (adminDoc.exists()) {
+        localStorage.setItem("adminEmail", user.email);
+        localStorage.setItem("adminUID", user.uid);
+        window.location.href = "admin.html"; // توجيه إلى لوحة صاحب العمل
         return;
       }
 
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        const uid = user.uid;
-        const email = user.email;
-
-        // 🔍 تحقق إن كان Admin
-        const adminDoc = await getDoc(doc(db, "admins", uid));
-        if (adminDoc.exists()) {
-          localStorage.setItem("adminEmail", email);
-          localStorage.setItem("adminUID", uid);
-          window.location.href = "admin.html";
-          return;
-        }
-
-        // 🔍 تحقق إن كان Worker
-        const workerDoc = await getDoc(doc(db, "workers", uid));
-        if (workerDoc.exists()) {
-          localStorage.setItem("workerEmail", email);
-          localStorage.setItem("workerUID", uid);
-          window.location.href = `worker.html?workerId=${uid}`;
-          return;
-        }
-
-        // 🚫 ليس مسجلاً في admins ولا workers
-        errorDiv.textContent = "❌ ليس لديك صلاحية الدخول، اتصل بالمسؤول";
-
-      } catch (error) {
-        console.error(error);
-        errorDiv.textContent = "❌ البريد أو كلمة المرور غير صحيحة";
+      // ✅ ثم التحقق إذا كان عامل (worker)
+      const workerDoc = await getDoc(doc(db, "workers", uid));
+      if (workerDoc.exists()) {
+        localStorage.setItem("workerEmail", user.email);
+        localStorage.setItem("workerUID", user.uid);
+        window.location.href = `worker.html?workerId=${user.uid}`;
+        return;
       }
-    };
-  </script>
+
+      // 🚫 المستخدم ليس مسجلاً في admins ولا workers
+      errorDiv.textContent = "❌ الحساب غير مفعل. اتصل بالمسؤول.";
+
+    } catch (error) {
+      console.error(error);
+      errorDiv.textContent = "❌ البريد أو كلمة المرور غير صحيحة";
+    }
+  };
+</script>
+
 </body>
 </html>
