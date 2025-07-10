@@ -103,12 +103,64 @@
       border: 1px solid #ccc;
       max-width: 100%;
     }
+
+    /* عرض الأعمال السابقة */
+    .previous-works {
+      background: #f0f8ff;
+      border: 1px solid #a0c4ff;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .previous-works h3 {
+      margin-top: 0;
+      color: #007BFF;
+      font-size: 1.2rem;
+    }
+    .previous-works .work-entry {
+      border-bottom: 1px solid #d0e2ff;
+      padding: 8px 0;
+    }
+    .previous-works .work-entry:last-child {
+      border-bottom: none;
+    }
+    .previous-works .work-date {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    /* إضافة مساحة للأخطاء أو التحذيرات */
+    #statusMessage {
+      margin: 15px 0;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
+      font-weight: bold;
+      text-align: center;
+    }
+    #statusMessage.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #statusMessage.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
   <h2>📋 تنفيذ العمل</h2>
+
+  <!-- عرض الأعمال السابقة -->
+  <div class="section previous-works" id="previousWorksContainer">
+    <h3>📅 أعمال الأيام السابقة</h3>
+    <p>⏳ جاري تحميل الأعمال السابقة...</p>
+  </div>
 
   <div class="section">
     <label>🧊 عدد المكيفات:</label>
@@ -160,6 +212,8 @@
   <div class="section">
     <button id="finishBtn">✅ إنهاء العمل</button>
   </div>
+
+  <div id="statusMessage"></div>
 </div>
 
 <script type="module">
@@ -185,6 +239,28 @@
   let toolsLarge = [];
   let admins = [];
 
+  // مساعدة لتحويل تاريخ إلى نص قابل للقراءة (مثلاً "اليوم", "أمس", "قبل أمس", أو تاريخ)
+  function formatDateLabel(date) {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const dayBeforeYesterday = new Date(today);
+    dayBeforeYesterday.setDate(today.getDate() - 2);
+
+    // توحيد الوقت إلى منتصف الليل للمقارنة فقط بالتاريخ
+    function toMidnight(d) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    const dMid = toMidnight(date);
+    if (dMid.getTime() === toMidnight(today).getTime()) return "اليوم";
+    if (dMid.getTime() === toMidnight(yesterday).getTime()) return "أمس";
+    if (dMid.getTime() === toMidnight(dayBeforeYesterday).getTime()) return "قبل أمس";
+
+    return date.toLocaleDateString("ar-EG");
+  }
+
+  // تحميل الأدوات الصغيرة والكبيرة وعرضها
   async function loadTools() {
     try {
       const smallSnap = await getDocs(collection(db, "smallTools"));
@@ -195,6 +271,9 @@
 
       smallContainer.innerHTML = "";
       largeContainer.innerHTML = "";
+
+      toolsSmall = [];
+      toolsLarge = [];
 
       smallSnap.forEach(doc => {
         const tool = doc.data().name;
@@ -215,15 +294,18 @@
       });
     } catch (e) {
       console.error("❌ فشل تحميل الأدوات:", e);
+      showStatus("❌ فشل تحميل الأدوات", "error");
     }
   }
 
+  // تحميل قائمة الأدمنز
   async function loadAdmins() {
     const adminSelect = document.getElementById("adminSelector");
     adminSelect.innerHTML = "<option disabled selected>اختر صاحب العمل</option>";
 
     try {
       const adminSnap = await getDocs(collection(db, "admins"));
+      admins = [];
       adminSnap.forEach(docSnap => {
         const admin = docSnap.data();
         admins.push({ id: docSnap.id, ...admin });
@@ -234,9 +316,11 @@
       });
     } catch (e) {
       console.error("❌ فشل تحميل قائمة الأدمنز:", e);
+      showStatus("❌ فشل تحميل قائمة الأدمنز", "error");
     }
   }
 
+  // رفع الصورة على Cloudinary
   async function uploadImageToCloudinary(file) {
     const formData = new FormData();
     formData.append("file", file);
@@ -249,13 +333,150 @@
     });
 
     const data = await res.json();
+    if (!data.secure_url) throw new Error("فشل رفع الصورة");
     return data.secure_url;
   }
 
+  // عرض رسالة حالة ناجحة أو خطأ
+  function showStatus(message, type = "success") {
+    const status = document.getElementById("statusMessage");
+    status.textContent = message;
+    status.className = type === "error" ? "error" : "success";
+    status.style.display = "block";
+    setTimeout(() => {
+      status.style.display = "none";
+    }, 6000);
+  }
+
+  // تحميل بيانات الطلب الحالي والأعمال السابقة
+  async function loadRequestData() {
+    if (!requestId) {
+      showStatus("❌ معرف الطلب غير موجود في الرابط.", "error");
+      return;
+    }
+    try {
+      const requestRef = doc(db, "requests", requestId);
+      const requestSnap = await getDoc(requestRef);
+      if (!requestSnap.exists()) {
+        showStatus("❌ الطلب غير موجود.", "error");
+        return;
+      }
+
+      const requestData = requestSnap.data();
+
+      // ملء الأعمال السابقة في قسم "أعمال الأيام السابقة"
+      const previousWorksContainer = document.getElementById("previousWorksContainer");
+      previousWorksContainer.innerHTML = "<h3>📅 أعمال الأيام السابقة</h3>";
+
+      const workDoneArray = Array.isArray(requestData.workDone) ? requestData.workDone : [];
+
+      if (workDoneArray.length === 0) {
+        previousWorksContainer.innerHTML += "<p>لا توجد أعمال سابقة.</p>";
+      } else {
+        // فرز الأعمال حسب التاريخ تنازلياً (الأحدث أولاً)
+        workDoneArray.sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt));
+
+        // نعرض آخر 5 أيام عمل فقط (يمكن تعديل الرقم)
+        const recentWorks = workDoneArray.slice(0, 5);
+
+        recentWorks.forEach(work => {
+          const div = document.createElement("div");
+          div.className = "work-entry";
+
+          const dateLabel = formatDateLabel(new Date(work.finishedAt));
+          div.innerHTML = `
+            <div class="work-date">${dateLabel}</div>
+            <div>🧊 داخلي: <input type="number" class="prev-indoor" value="${work.indoor}" data-id="${work.finishedAt}" /></div>
+            <div>🧊 خارجي: <input type="number" class="prev-outdoor" value="${work.outdoor}" data-id="${work.finishedAt}" /></div>
+            <div>🔧 صيانة: <input type="number" class="prev-maintenance" value="${work.maintenance}" data-id="${work.finishedAt}" /></div>
+            <div>📝 ملاحظات: <textarea class="prev-publicNotes" data-id="${work.finishedAt}">${work.publicNotes || ''}</textarea></div>
+            <hr>
+          `;
+          previousWorksContainer.appendChild(div);
+        });
+
+        // تعيين الأرقام في حقول العمل اليوم بناء على آخر عمل (اليوم أو آخر عمل)
+        if (recentWorks.length > 0) {
+          const latest = recentWorks[0];
+          document.getElementById("indoorCount").value = latest.indoor || 0;
+          document.getElementById("outdoorCount").value = latest.outdoor || 0;
+          document.getElementById("maintenanceCount").value = latest.maintenance || 0;
+          document.getElementById("publicNotes").value = latest.publicNotes || "";
+          document.getElementById("opportunityNote").value = latest.opportunityNote || "";
+          document.getElementById("privateNotes").value = latest.privateNotes || "";
+
+          // ضبط الأدمن المختار حسب آخر عمل
+          if (latest.adminId) {
+            document.getElementById("adminSelector").value = latest.adminId;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("❌ خطأ في تحميل بيانات الطلب:", e);
+      showStatus("❌ خطأ في تحميل بيانات الطلب", "error");
+    }
+  }
+
+  // تحديث بيانات عمل سابق بعد تعديل المستخدم عليها
+  async function updatePreviousWork(finishedAtStr, updatedData) {
+    try {
+      const requestRef = doc(db, "requests", requestId);
+      const requestSnap = await getDoc(requestRef);
+      if (!requestSnap.exists()) return;
+
+      const requestData = requestSnap.data();
+      let workDoneArray = Array.isArray(requestData.workDone) ? requestData.workDone : [];
+
+      // إيجاد العمل الذي نريد تحديثه عبر timestamp
+      let idx = workDoneArray.findIndex(w => new Date(w.finishedAt).getTime() === new Date(finishedAtStr).getTime());
+      if (idx === -1) return;
+
+      // دمج التحديثات
+      workDoneArray[idx] = {...workDoneArray[idx], ...updatedData};
+
+      await updateDoc(requestRef, { workDone: workDoneArray });
+      showStatus("✅ تم تحديث العمل السابق");
+    } catch (e) {
+      console.error("❌ خطأ في تحديث العمل السابق:", e);
+      showStatus("❌ خطأ في تحديث العمل السابق", "error");
+    }
+  }
+
+  // التهيئة وربط الأحداث
+  function setupPreviousWorksListeners() {
+    const container = document.getElementById("previousWorksContainer");
+
+    // عند تغيير أي قيمة في الأعمال السابقة يتم تحديثها فوراً في قاعدة البيانات
+    container.addEventListener("change", async (ev) => {
+      const target = ev.target;
+      if (!target) return;
+
+      // الحصول على id الخاص بالعمل من data-id
+      const id = target.getAttribute("data-id");
+      if (!id) return;
+
+      let updatedData = {};
+
+      if (target.classList.contains("prev-indoor")) {
+        updatedData.indoor = parseInt(target.value) || 0;
+      } else if (target.classList.contains("prev-outdoor")) {
+        updatedData.outdoor = parseInt(target.value) || 0;
+      } else if (target.classList.contains("prev-maintenance")) {
+        updatedData.maintenance = parseInt(target.value) || 0;
+      } else if (target.classList.contains("prev-publicNotes")) {
+        updatedData.publicNotes = target.value;
+      } else {
+        return;
+      }
+
+      await updatePreviousWork(id, updatedData);
+    });
+  }
+
   document.getElementById("finishBtn").addEventListener("click", async () => {
-    const indoor = document.getElementById("indoorCount").value || "0";
-    const outdoor = document.getElementById("outdoorCount").value || "0";
-    const maintenance = document.getElementById("maintenanceCount").value || "0";
+    const indoor = parseInt(document.getElementById("indoorCount").value) || 0;
+    const outdoor = parseInt(document.getElementById("outdoorCount").value) || 0;
+    const maintenance = parseInt(document.getElementById("maintenanceCount").value) || 0;
     const publicNotes = document.getElementById("publicNotes").value;
     const privateNotes = document.getElementById("privateNotes").value;
     const opportunityNote = document.getElementById("opportunityNote").value;
@@ -268,27 +489,35 @@
     const missingSmall = toolsSmall.filter(tool => !selectedSmall.includes(tool));
     const missingLarge = toolsLarge.filter(tool => !selectedLarge.includes(tool));
 
-    let imageUrl = "";
-    if (imageFile) {
-      imageUrl = await uploadImageToCloudinary(imageFile);
-      document.getElementById("previewImage").src = imageUrl;
-      document.getElementById("previewImage").style.display = "block";
-    }
-
     try {
+      let imageUrl = "";
+      if (imageFile) {
+        imageUrl = await uploadImageToCloudinary(imageFile);
+        document.getElementById("previewImage").src = imageUrl;
+        document.getElementById("previewImage").style.display = "block";
+      }
+
       const requestRef = doc(db, "requests", requestId);
       const requestSnap = await getDoc(requestRef);
+      if (!requestSnap.exists()) {
+        showStatus("❌ الطلب غير موجود", "error");
+        return;
+      }
       const requestData = requestSnap.data();
-      const existingWorkDone = Array.isArray(requestData.workDone) ? requestData.workDone : [];
+      let existingWorkDone = Array.isArray(requestData.workDone) ? requestData.workDone : [];
+
+      // نتحقق إذا كان هناك عمل لنفس اليوم لتحديثه بدل الإضافة الجديدة
+      const todayStr = new Date().toDateString();
+      const todayIndex = existingWorkDone.findIndex(w => new Date(w.finishedAt).toDateString() === todayStr);
 
       const todayWork = {
-        indoor: parseInt(indoor),
-        outdoor: parseInt(outdoor),
-        maintenance: parseInt(maintenance),
+        indoor,
+        outdoor,
+        maintenance,
         publicNotes,
         privateNotes,
         opportunityNote,
-        photo: imageUrl,
+        photo: imageUrl || (todayIndex !== -1 ? existingWorkDone[todayIndex].photo : ""),
         toolsUsed: {
           small: selectedSmall,
           large: selectedLarge
@@ -301,9 +530,17 @@
         adminId: adminId || null
       };
 
+      if (todayIndex !== -1) {
+        // تحديث عمل اليوم
+        existingWorkDone[todayIndex] = todayWork;
+      } else {
+        // إضافة عمل جديد
+        existingWorkDone.unshift(todayWork);
+      }
+
       await updateDoc(requestRef, {
         status: "تم الإنجاز",
-        workDone: [...existingWorkDone, todayWork]
+        workDone: existingWorkDone
       });
 
       if (missingSmall.length > 0 || missingLarge.length > 0) {
@@ -313,14 +550,19 @@
           missingLarge,
           timestamp: new Date()
         });
-        alert("⚠️ تم إرسال إشعار بفقدان الأدوات!");
+        showStatus("⚠️ تم إرسال إشعار بفقدان الأدوات!");
       }
 
-      alert("✅ تم إنهاء العمل بنجاح");
-      window.location.href = "worker-tasks.html";
+      showStatus("✅ تم إنهاء العمل بنجاح");
+
+      // إعادة تحميل الأعمال السابقة لتحديث العرض
+      await loadRequestData();
+
+      // مسح الصورة المختارة
+      document.getElementById("finishImage").value = "";
     } catch (e) {
       console.error("❌ خطأ في إنهاء العمل:", e);
-      alert("❌ حدث خطأ أثناء حفظ العمل");
+      showStatus("❌ حدث خطأ أثناء حفظ العمل", "error");
     }
   });
 
@@ -329,8 +571,14 @@
     allCheckboxes.forEach(cb => cb.checked = true);
   }
 
-  loadTools();
-  loadAdmins();
+  // بدء التحميل
+  (async () => {
+    await loadTools();
+    await loadAdmins();
+    await loadRequestData();
+    setupPreviousWorksListeners();
+  })();
+
 </script>
 </body>
 </html>
