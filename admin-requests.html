@@ -4,288 +4,180 @@
   <meta charset="UTF-8" />
   <title>📋 إدارة الطلبات – TopClim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f8f9fa;
-      direction: rtl;
+    body { font-family: 'Cairo', sans-serif; margin: 0; padding: 20px; background: #f5f7fa; }
+    h1 { text-align: center; color: #007BFF; }
+    .filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0; }
+    .filters select, .filters input, .filters button {
+      padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px;
     }
-
-    header {
-      background-color: #007bff;
-      color: white;
-      padding: 15px 20px;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      padding: 15px;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    .filters select, .filters input[type="date"] {
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-family: 'Cairo';
-    }
-
-    .filters button {
-      padding: 8px 12px;
-      border: none;
-      background-color: #28a745;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .filters button:hover {
-      background-color: #218838;
-    }
-
-    .status-boxes {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-      margin: 20px;
-    }
-
-    .box {
-      background: white;
-      border: 2px solid #007bff;
-      border-radius: 8px;
-      padding: 10px 15px;
-      text-align: center;
-      color: #007bff;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .box:hover {
-      background: #007bff;
-      color: white;
-    }
-
-    .box span {
-      display: block;
-      font-size: 20px;
-      margin-top: 4px;
-    }
-
-    #orders {
-      padding: 10px;
-      max-width: 100%;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    th, td {
-      padding: 12px;
-      border: 1px solid #e0e0e0;
-      text-align: center;
-    }
-
-    th {
-      background-color: #007bff;
-      color: white;
-    }
-
+    .filters button { background: #28a745; color: white; border: none; cursor: pointer; }
+    .filters button:hover { background: #218838; }
+    table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; margin-top: 10px; }
+    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; vertical-align: middle; }
+    th { background: #007BFF; color: white; }
+    tr:hover { background: #f1f1f1; }
+    .btn { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .btn-confirm { background: #17a2b8; color: white; }
+    .btn-confirm:hover { background: #138496; }
+    .btn-details { background: #ffc107; color: white; }
+    .btn-details:hover { background: #e0a800; }
+    .btn-delete { background: #dc3545; color: white; }
+    .btn-delete:hover { background: #c82333; }
     @media (max-width: 768px) {
-      .filters {
-        flex-direction: column;
-        align-items: stretch;
-      }
+      table, thead, tbody, th, td, tr { display: block; }
+      tr { margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
+      th { display: none; }
+      td { position: relative; padding-right: 40%; text-align: right; }
+      td::before { content: attr(data-label); position: absolute; right: 10px; font-weight: bold; color: #007BFF; }
     }
   </style>
 </head>
-
-
 <body>
-  <header>
-    <h1>📋 إدارة الطلبات – TopClim</h1>
-  </header>
+  <h1>📋 إدارة الطلبات – TopClim</h1>
 
-  <!-- 🧭 فلاتر تحديد التاريخ والحالة -->
   <div class="filters">
-    <input type="date" id="filterDate" />
-    <select id="filterStatus">
-      <option value="الكل">📦 كل الحالات</option>
+    <select id="statusFilter">
+      <option value="الكل">📂 الحالة: الكل</option>
       <option value="مبدئي">📄 مبدئي</option>
-      <option value="قيد المعالجة">🔧 قيد المعالجة</option>
-      <option value="تم الإنجاز">✅ تم الإنجاز</option>
+      <option value="قيد المعالجة">🛠 قيد المعالجة</option>
+      <option value="تم الإنجاز">📦 تم الإنجاز</option>
       <option value="تم الدفع">💰 تم الدفع</option>
-      <option value="متروك">🕓 متروك</option>
       <option value="محذوف">🗑️ محذوف</option>
     </select>
-    <button onclick="applyFilters()">🔍 تصفية</button>
+
+    <select id="dateFilter">
+      <option value="الكل">📅 التاريخ: الكل</option>
+      <option value="today">📅 اليوم</option>
+      <option value="yesterday">📅 أمس</option>
+      <option value="tomorrow">📅 غدًا</option>
+    </select>
+
+    <input type="date" id="customDate" />
+
+    <button id="filterBtn">🔍 تصفية</button>
   </div>
 
-  <!-- 🔢 صناديق عدد الطلبات لكل حالة -->
-  <div class="status-boxes" id="statusBoxes">
-    <div class="box" onclick="filterByStatus('الكل')">📦 الكل<span id="count-الكل">0</span></div>
-    <div class="box" onclick="filterByStatus('مبدئي')">📄 مبدئي<span id="count-مبدئي">0</span></div>
-    <div class="box" onclick="filterByStatus('قيد المعالجة')">🔧 قيد المعالجة<span id="count-قيد المعالجة">0</span></div>
-    <div class="box" onclick="filterByStatus('تم الإنجاز')">✅ تم الإنجاز<span id="count-تم الإنجاز">0</span></div>
-    <div class="box" onclick="filterByStatus('تم الدفع')">💰 تم الدفع<span id="count-تم الدفع">0</span></div>
-    <div class="box" onclick="filterByStatus('متروك')">🕓 متروك<span id="count-متروك">0</span></div>
-    <div class="box" onclick="filterByStatus('محذوف')">🗑️ محذوف<span id="count-محذوف">0</span></div>
-  </div>
+  <table id="ordersTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>الاسم</th>
+        <th>عنوان الزبون</th>
+        <th>الهاتف</th>
+        <th>الحالة</th>
+        <th>العامل</th>
+        <th>صاحب العمل</th>
+        <th>تاريخ الطلب</th>
+        <th>خيارات</th>
+      </tr>
+    </thead>
+    <tbody id="ordersBody">
+      <!-- سيتم تعبئتها عبر JS -->
+    </tbody>
+  </table>
 
-  <!-- 📝 جدول عرض الطلبات -->
-  <div id="orders">
-    ⏳ جاري تحميل الطلبات...
-  </div>
 
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    getDocs,
-    doc,
-    updateDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-    authDomain: "topclim-3edfa.firebaseapp.com",
-    projectId: "topclim-3edfa"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const ordersContainer = document.getElementById("orders");
-  const statusBoxes = ["مبدئي", "قيد المعالجة", "تم الإنجاز", "تم الدفع", "متروك", "محذوف"];
-  let allOrders = [];
-
-  async function loadOrders() {
-    const snap = await getDocs(collection(db, "requests"));
-    allOrders = [];
-
-    const statusCounts = {
-      "مبدئي": 0, "قيد المعالجة": 0,
-      "تم الإنجاز": 0, "تم الدفع": 0,
-      "متروك": 0, "محذوف": 0
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
     };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    snap.forEach(docSnap => {
-      const data = docSnap.data();
-      const id = docSnap.id;
-      const status = data.status || "مبدئي";
-      allOrders.push({ id, ...data });
-      if (statusCounts[status] !== undefined) statusCounts[status]++;
-    });
+    const ordersBody = document.getElementById("ordersBody");
+    const statusFilter = document.getElementById("statusFilter");
+    const dateFilter = document.getElementById("dateFilter");
+    const customDate = document.getElementById("customDate");
+    const filterBtn = document.getElementById("filterBtn");
 
-    // تحديث العدادات
-    document.getElementById("count-الكل").textContent = allOrders.length;
-    statusBoxes.forEach(status => {
-      const count = statusCounts[status] || 0;
-      document.getElementById("count-" + status).textContent = count;
-    });
+    let allOrders = [];
+    let workersMap = {};
+    let ownersMap = {};
 
-    renderOrders(allOrders);
-  }
+    async function loadData() {
+      // تحميل جميع العمال وصاحب العمل
+      const [workersSnap, ownersSnap, ordersSnap] = await Promise.all([
+        getDocs(collection(db, "workers")),
+        getDocs(collection(db, "owners")), // تأكد من مسار collection
+        getDocs(collection(db, "requests"))
+      ]);
 
-  function renderOrders(list) {
-    ordersContainer.innerHTML = "";
+      workersSnap.forEach(d => { workersMap[d.id] = d.data().name; });
+      ownersSnap.forEach(d => { ownersMap[d.id] = d.data().name; });
 
-    const table = document.createElement("table");
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th>رقم</th>
-          <th>الاسم</th>
-          <th>العنوان</th>
-          <th>الهاتف</th>
-          <th>الحالة</th>
-          <th>العامل</th>
-          <th>صاحب العمل</th>
-          <th>وقت التنفيذ</th>
-          <th>خيارات</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${list.map((order, i) => {
-          const date = order.executionSchedule?.seconds
-            ? new Date(order.executionSchedule.seconds * 1000).toLocaleString()
-            : "-";
-          return `
-            <tr>
-              <td>${i + 1}</td>
-              <td>${order.name || ""}</td>
-              <td>${order.address || ""}</td>
-              <td>${order.phone || ""}</td>
-              <td>${order.status || "مبدئي"}</td>
-              <td>${order.workerName || order.assignedTo || "-"}</td>
-              <td>${order.ownerName || "-"}</td>
-              <td>${date}</td>
-              <td>
-                <button onclick="location.href='order-details.html?id=${order.id}&owner=${encodeURIComponent(order.ownerName || '')}'">عرض</button>
-              </td>
-            </tr>
-          `;
-        }).join("")}
-      </tbody>
-    `;
-    ordersContainer.appendChild(table);
-  }
+      allOrders = [];
+      ordersSnap.forEach(d => {
+        const dt = d.data();
+        const date = dt.executionSchedule?.toDate()?.toISOString().split('T')[0] || "";
+        allOrders.push({ id: d.id, ...dt, date });
+      });
 
-  // فلترة حسب الحالة
-  window.filterByStatus = function (status) {
-    if (status === "الكل") {
       renderOrders(allOrders);
-    } else {
-      renderOrders(allOrders.filter(order => order.status === status));
     }
-  };
 
-  // فلترة بالتاريخ والحالة
-  window.applyFilters = function () {
-    const dateInput = document.getElementById("filterDate").value;
-    const selectedStatus = document.getElementById("filterStatus").value;
-    let filtered = allOrders;
-
-    if (dateInput) {
-      const selectedDate = new Date(dateInput).toDateString();
-      filtered = filtered.filter(order => {
-        if (!order.executionSchedule?.seconds) return false;
-        const orderDate = new Date(order.executionSchedule.seconds * 1000).toDateString();
-        return orderDate === selectedDate;
+    function renderOrders(list) {
+      ordersBody.innerHTML = "";
+      list.forEach((o, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td data-label="#">${i+1}</td>
+          <td data-label="الاسم">${o.name}</td>
+          <td data-label="العنوان">${o.address}</td>
+          <td data-label="الهاتف">${o.phone}</td>
+          <td data-label="الحالة">${o.status}</td>
+          <td data-label="العامل">${workersMap[o.assignedTo] || "-"}</td>
+          <td data-label="صاحب العمل">${ownersMap[o.ownerId] || "-"}</td>
+          <td data-label="التاريخ">${o.date}</td>
+          <td data-label="خيارات">
+            <button class="btn btn-confirm" onclick="confirmOrder('${o.id}')">✔ تأكيد</button>
+            <button class="btn btn-details" onclick="goToDetails('${o.id}','${o.ownerId}')">📋 التفاصيل</button>
+          </td>`;
+        ordersBody.appendChild(tr);
       });
     }
 
-    if (selectedStatus !== "الكل") {
-      filtered = filtered.filter(order => order.status === selectedStatus);
+
+        function formatDate(d) {
+      return d.toISOString().split('T')[0];
     }
 
-    renderOrders(filtered);
-  };
+    filterBtn.addEventListener("click", () => {
+      let filtered = [...allOrders];
+      const st = statusFilter.value;
+      const dtv = dateFilter.value;
+      const cd = customDate.value;
 
-  loadOrders();
-</script>
+      if (st !== "الكل") filtered = filtered.filter(o => o.status === st);
+
+      let fd = "";
+      const today = new Date();
+      if (dtv === "today") fd = formatDate(today);
+      else if (dtv === "yesterday") { const y = new Date(today); y.setDate(y.getDate()-1); fd = formatDate(y); }
+      else if (dtv === "tomorrow") { const t = new Date(today); t.setDate(t.getDate()+1); fd = formatDate(t); }
+      if (cd) fd = cd;
+      if (fd) filtered = filtered.filter(o => o.date === fd);
+
+      renderOrders(filtered);
+    });
+
+    window.confirmOrder = async function(id) {
+      await updateDoc(doc(db, "requests", id), { status: "قيد المعالجة" });
+      alert("تم تأكيد الطلب!");
+      loadData();
+    };
+
+    window.goToDetails = function(id, ownerId) {
+      window.location.href = `order-details.html?id=${id}&ownerId=${ownerId}`;
+    };
+
+    loadData();
+  </script>
+
 </body>
 </html>
