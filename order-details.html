@@ -283,34 +283,38 @@
     document.getElementById("scheduleModal").style.display = "none";
   }
 
-  async function saveSchedule() {
-    const date = document.getElementById("execDate").value;
-    const time = document.getElementById("execTime").value;
-    const select = document.getElementById("assistantSelect");
+async function saveSchedule() {
+  const date = document.getElementById("execDate").value;
+  const time = document.getElementById("execTime").value;
+  const select = document.getElementById("assistantSelect");
 
-    const workerId = select.value;
-    const assistantName = select.options[select.selectedIndex]?.textContent;
+  const workerId = select.value;
+  const assistantName = select.options[select.selectedIndex]?.textContent;
 
-    if (!date || !time || !workerId) {
-      alert("❌ يرجى تحديد التاريخ والوقت واختيار المساعد");
-      return;
-    }
+  const adminId = localStorage.getItem("adminId"); // ✅ استخرج id المسؤول من localStorage
 
-    const execDateTime = new Date(`${date}T${time}`);
-
-    try {
-      await updateDoc(selectedOrderRef, {
-        executionSchedule: Timestamp.fromDate(execDateTime),
-        assistantName,
-        assignedTo: workerId
-      });
-      alert("✅ تم حفظ الجدولة بنجاح");
-      closeModal();
-    } catch (e) {
-      alert("❌ فشل في الحفظ");
-      console.error(e);
-    }
+  if (!date || !time || !workerId || !adminId) {
+    alert("❌ يرجى تحديد كل الحقول المطلوبة، بما في ذلك حساب المستخدم");
+    return;
   }
+
+  const execDateTime = new Date(`${date}T${time}`);
+
+  try {
+    await updateDoc(selectedOrderRef, {
+      executionSchedule: Timestamp.fromDate(execDateTime),
+      assistantName,
+      assignedTo: workerId,
+      scheduledBy: adminId, // ✅ هذا هو الحقل الجديد الذي يحفظ ID المسؤول
+    });
+    alert("✅ تم حفظ الجدولة بنجاح");
+    closeModal();
+  } catch (e) {
+    alert("❌ فشل في الحفظ");
+    console.error(e);
+  }
+}
+
 
   // بدء التنفيذ
   loadOrder();
