@@ -149,8 +149,12 @@
         actionBox.innerHTML = `
           <a class="call" href="tel:${d.phone}">📞 اتصال</a>
           <a class="whatsapp" href="https://wa.me/213${d.phone.replace(/^0/, '')}" target="_blank">💬 واتساب</a>
-          <a class="map-btn" href="#" onclick="openModal();return false;">🗓️ جدولة التنفيذ</a>`;
+          <a class="map-btn" href="#" id="scheduleBtn">🗓️ جدولة التنفيذ</a>`;
         actionBox.style.display = "block";
+        document.getElementById("scheduleBtn").addEventListener("click", function(e) {
+          e.preventDefault();
+          openModal();
+        });
       }
     }
 
