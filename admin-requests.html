@@ -1,329 +1,291 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>📋 إدارة الطلبات – TopClim</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f4f7fc;
-      direction: rtl;
-      min-height: 100vh;
-    }
-    header {
-      background: #007bff;
-      color: #fff;
-      padding: 15px;
-      text-align: center;
-    }
-    .container {
-      padding: 20px;
-      max-width: 1200px;
-      margin: auto;
-    }
-    .date-strip {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 20px 0;
-    }
-    .date-box {
-      flex: 1;
-      padding: 15px;
-      background: #fff;
-      border: 2px solid #007bff;
-      border-radius: 8px;
-      text-align: center;
-      cursor: pointer;
-    }
-    .date-box.today {
-      background: #007bff;
-      color: #fff;
-    }
-    .custom-date {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .custom-date input {
-      padding: 8px;
-      font-size: 16px;
-    }
-    .order-card {
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .badge {
-      background: #28a745;
-      color: #fff;
-      padding: 5px 10px;
-      border-radius: 5px;
-      display: inline-block;
-      margin-top: 5px;
-    }
-    .btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .btn-group button {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .btn-contacted { background-color: #007bff; color: white; }
-    .btn-delivered { background-color: #28a745; color: white; }
-    .btn-rejected { background-color: #dc3545; color: white; }
-    .btn-call { background-color: #ffc107; color: black; }
-    .btn-note { background-color: #17a2b8; color: white; }
-    .btn-update { background-color: #6f42c1; color: white; }
-    .btn-delete { background-color: #343a40; color: white; }
-    .btn-pending { background-color: #fd7e14; color: white; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم الطلبات</title>
+  <style>/* 📁 assets/style.css – الجزء الثاني من المشروع */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Cairo', sans-serif;
+}
+
+body {
+  background-color: #f4f7fa;
+  color: #333;
+}
+
+.header {
+  background-color: #007bff;
+  padding: 20px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header input[type="search"] {
+  margin-top: 10px;
+  padding: 10px;
+  width: 60%;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.dashboard {
+  padding: 30px 20px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.summary-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: space-around;
+  margin-bottom: 30px;
+}
+
+.card {
+  background-color: #fff;
+  padding: 15px 25px;
+  border-radius: 10px;
+  min-width: 150px;
+  text-align: center;
+  font-weight: bold;
+  color: #007bff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.card span {
+  display: block;
+  font-size: 24px;
+  margin-top: 10px;
+  color: #222;
+}
+
+.card:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.filters {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filters button {
+  padding: 10px 20px;
+  border: none;
+  background: #e0e0e0;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.filters button:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.toolbar select, .toolbar button {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.toolbar .add-order {
+  background-color: #28a745;
+  color: white;
+  border: none;
+}
+
+.orders-list table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.orders-list th, .orders-list td {
+  padding: 12px 10px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.orders-list th {
+  background-color: #007bff;
+  color: white;
+}
+</style>
 </head>
 <body>
-  <header>
-    <h1>📋 إدارة الطلبات – TopClim</h1>
+  <header class="header">
+    <h1>إدارة الطلبات</h1>
+    <input type="search" placeholder="...البحث عن طلبية">
   </header>
-  <div class="container">
-    <div class="date-strip">
-      <div class="date-box" id="yesterdayBox"></div>
-      <div class="date-box today" id="todayBox"></div>
-      <div class="date-box" id="tomorrowBox"></div>
-    </div>
-    <div class="custom-date">
-      <label>📆 اختر تاريخًا: <input type="date" id="customDate" /></label>
-    </div>
-    <div id="ordersContainer">⏳ جاري تحميل الطلبات...</div>
-  </div>
+  <main class="dashboard">
+    <section class="summary-cards">
+      <div class="card total">الكل <span>0</span></div>
+      <div class="card new">جديد <span>0</span></div>
+      <div class="card pending">قيد التأكيد <span>0</span></div>
+      <div class="card confirmed">مؤكدة <span>0</span></div>
+      <div class="card delivery">عند شركة التوصيل <span>0</span></div>
+      <div class="card done">مكتملة <span>0</span></div>
+      <div class="card failed">ملغي <span>0</span></div>
+      <div class="card deleted">محذوفة <span>0</span></div>
+    </section>
+    <section class="filters">
+      <button>اليوم</button>
+      <button>7 أيام</button>
+      <button>شهر</button>
+    </section>
+    <section class="toolbar">
+      <button class="add-order">إضافة طلب جديد +</button>
+      <select>
+        <option>10 طلبات</option>
+        <option>20 طلب</option>
+        <option>50 طلب</option>
+      </select>
+      <select>
+        <option>اختر المنتجات</option>
+      </select>
+    </section>
+    <section class="orders-list">
+      <table>
+        <thead>
+          <tr>
+            <th>الطلب</th>
+            <th>الاسم</th>
+            <th>العنوان</th>
+            <th>الهاتف</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="orders-body">
+          <!-- الطلبات تُدرج هنا ديناميكياً -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <footer>
+    Foorweb, Inc 2022-2025 ©
+  </footer>
 
+  <script type="module" >// 📁 public/app.js – الجزء الثالث من المشروع
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  Timestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      getDocs,
-      updateDoc,
-      doc,
-      Timestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+// إعداد Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+  authDomain: "topclim-3edfa.firebaseapp.com",
+  projectId: "topclim-3edfa"
+};
 
-    const firebaseConfig = {
-      apiKey: "AIza...mbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 🗂️ العناصر
+const ordersTable = document.querySelector("#ordersTable tbody");
+const searchInput = document.querySelector("#searchInput");
+
+let allOrders = [];
+
+// 📥 تحميل الطلبات
+async function fetchOrders() {
+  const snapshot = await getDocs(collection(db, "requests"));
+  allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderOrders(allOrders);
+}
+
+function renderOrders(list) {
+  ordersTable.innerHTML = "";
+
+  if (list.length === 0) {
+    ordersTable.innerHTML = "<tr><td colspan='7'>🚫 لا توجد طلبات</td></tr>";
+    return;
+  }
+
+  for (const order of list) {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${order.id}</td>
+      <td>${order.name || "—"}</td>
+      <td>${order.phone || "—"}</td>
+      <td>${order.status || "مبدئي"}</td>
+      <td>${order.address || "—"}</td>
+      <td><button class="view-btn" data-id="${order.id}">📄 تفاصيل</button></td>
+      <td><button class="delete-btn" data-id="${order.id}">🗑️ حذف</button></td>
+    `;
+
+    ordersTable.appendChild(tr);
+  }
+
+  addActionListeners();
+}
+
+function addActionListeners() {
+  document.querySelectorAll(".view-btn").forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.id;
+      window.location.href = `order-details.html?id=${id}`;
     };
+  });
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const ordersContainer = document.getElementById("ordersContainer");
-    const todayBox = document.getElementById("todayBox");
-    const yesterdayBox = document.getElementById("yesterdayBox");
-    const tomorrowBox = document.getElementById("tomorrowBox");
-    const customDate = document.getElementById("customDate");
-
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    todayBox.textContent = formatDate(today);
-    yesterdayBox.textContent = formatDate(yesterday);
-    tomorrowBox.textContent = formatDate(tomorrow);
-
-    todayBox.onclick = () => fetchOrdersByDate(today);
-    yesterdayBox.onclick = () => fetchOrdersByDate(yesterday);
-    tomorrowBox.onclick = () => fetchOrdersByDate(tomorrow);
-    customDate.onchange = () => {
-      const selectedDate = new Date(customDate.value);
-      fetchOrdersByDate(selectedDate);
-    };
-
-    function formatDate(date) {
-      return date.toISOString().split("T")[0];
-    }
-
-    function sameDay(d1, d2) {
-      return d1.getFullYear() === d2.getFullYear() &&
-             d1.getMonth() === d2.getMonth() &&
-             d1.getDate() === d2.getDate();
-    }
-
-    async function fetchOrdersByDate(targetDate) {
-      ordersContainer.innerHTML = "⏳ جاري تحميل الطلبات...";
-      const snap = await getDocs(collection(db, "requests"));
-      const allOrders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      const filtered = allOrders.filter(order => {
-        const created = order.createdAt?.seconds ? new Date(order.createdAt.seconds * 1000) : null;
-        return created && sameDay(created, targetDate);
-      });
-
-      renderOrders(filtered);
-    }
-
-    function renderOrders(orders) {
-      if (orders.length === 0) {
-        ordersContainer.innerHTML = "<p>🚫 لا توجد طلبات لهذا التاريخ.</p>";
-        return;
-      }
-
-      ordersContainer.innerHTML = orders.map(order => {
-        const id = order.id;
-        const name = order.name || "—";
-        const phone = order.phone || "—";
-        const address = order.address || "—";
-        const status = order.status || "مبدئي";
-        const created = order.createdAt?.seconds ? formatDate(new Date(order.createdAt.seconds * 1000)) : "—";
-        const technician = order.assistantName || "—";
-        const notes = order.notes || "—";
-        const price = order.price || 0;
-        const preferredTime = order.preferredTime || "—";
-        const admin = order.adminId || "—";
-
-        return `
-          <div class="order-card" id="order_${id}">
-            <h4>🔖 الطلب: ${id}</h4>
-            <p>👤 الاسم: ${name}</p>
-            <p>📞 الهاتف: ${phone}</p>
-            <p>📍 العنوان: ${address}</p>
-            <p>📆 التاريخ: ${created}</p>
-            <p>📦 الحالة: <span class="badge">${status}</span></p>
-            <p>🧑‍🔧 الفني: ${technician}</p>
-            <p>📝 ملاحظات: ${notes}</p>
-            <div class="btn-group">
-              <button class="btn-contacted" onclick="markContacted('${id}')">✅ تم التواصل</button>
-              <button class="btn-delivered" onclick="markDelivered('${id}')">📦 تم التوصيل</button>
-              <button class="btn-rejected" onclick="markRejected('${id}')">🚫 مرفوض</button>
-              <a class="btn-call" href="tel:${phone}">📞 اتصال</a>
-              <button class="btn-note" onclick="addNote('${id}')">🗒️ إضافة ملاحظة</button>
-              <button class="btn-update" onclick="updateStatus('${id}')">🔄 تحديث الحالة</button>
-              <button class="btn-delete" onclick="deleteOrder('${id}')">🗑️ حذف</button>
-              <button class="btn-pending" onclick="markPending('${id}')">⏳ قيد الانتظار</button>
-            </div>
-            <div style="margin-top:8px; font-size:13px; color:#555;">
-              👨‍💼 المسؤول: ${admin} | 💵 السعر: ${price} دج | ⏰ الوقت المفضل: ${preferredTime}
-            </div>
-          </div>`;
-      }).join("");
-    }
-
-    fetchOrdersByDate(today);
-
-
-
-        // ✅ تحديث حالة "تم التواصل"
-    window.markContacted = async function(id) {
-      try {
-        await updateDoc(doc(db, "requests", id), {
-          status: "تم التواصل"
-        });
-        alert("✅ تم تحديث الحالة إلى تم التواصل.");
-        document.getElementById(`order_${id}`).style.border = "2px solid #007bff";
-      } catch (e) {
-        alert("حدث خطأ أثناء التحديث.");
-        console.error(e);
-      }
-    };
-
-    // 📦 تحديث حالة "تم التوصيل"
-    window.markDelivered = async function(id) {
-      try {
-        await updateDoc(doc(db, "requests", id), {
-          status: "تم التوصيل",
-          deliveredAt: Timestamp.now()
-        });
-        alert("📦 تم التوصيل بنجاح.");
-        document.getElementById(`order_${id}`).style.backgroundColor = "#d4edda";
-      } catch (e) {
-        alert("حدث خطأ أثناء التوصيل.");
-      }
-    };
-
-    // 🚫 تحديث حالة "مرفوض"
-    window.markRejected = async function(id) {
-      const confirmReject = confirm("هل أنت متأكد أن هذا الطلب مرفوض؟");
-      if (!confirmReject) return;
-      try {
-        await updateDoc(doc(db, "requests", id), {
-          status: "مرفوض"
-        });
-        alert("🚫 تم تحديث الطلب إلى مرفوض.");
-        document.getElementById(`order_${id}`).style.opacity = 0.4;
-      } catch (e) {
-        alert("فشل في التحديث.");
-      }
-    };
-
-    // 📞 لا يحتاج تحديث، فقط فتح رابط الاتصال
-    // الزر <a href="tel:رقم_الهاتف">
-
-    // 🗒️ إضافة ملاحظة
-    window.addNote = async function(id) {
-      const note = prompt("📌 اكتب الملاحظة:");
-      if (!note) return;
-      try {
-        await updateDoc(doc(db, "requests", id), {
-          notes: note
-        });
-        alert("📝 تم حفظ الملاحظة.");
-      } catch (e) {
-        alert("تعذر حفظ الملاحظة.");
-      }
-    };
-
-    // 🔄 تحديث يدوي للحالة
-    window.updateStatus = async function(id) {
-      const newStatus = prompt("🔄 أدخل الحالة الجديدة:");
-      if (!newStatus) return;
-      try {
-        await updateDoc(doc(db, "requests", id), {
-          status: newStatus
-        });
-        alert(`✅ تم تغيير الحالة إلى "${newStatus}".`);
-      } catch (e) {
-        alert("حدث خطأ أثناء التحديث.");
-      }
-    };
-
-    // 🗑️ حذف الطلب (للمشرف فقط)
-    window.deleteOrder = async function(id) {
-      const confirmDelete = confirm("⚠ هل تريد حذف هذا الطلب نهائيًا؟");
+  document.querySelectorAll(".delete-btn").forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      const confirmDelete = confirm("هل أنت متأكد من حذف هذا الطلب؟");
       if (!confirmDelete) return;
-      try {
-        await updateDoc(doc(db, "requests", id), {
-          status: "محذوف"
-        });
-        alert("🗑️ تم حذف الطلب (نقله إلى المحذوفات).");
-        document.getElementById(`order_${id}`).remove();
-      } catch (e) {
-        alert("فشل في حذف الطلب.");
-      }
+
+      await deleteDoc(doc(db, "requests", id));
+      fetchOrders();
     };
+  });
+}
 
-    // ⏳ قيد الانتظار
-    window.markPending = async function(id) {
-      try {
-        await updateDoc(doc(db, "requests", id), {
-          status: "قيد الانتظار"
-        });
-        alert("⏳ تم وضع الطلب في الانتظار.");
-      } catch (e) {
-        alert("حدث خطأ أثناء التحديث.");
-      }
-    }
+// 🔍 فلترة عبر البحث
+searchInput.addEventListener("input", () => {
+  const term = searchInput.value.trim().toLowerCase();
+  const filtered = allOrders.filter(o =>
+    (o.name || "").toLowerCase().includes(term) ||
+    (o.phone || "").toLowerCase().includes(term) ||
+    (o.address || "").toLowerCase().includes(term)
+  );
+  renderOrders(filtered);
+});
 
-  </script>
+fetchOrders();
+</script>
 </body>
 </html>
