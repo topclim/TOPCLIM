@@ -1,292 +1,177 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة تحكم الطلبات</title>
-  <style>/* 📁 assets/style.css – الجزء الثاني من المشروع */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Cairo', sans-serif;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📄 تفاصيل الطلب</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f5f6fa;
+      padding: 20px;
+      color: #333;
+    }
 
-body {
-  background-color: #f4f7fa;
-  color: #333;
-}
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
 
-.header {
-  background-color: #007bff;
-  padding: 20px;
-  color: white;
-  text-align: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
+    .section {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
 
-.header input[type="search"] {
-  margin-top: 10px;
-  padding: 10px;
-  width: 60%;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-}
+    .section h3 {
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
+      margin-bottom: 15px;
+    }
 
-.dashboard {
-  padding: 30px 20px;
-  max-width: 1200px;
-  margin: auto;
-}
+    .info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
 
-.summary-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: space-around;
-  margin-bottom: 30px;
-}
+    .info div {
+      flex: 1 1 200px;
+    }
 
-.card {
-  background-color: #fff;
-  padding: 15px 25px;
-  border-radius: 10px;
-  min-width: 150px;
-  text-align: center;
-  font-weight: bold;
-  color: #007bff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  cursor: pointer;
-  transition: 0.2s;
-}
+    img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
 
-.card span {
-  display: block;
-  font-size: 24px;
-  margin-top: 10px;
-  color: #222;
-}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
 
-.card:hover {
-  background-color: #007bff;
-  color: white;
-}
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
 
-.filters {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.filters button {
-  padding: 10px 20px;
-  border: none;
-  background: #e0e0e0;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.filters button:hover {
-  background-color: #007bff;
-  color: white;
-}
-
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.toolbar select, .toolbar button {
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-.toolbar .add-order {
-  background-color: #28a745;
-  color: white;
-  border: none;
-}
-
-.orders-list table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-.orders-list th, .orders-list td {
-  padding: 12px 10px;
-  text-align: center;
-  border-bottom: 1px solid #eee;
-}
-
-.orders-list th {
-  background-color: #007bff;
-  color: white;
-}
-</style>
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
 </head>
 <body>
-  <header class="header">
-    <h1>إدارة الطلبات</h1>
-    <input type="search" placeholder="...البحث عن طلبية">
-  </header>
-  <main class="dashboard">
-    <section class="summary-cards">
-      <div class="card total">الكل <span>0</span></div>
-      <div class="card new">جديد <span>0</span></div>
-      <div class="card pending">قيد التأكيد <span>0</span></div>
-      <div class="card confirmed">مؤكدة <span>0</span></div>
-      <div class="card delivery">عند شركة التوصيل <span>0</span></div>
-      <div class="card done">مكتملة <span>0</span></div>
-      <div class="card failed">ملغي <span>0</span></div>
-      <div class="card deleted">محذوفة <span>0</span></div>
-    </section>
-    <section class="filters">
-      <button>اليوم</button>
-      <button>7 أيام</button>
-      <button>شهر</button>
-    </section>
-    <section class="toolbar">
-      <button class="add-order">إضافة طلب جديد +</button>
-      <select>
-        <option>10 طلبات</option>
-        <option>20 طلب</option>
-        <option>50 طلب</option>
-      </select>
-      <select>
-        <option>اختر المنتجات</option>
-      </select>
-    </section>
-    <section class="orders-list">
-      <table>
-        <thead>
-          <tr>
-            <th>الطلب</th>
-            <th>الاسم</th>
-            <th>العنوان</th>
-            <th>الهاتف</th>
-            <th>الحالة</th>
-            <th>الإجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="orders-body">
-          <!-- الطلبات تُدرج هنا ديناميكياً -->
-        </tbody>
-      </table>
-    </section>
-  </main>
-  <footer>
-    Foorweb, Inc 2022-2025 ©
-  </footer>
+  <h1>📄 تفاصيل الطلب</h1>
+  <div id="content">⏳ جاري تحميل البيانات...</div>
 
-  <script type="module" >// 📁 public/app.js – الجزء الثالث من المشروع
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-  Timestamp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// إعداد Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-  authDomain: "topclim-3edfa.firebaseapp.com",
-  projectId: "topclim-3edfa"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// 🗂️ العناصر
-const ordersTable = document.querySelector("#orders-body");
-
-const searchInput = document.querySelector("#searchInput");
-
-let allOrders = [];
-
-// 📥 تحميل الطلبات
-async function fetchOrders() {
-  const snapshot = await getDocs(collection(db, "requests"));
-  allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  renderOrders(allOrders);
-}
-
-function renderOrders(list) {
-  ordersTable.innerHTML = "";
-
-  if (list.length === 0) {
-    ordersTable.innerHTML = "<tr><td colspan='7'>🚫 لا توجد طلبات</td></tr>";
-    return;
-  }
-
-  for (const order of list) {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${order.id}</td>
-      <td>${order.name || "—"}</td>
-      <td>${order.phone || "—"}</td>
-      <td>${order.status || "مبدئي"}</td>
-      <td>${order.address || "—"}</td>
-      <td><button class="view-btn" data-id="${order.id}">📄 تفاصيل</button></td>
-      <td><button class="delete-btn" data-id="${order.id}">🗑️ حذف</button></td>
-    `;
-
-    ordersTable.appendChild(tr);
-  }
-
-  addActionListeners();
-}
-
-function addActionListeners() {
-  document.querySelectorAll(".view-btn").forEach(btn => {
-    btn.onclick = () => {
-      const id = btn.dataset.id;
-      window.location.href = `order-details.html?id=${id}`;
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
     };
-  });
 
-  document.querySelectorAll(".delete-btn").forEach(btn => {
-    btn.onclick = async () => {
-      const id = btn.dataset.id;
-      const confirmDelete = confirm("هل أنت متأكد من حذف هذا الطلب؟");
-      if (!confirmDelete) return;
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-      await deleteDoc(doc(db, "requests", id));
-      fetchOrders();
-    };
-  });
-}
+    const content = document.getElementById("content");
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get("id");
 
-// 🔍 فلترة عبر البحث
-searchInput.addEventListener("input", () => {
-  const term = searchInput.value.trim().toLowerCase();
-  const filtered = allOrders.filter(o =>
-    (o.name || "").toLowerCase().includes(term) ||
-    (o.phone || "").toLowerCase().includes(term) ||
-    (o.address || "").toLowerCase().includes(term)
-  );
-  renderOrders(filtered);
-});
+    if (!orderId) {
+      content.innerHTML = "❌ لم يتم تحديد الطلب.";
+    } else {
+      loadOrder();
+    }
 
-fetchOrders();
-</script>
+    async function loadOrder() {
+      const docRef = doc(db, "requests", orderId);
+      const snap = await getDoc(docRef);
+
+      if (!snap.exists()) {
+        content.innerHTML = "❌ الطلب غير موجود.";
+        return;
+      }
+
+      const data = snap.data();
+
+      content.innerHTML = `
+        <div class="section">
+          <h3>📌 معلومات عامة</h3>
+          <div class="info">
+            <div><strong>الاسم:</strong> ${data.name || "—"}</div>
+            <div><strong>الهاتف:</strong> ${data.phone || "—"}</div>
+            <div><strong>العنوان:</strong> ${data.address || "—"}</div>
+            <div><strong>الحالة:</strong> ${data.status || "مبدئي"}</div>
+            <div><strong>السعر:</strong> ${data.price || 0} دج</div>
+            <div><strong>الوقت المفضل:</strong> ${data.preferredTime || "—"}</div>
+            <div><strong>ملاحظات:</strong> ${data.notes || "—"}</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>🛠️ وحدات التكييف</h3>
+          <ul>
+            ${data.acUnits?.map(u => `<li>${u.type} - ${u.size}</li>`).join("") || "<li>لا يوجد</li>"}
+          </ul>
+        </div>
+
+        <div class="section">
+          <h3>📷 صورة العميل</h3>
+          ${data.imageUrl ? `<img src="${data.imageUrl}" alt="صورة الطلب">` : "—"}
+        </div>
+
+        <div class="section">
+          <h3>⭐ تقييم</h3>
+          <div><strong>التقييم:</strong> ${data.feedback?.rating || "لا يوجد"}</div>
+          <div><strong>تعليق:</strong> ${data.feedback?.comment || "لا يوجد"}</div>
+        </div>
+
+        <div class="section">
+          <h3>📋 العمل المنجز</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>العامل</th>
+                <th>الانتهاء</th>
+                <th>داخلي</th>
+                <th>خارجي</th>
+                <th>صيانة</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.workDone?.map(w => `
+                <tr>
+                  <td>${w.adminId}</td>
+                  <td>${w.finishedAt?.toDate().toLocaleString() || "—"}</td>
+                  <td>${w.indoor || 0}</td>
+                  <td>${w.outdoor || 0}</td>
+                  <td>${w.maintenance || 0}</td>
+                </tr>
+              `).join("") || "<tr><td colspan='5'>لا يوجد</td></tr>"}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section">
+          <h3>🧰 الأدوات المستعملة</h3>
+          <div><strong>أدوات كبيرة:</strong> ${data.workDone?.[0]?.toolsUsed?.large?.join(", ") || "—"}</div>
+          <div><strong>أدوات صغيرة:</strong> ${data.workDone?.[0]?.toolsUsed?.small?.join(", ") || "—"}</div>
+        </div>
+      `;
+    }
+  </script>
 </body>
 </html>
