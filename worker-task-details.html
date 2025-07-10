@@ -607,13 +607,15 @@
   }
 
   // بدء التحميل
-  (async () => {
+async function initPage() {
   await loadTools();
   await loadAdmins();
   await loadRequestData();
   await loadPreviousWork();
   setupPreviousWorksListeners();
-})();
+}
+
+initPage();
 
 
 </script>
