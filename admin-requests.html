@@ -1,177 +1,341 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📄 تفاصيل الطلب</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📋 إدارة الطلبات – TopClim</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background-color: #f5f6fa;
-      padding: 20px;
+      background-color: #f9f7fc;
+      margin: 0;
+      padding: 0;
       color: #333;
     }
 
-    h1 {
-      text-align: center;
-      color: #007bff;
-    }
-
-    .section {
+    header {
       background: white;
-      border-radius: 10px;
       padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-
-    .section h3 {
-      border-bottom: 2px solid #007bff;
-      padding-bottom: 5px;
-      margin-bottom: 15px;
-    }
-
-    .info {
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    header input {
+      padding: 10px 15px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      width: 300px;
+      font-size: 14px;
+    }
+
+    main {
+      padding: 20px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #6c63ff;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
       flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 10px 15px;
+      background: #f0ebff;
+      color: #6c63ff;
+      border-radius: 8px;
+      border: 1px solid #dcd3ff;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background: #6c63ff;
+      color: white;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 15px;
+      margin-bottom: 25px;
     }
 
-    .info div {
-      flex: 1 1 200px;
-    }
-
-    img {
-      max-width: 100%;
+    .card {
+      background: white;
+      padding: 15px;
       border-radius: 10px;
-      margin-top: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .card span {
+      display: block;
+      font-weight: bold;
+      font-size: 22px;
+      margin-top: 5px;
+      color: #6c63ff;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .toolbar select, .toolbar button {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .toolbar .add-btn {
+      background-color: #6c63ff;
+      color: white;
+      border: none;
+      font-weight: bold;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
     th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
+      padding: 12px 10px;
       text-align: center;
+      border-bottom: 1px solid #eee;
     }
 
     th {
-      background-color: #007bff;
+      background-color: #6c63ff;
       color: white;
+      font-size: 14px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #aaa;
+      font-size: 13px;
+    }
+
+    @media(max-width: 768px) {
+      header input {
+        width: 100%;
+        margin-top: 10px;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>📄 تفاصيل الطلب</h1>
-  <div id="content">⏳ جاري تحميل البيانات...</div>
+<header>
+  <div>
+    <strong>إدارة الطلبات</strong>
+    <p style="font-size: 13px;">مراقبة وإدارة الطلبات الخاصة بمتجرك</p>
+  </div>
+  <input id="searchInput" type="search" placeholder="🔍 البحث عن طلبية...">
+</header>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<main>
+  <section class="filters">
+    <button class="filter-btn active">الكل</button>
+    <button class="filter-btn">جديد</button>
+    <button class="filter-btn">قيد التأكيد</button>
+    <button class="filter-btn">مؤكدة</button>
+    <button class="filter-btn">عند شركة التوصيل</button>
+    <button class="filter-btn">مكتملة</button>
+    <button class="filter-btn">ملغي</button>
+    <button class="filter-btn">محذوفة</button>
+  </section>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
-    };
+  <section class="summary" id="statusSummary">
+    <!-- سيتم ملؤها ديناميكياً -->
+  </section>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  <section class="toolbar">
+    <button class="add-btn">➕ إضافة طلب جديد</button>
+    <select>
+      <option>10 طلبات</option>
+      <option>20 طلب</option>
+      <option>50 طلب</option>
+    </select>
+    <select>
+      <option>اختر المنتجات</option>
+    </select>
+  </section>
 
-    const content = document.getElementById("content");
-    const urlParams = new URLSearchParams(window.location.search);
-    const orderId = urlParams.get("id");
+  <section>
+    <table id="ordersTable">
+      <thead>
+        <tr>
+          <th>رقم الطلب</th>
+          <th>الاسم</th>
+          <th>الهاتف</th>
+          <th>العنوان</th>
+          <th>الحالة</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- الطلبات تظهر هنا -->
+      </tbody>
+    </table>
+  </section>
+</main>
 
-    if (!orderId) {
-      content.innerHTML = "❌ لم يتم تحديد الطلب.";
-    } else {
-      loadOrder();
+<footer>
+  Foorweb, Inc 2022-2025 ©
+</footer>
+
+<!-- ✅ الجزء الثاني: JavaScript + Firebase سيتم في الرسالة القادمة -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ✅ معلومات Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+  authDomain: "topclim-3edfa.firebaseapp.com",
+  projectId: "topclim-3edfa"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ✅ العناصر في الصفحة
+const ordersTable = document.querySelector("#ordersTable tbody");
+const searchInput = document.querySelector("#searchInput");
+const statusSummary = document.getElementById("statusSummary");
+const filterButtons = document.querySelectorAll(".filter-btn");
+
+let allOrders = [];
+
+// ✅ تحميل الطلبات من Firestore
+async function loadOrders() {
+  const snapshot = await getDocs(collection(db, "requests"));
+  allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderOrders(allOrders);
+  renderStatusCounts(allOrders);
+}
+
+// ✅ عرض الطلبات في الجدول
+function renderOrders(orders) {
+  ordersTable.innerHTML = "";
+
+  if (orders.length === 0) {
+    ordersTable.innerHTML = "<tr><td colspan='6'>🚫 لا توجد طلبات</td></tr>";
+    return;
+  }
+
+  orders.forEach(order => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${order.id}</td>
+      <td>${order.name || "—"}</td>
+      <td>${order.phone || "—"}</td>
+      <td>${order.address || "—"}</td>
+      <td>${order.status || "مبدئي"}</td>
+      <td>
+        <button onclick="location.href='order-details.html?id=${order.id}'">📋 تفاصيل</button>
+        <button onclick="deleteOrder('${order.id}')">🗑️ حذف</button>
+      </td>
+    `;
+    ordersTable.appendChild(row);
+  });
+}
+
+// ✅ حذف طلب
+window.deleteOrder = async function(id) {
+  if (confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
+    await deleteDoc(doc(db, "requests", id));
+    loadOrders();
+  }
+};
+
+// ✅ عداد الحالات في الأعلى
+function renderStatusCounts(orders) {
+  const statuses = ["الكل", "جديد", "قيد التأكيد", "مؤكدة", "عند شركة التوصيل", "مكتملة", "ملغي", "محذوفة"];
+  const counts = {
+    "الكل": orders.length,
+    "جديد": 0,
+    "قيد التأكيد": 0,
+    "مؤكدة": 0,
+    "عند شركة التوصيل": 0,
+    "مكتملة": 0,
+    "ملغي": 0,
+    "محذوفة": 0
+  };
+
+  orders.forEach(order => {
+    const status = order.status || "جديد";
+    if (counts[status] !== undefined) {
+      counts[status]++;
     }
+  });
 
-    async function loadOrder() {
-      const docRef = doc(db, "requests", orderId);
-      const snap = await getDoc(docRef);
+  statusSummary.innerHTML = statuses.map(status => `
+    <div class="card" data-status="${status}">
+      ${status}
+      <span>${counts[status]}</span>
+    </div>
+  `).join("");
 
-      if (!snap.exists()) {
-        content.innerHTML = "❌ الطلب غير موجود.";
-        return;
-      }
+  // ✅ فلترة بالضغط على كروت الحالات
+  document.querySelectorAll(".card").forEach(card => {
+    card.addEventListener("click", () => {
+      const status = card.dataset.status;
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      if (status === "الكل") renderOrders(allOrders);
+      else renderOrders(allOrders.filter(o => (o.status || "جديد") === status));
+    });
+  });
+}
 
-      const data = snap.data();
+// ✅ بحث مباشر
+searchInput.addEventListener("input", () => {
+  const term = searchInput.value.toLowerCase();
+  const filtered = allOrders.filter(o =>
+    (o.name || "").toLowerCase().includes(term) ||
+    (o.phone || "").toLowerCase().includes(term) ||
+    (o.address || "").toLowerCase().includes(term) ||
+    (o.id || "").toLowerCase().includes(term)
+  );
+  renderOrders(filtered);
+});
 
-      content.innerHTML = `
-        <div class="section">
-          <h3>📌 معلومات عامة</h3>
-          <div class="info">
-            <div><strong>الاسم:</strong> ${data.name || "—"}</div>
-            <div><strong>الهاتف:</strong> ${data.phone || "—"}</div>
-            <div><strong>العنوان:</strong> ${data.address || "—"}</div>
-            <div><strong>الحالة:</strong> ${data.status || "مبدئي"}</div>
-            <div><strong>السعر:</strong> ${data.price || 0} دج</div>
-            <div><strong>الوقت المفضل:</strong> ${data.preferredTime || "—"}</div>
-            <div><strong>ملاحظات:</strong> ${data.notes || "—"}</div>
-          </div>
-        </div>
+// ✅ تحميل الطلبات عند البداية
+loadOrders();
+</script>
 
-        <div class="section">
-          <h3>🛠️ وحدات التكييف</h3>
-          <ul>
-            ${data.acUnits?.map(u => `<li>${u.type} - ${u.size}</li>`).join("") || "<li>لا يوجد</li>"}
-          </ul>
-        </div>
-
-        <div class="section">
-          <h3>📷 صورة العميل</h3>
-          ${data.imageUrl ? `<img src="${data.imageUrl}" alt="صورة الطلب">` : "—"}
-        </div>
-
-        <div class="section">
-          <h3>⭐ تقييم</h3>
-          <div><strong>التقييم:</strong> ${data.feedback?.rating || "لا يوجد"}</div>
-          <div><strong>تعليق:</strong> ${data.feedback?.comment || "لا يوجد"}</div>
-        </div>
-
-        <div class="section">
-          <h3>📋 العمل المنجز</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>العامل</th>
-                <th>الانتهاء</th>
-                <th>داخلي</th>
-                <th>خارجي</th>
-                <th>صيانة</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.workDone?.map(w => `
-                <tr>
-                  <td>${w.adminId}</td>
-                  <td>${w.finishedAt?.toDate().toLocaleString() || "—"}</td>
-                  <td>${w.indoor || 0}</td>
-                  <td>${w.outdoor || 0}</td>
-                  <td>${w.maintenance || 0}</td>
-                </tr>
-              `).join("") || "<tr><td colspan='5'>لا يوجد</td></tr>"}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="section">
-          <h3>🧰 الأدوات المستعملة</h3>
-          <div><strong>أدوات كبيرة:</strong> ${data.workDone?.[0]?.toolsUsed?.large?.join(", ") || "—"}</div>
-          <div><strong>أدوات صغيرة:</strong> ${data.workDone?.[0]?.toolsUsed?.small?.join(", ") || "—"}</div>
-        </div>
-      `;
-    }
-  </script>
 </body>
 </html>
