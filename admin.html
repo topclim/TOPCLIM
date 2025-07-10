@@ -3,64 +3,101 @@
 <head>
   <meta charset="UTF-8">
   <title>🧑‍💼 لوحة المدير – TopClim</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
     body {
-      font-family: 'Cairo', sans-serif;
       margin: 0;
       display: flex;
-      height: 100vh;
+      font-family: 'Cairo', sans-serif;
+      background-color: #f4f7fc;
     }
+
     .sidebar {
-      width: 240px;
-      background: #343a40;
-      color: white;
+      width: 260px;
+      background-color: #343a40;
+      color: #fff;
       display: flex;
       flex-direction: column;
       padding: 20px;
     }
-    .sidebar h2 {
-      font-size: 20px;
+
+    .sidebar .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 20px;
-      border-bottom: 1px solid #555;
-      padding-bottom: 10px;
     }
+
+    .sidebar .logo-container img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+    }
+
+    .sidebar .logo-container h2 {
+      font-size: 18px;
+      margin: 0;
+    }
+
     .sidebar button {
       background: none;
       border: none;
-      color: white;
+      color: #fff;
       text-align: right;
       padding: 12px;
-      cursor: pointer;
       font-size: 16px;
-      transition: background 0.3s;
       border-radius: 5px;
+      cursor: pointer;
       margin-bottom: 8px;
-    }
-    .sidebar button:hover,
-    .sidebar button.active {
-      background: #495057;
-    }
-    iframe {
-      flex: 1;
-      border: none;
-      height: 100vh;
+      transition: background 0.3s;
     }
 
-    /* خط فاصل */
+    .sidebar button:hover,
+    .sidebar button.active {
+      background-color: #495057;
+    }
+
     .sidebar hr {
       border: none;
       border-top: 1px solid #555;
       margin: 15px 0;
     }
+
+    iframe {
+      flex-grow: 1;
+      border: none;
+      height: 100vh;
+      background-color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100px;
+        padding: 10px;
+      }
+      .sidebar .logo-container h2 {
+        display: none;
+      }
+      .sidebar button {
+        font-size: 12px;
+        padding: 10px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="sidebar">
-    <h2>🔧 لوحة المدير</h2>
+    <!-- 🔷 شعار الشركة والبرنامج -->
+    <div class="logo-container">
+      <img src="logo-company.png" alt="شعار الشركة" title="TopClim">
+      <h2>TopClim Admin</h2>
+    </div>
 
-    <!-- الأزرار المعتادة -->
+    <!-- 🔘 قائمة التنقل -->
     <button class="active" onclick="loadPage('admin-requests.html', this)">📞 الاتصال بالزبائن</button>
     <button onclick="loadPage('admin-tasks.html', this)">✅ تأكيد الدفع</button>
     <button onclick="loadPage('admin_upload.html', this)">📤 تعديل الصفحة الرئيسية</button>
@@ -68,19 +105,72 @@
     <button onclick="loadPage('worker-register.html', this)">👷 تسجيل العمال</button>
     <button onclick="loadPage('admin-notifications.html', this)">📣 التنبيهات</button>
     <button onclick="loadPage('admin-profits.html', this)">💰 الأرباح</button>
-
-    <!-- 🔻 سطر جديد لفرص بيع المكيفات -->
     <hr>
-    <button onclick="loadPage('sale-opportunities.html', this)">📈 فرص بيع</button>
+    <button onclick="loadPage('sale-opportunities.html', this)">📈 فرص البيع</button>
+    <button onclick="loadPage('settings.html', this)">⚙️ الإعدادات</button>
+    <hr>
+    <button onclick="loadPage('about.html', this)">ℹ️ عن البرنامج</button>
+    <button onclick="logout()">🚪 تسجيل الخروج</button>
   </div>
 
+  <!-- 🔳 الإطار الذي يتم فيه تحميل الصفحات -->
   <iframe id="mainFrame" src="admin-requests.html"></iframe>
 
-  <script>
+    <script>
+    // 🔁 وظيفة تحميل الصفحات داخل iframe وتفعيل الزر النشط
     function loadPage(page, btn) {
-      document.getElementById("mainFrame").src = page;
-      document.querySelectorAll(".sidebar button").forEach(b => b.classList.remove("active"));
+      const iframe = document.getElementById("mainFrame");
+      iframe.src = page;
+
+      document.querySelectorAll(".sidebar button").forEach(b => {
+        b.classList.remove("active");
+      });
+
       btn.classList.add("active");
+    }
+
+    // 🔐 وظيفة تسجيل الخروج (تعديل حسب النظام المستخدم)
+    function logout() {
+      if (confirm("هل تريد تسجيل الخروج؟")) {
+        // مثلاً حذف بيانات تسجيل الدخول أو التوجيه إلى صفحة الدخول
+        localStorage.clear(); // إن كنت تستخدم localStorage
+        window.location.href = "login.html"; // أو أي صفحة دخول
+      }
+    }
+
+    // 🔧 وظيفة فحص التوجيه عند الفتح لأول مرة
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const page = params.get("page");
+      if (page) {
+        document.getElementById("mainFrame").src = page;
+        // نحدد الزر النشط يدويًا (إن وجد)
+        const buttons = document.querySelectorAll(".sidebar button");
+        buttons.forEach(btn => {
+          if (btn.getAttribute("onclick")?.includes(page)) {
+            btn.classList.add("active");
+          } else {
+            btn.classList.remove("active");
+          }
+        });
+      }
+    });
+
+    // 📱 دعم السحب للهواتف (اختياري)
+    if ('ontouchstart' in window) {
+      let startX = 0;
+      document.body.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+      });
+
+      document.body.addEventListener('touchend', e => {
+        const endX = e.changedTouches[0].clientX;
+        if (startX - endX > 100) {
+          document.querySelector('.sidebar').style.display = 'none';
+        } else if (endX - startX > 100) {
+          document.querySelector('.sidebar').style.display = 'flex';
+        }
+      });
     }
   </script>
 </body>
