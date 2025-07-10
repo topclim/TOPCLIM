@@ -252,26 +252,33 @@
     }
 
     try {
-      await updateDoc(doc(db, "requests", requestId), {
+      const requestRef = doc(db, "requests", requestId);
+      const requestSnap = await getDoc(requestRef);
+      const requestData = requestSnap.data();
+      const existingWorkDone = Array.isArray(requestData.workDone) ? requestData.workDone : [];
+
+      const todayWork = {
+        indoor: parseInt(indoor),
+        outdoor: parseInt(outdoor),
+        maintenance: parseInt(maintenance),
+        publicNotes,
+        privateNotes,
+        opportunityNote,
+        photo: imageUrl,
+        toolsUsed: {
+          small: selectedSmall,
+          large: selectedLarge
+        },
+        missingTools: {
+          small: missingSmall,
+          large: missingLarge
+        },
+        finishedAt: new Date()
+      };
+
+      await updateDoc(requestRef, {
         status: "تم الإنجاز",
-        workDone: {
-          indoor: parseInt(indoor),
-          outdoor: parseInt(outdoor),
-          maintenance: parseInt(maintenance),
-          publicNotes,
-          privateNotes,
-          opportunityNote,
-          photo: imageUrl,
-          toolsUsed: {
-            small: selectedSmall,
-            large: selectedLarge
-          },
-          missingTools: {
-            small: missingSmall,
-            large: missingLarge
-          },
-          finishedAt: new Date()
-        }
+        workDone: [...existingWorkDone, todayWork]
       });
 
       if (missingSmall.length > 0 || missingLarge.length > 0) {
@@ -293,15 +300,17 @@
     }
   });
 
-  // بدء التحميل
-  loadTools();
-
+  // ✅ زر تحديد الكل
   window.selectAllTools = function () {
-  const allCheckboxes = document.querySelectorAll('#smallToolsContainer input[type="checkbox"], #largeToolsContainer input[type="checkbox"]');
-  allCheckboxes.forEach(cb => cb.checked = true);
-}
+    const allCheckboxes = document.querySelectorAll('#smallToolsContainer input[type="checkbox"], #largeToolsContainer input[type="checkbox"]');
+    allCheckboxes.forEach(cb => cb.checked = true);
+  }
 
+  // ⏳ بدء التحميل
+  loadTools();
 </script>
+
 
 </body>
 </html>
+
