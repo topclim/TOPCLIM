@@ -2,64 +2,113 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📋 إدارة الطلبات – TopClim</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+  <title>📋 لوحة إدارة الطلبات – TopClim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Cairo', sans-serif;
-      background: #eef2f7;
       margin: 0;
-      padding: 0;
-      direction: rtl;
+      background-color: #f4f6f9;
+      color: #333;
     }
 
     header {
-      background: #007bff;
+      background-color: #007bff;
       color: white;
       padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    header h1 {
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-section img {
+      height: 50px;
+      border-radius: 8px;
+    }
+
+    .logo-section h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: 24px;
+    }
+
+    .filters-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .filters-section select,
+    .filters-section input[type="date"] {
+      padding: 8px 12px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .filters-section button {
+      padding: 8px 16px;
+      background-color: #28a745;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .filters-section button:hover {
+      background-color: #218838;
     }
 
     .status-boxes {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 15px;
       justify-content: center;
-      padding: 20px;
+      margin: 30px auto;
+      max-width: 1200px;
     }
 
     .box {
-      background-color: white;
-      border: 2px solid #007bff;
-      color: #007bff;
-      padding: 15px;
+      background-color: #fff;
+      border: 2px solid #007BFF;
       border-radius: 10px;
-      width: 120px;
+      padding: 15px;
       text-align: center;
-      cursor: pointer;
+      width: 140px;
       font-weight: bold;
-      transition: all 0.3s ease;
+      color: #007BFF;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: 0.3s;
     }
 
     .box:hover {
-      background-color: #007bff;
-      color: white;
+      background: #007BFF;
+      color: #fff;
     }
 
     .box span {
       display: block;
-      font-size: 18px;
+      font-size: 1.6em;
       margin-top: 5px;
     }
 
-    .container {
+    #orders {
       padding: 20px;
       max-width: 1200px;
       margin: auto;
@@ -68,11 +117,10 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      background-color: white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background: #fff;
       border-radius: 10px;
       overflow: hidden;
-      margin-top: 20px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
 
     th, td {
@@ -82,72 +130,129 @@
     }
 
     th {
-      background-color: #007bff;
+      background-color: #007BFF;
       color: white;
+      font-size: 16px;
     }
 
-    select, input[type="datetime-local"] {
-      padding: 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      width: 100%;
+    td {
+      font-size: 15px;
     }
 
-    button {
-      padding: 8px 14px;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .btn-confirm {
-      background-color: #28a745;
-    }
-
-    .btn-view {
+    .action-btn {
       background-color: #17a2b8;
-      margin-right: 5px;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
     }
 
-    button:hover {
-      opacity: 0.9;
+    .action-btn:hover {
+      background-color: #138496;
     }
 
-    .loading {
-      text-align: center;
-      padding: 40px;
-      font-size: 20px;
+    .worker-section {
+      margin-top: 10px;
+      font-size: 14px;
       color: #555;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .filters-section {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+      }
+
+      .box {
+        width: 100%;
+        max-width: 300px;
+      }
+
+      table, th, td {
+        font-size: 13px;
+      }
     }
   </style>
 </head>
 
-
-
-
-
 <body>
   <header>
-    <img src="assets/logo-topclim.png" alt="TopClim Logo" style="height: 40px; float: right; margin-left: 15px;">
-    <img src="assets/logo-admin.png" alt="Admin Logo" style="height: 40px; float: left; margin-right: 15px;">
-    <h1>📋 إدارة الطلبات – TopClim</h1>
+    <div class="logo-section">
+      <img src="logo-company.png" alt="شعار الشركة">
+      <img src="logo-system.png" alt="شعار النظام">
+      <h1>🧾 إدارة طلبات TopClim</h1>
+    </div>
+
+    <div class="filters-section">
+      <select id="dateFilter">
+        <option value="all">📅 الكل</option>
+        <option value="today">📆 اليوم</option>
+        <option value="yesterday">🕓 أمس</option>
+        <option value="tomorrow">📈 غدًا</option>
+      </select>
+
+      <input type="date" id="customDate" />
+
+      <button onclick="applyDateFilter()">🔍 تطبيق الفلترة</button>
+    </div>
   </header>
 
-  <div class="status-boxes">
-    <div class="box" onclick="filterOrders('الكل')">🔄 الكل<span id="count-الكل">0</span></div>
-    <div class="box" onclick="filterOrders('مبدئي')">📝 مبدئي<span id="count-مبدئي">0</span></div>
-    <div class="box" onclick="filterOrders('قيد المعالجة')">🔧 مؤكد<span id="count-قيد المعالجة">0</span></div>
+
+
+
+
+
+
+    <section class="status-boxes" id="statusBoxes">
+    <div class="box" onclick="filterOrders('الكل')">📦 الكل<span id="count-الكل">0</span></div>
+    <div class="box" onclick="filterOrders('مبدئي')">📄 مبدئي<span id="count-مبدئي">0</span></div>
+    <div class="box" onclick="filterOrders('قيد المعالجة')">⚙️ قيد المعالجة<span id="count-قيد المعالجة">0</span></div>
     <div class="box" onclick="filterOrders('تم الإنجاز')">✅ تم الإنجاز<span id="count-تم الإنجاز">0</span></div>
     <div class="box" onclick="filterOrders('تم الدفع')">💰 تم الدفع<span id="count-تم الدفع">0</span></div>
-    <div class="box" onclick="filterOrders('متروك')">🕒 متروك<span id="count-متروك">0</span></div>
+    <div class="box" onclick="filterOrders('متروك')">🕓 متروك<span id="count-متروك">0</span></div>
     <div class="box" onclick="filterOrders('محذوف')">🗑️ محذوف<span id="count-محذوف">0</span></div>
-  </div>
+  </section>
 
-  <div class="container">
-    <div id="orders" class="loading">⏳ جاري تحميل الطلبات...</div>
-  </div>
+  <section id="orders">
+    <div style="text-align: center; font-size: 18px; color: gray;">⏳ جاري تحميل الطلبات...</div>
+  </section>
+
+  <template id="orderRowTemplate">
+    <tr>
+      <td class="order-id">--</td>
+      <td class="order-name">--</td>
+      <td class="order-address">--</td>
+      <td class="order-phone">--</td>
+      <td class="order-status">--</td>
+      <td class="worker-info">--</td>
+      <td class="execution-info">--</td>
+      <td class="actions">
+        <button class="action-btn view-btn">📋 تفاصيل</button>
+        <button class="action-btn confirm-btn">✔ تأكيد</button>
+      </td>
+    </tr>
+  </template>
+
+  <template id="workerDetailsTemplate">
+    <div class="worker-section">
+      👷 العامل: <strong class="worker-name">--</strong><br />
+      👤 صاحب العمل: <strong class="owner-name">--</strong>
+    </div>
+  </template>
+
+  <template id="emptyTableTemplate">
+    <tr>
+      <td colspan="8" style="text-align:center; padding: 20px;">🙁 لا توجد طلبات بهذه الحالة</td>
+    </tr>
+  </template>
 
 
 
@@ -158,154 +263,180 @@
 
 
 
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    getDocs,
-    doc,
-    updateDoc,
-    Timestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, doc, updateDoc, Timestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // إعداد Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-    authDomain: "topclim-3edfa.firebaseapp.com",
-    projectId: "topclim-3edfa"
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const ordersContainer = document.getElementById("orders");
-  let allOrders = [];
-
-  async function loadOrders() {
-    const querySnapshot = await getDocs(collection(db, "requests"));
-    ordersContainer.innerHTML = "";
-    allOrders = [];
-
-    const statusCounts = {
-      "مبدئي": 0,
-      "قيد المعالجة": 0,
-      "تم الإنجاز": 0,
-      "تم الدفع": 0,
-      "متروك": 0,
-      "محذوف": 0
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+      authDomain: "topclim-3edfa.firebaseapp.com",
+      projectId: "topclim-3edfa"
     };
 
-    let total = 0;
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    querySnapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      const id = docSnap.id;
-      const status = data.status || "مبدئي";
+    const ordersContainer = document.getElementById("orders");
+    let allOrders = [];
 
-      allOrders.push({ id, ...data });
-      statusCounts[status] = (statusCounts[status] || 0) + 1;
-      total++;
-    });
+    async function loadOrders() {
+      const snapshot = await getDocs(collection(db, "requests"));
+      const workersSnapshot = await getDocs(collection(db, "workers"));
 
-    document.getElementById("count-الكل").innerText = total;
-    Object.keys(statusCounts).forEach(st => {
-      const el = document.getElementById(`count-${st}`);
-      if (el) el.innerText = statusCounts[st];
-    });
+      const workersMap = {};
+      workersSnapshot.forEach(doc => {
+        const data = doc.data();
+        workersMap[doc.id] = data;
+      });
 
-    renderOrders(allOrders);
-  }
+      allOrders = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        allOrders.push({
+          id: docSnap.id,
+          ...data,
+          worker: workersMap[data.assignedTo] || null
+        });
+      });
 
-  function renderOrders(list) {
-    const table = document.createElement("table");
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th>الطلب</th>
-          <th>الاسم</th>
-          <th>العنوان</th>
-          <th>الهاتف</th>
-          <th>الحالة</th>
-          <th>العامل</th>
-          <th>الجدولة</th>
-          <th>خيارات</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${list.map(order => `
-          <tr>
-            <td>${order.id}</td>
-            <td>${order.name || "—"}</td>
-            <td>${order.address || "—"}</td>
-            <td>${order.phone || "—"}</td>
-            <td>${order.status || "مبدئي"}</td>
-            <td>
-              <select id="worker-${order.id}"><option value="">اختيار</option></select>
-            </td>
-            <td>
-              <input type="datetime-local" id="schedule-${order.id}" value="${order.schedule || ''}">
-            </td>
-            <td>
-              <button onclick="confirmTask('${order.id}')">✔ تأكيد</button>
-              <button onclick="goToDetails('${order.id}', '${order.name || ""}')">📋 تفاصيل</button>
-            </td>
-          </tr>
-        `).join("")}
-      </tbody>
-    `;
-    ordersContainer.innerHTML = "";
-    ordersContainer.appendChild(table);
-    loadWorkers(list);
-  }
-
-  async function loadWorkers(list) {
-    const workersSnap = await getDocs(collection(db, "workers"));
-    const options = [];
-    workersSnap.forEach(doc => {
-      const data = doc.data();
-      options.push(`<option value="${doc.id}">${data.name || doc.id}</option>`);
-    });
-
-    list.forEach(order => {
-      const sel = document.getElementById(`worker-${order.id}`);
-      if (sel) sel.innerHTML += options.join("");
-    });
-  }
-
-  window.confirmTask = async function (id) {
-    const workerId = document.getElementById(`worker-${id}`).value;
-    const schedule = document.getElementById(`schedule-${id}`).value;
-
-    if (!workerId || !schedule) {
-      alert("❗ يرجى اختيار العامل وتحديد الوقت");
-      return;
-    }
-
-    await updateDoc(doc(db, "requests", id), {
-      assignedTo: workerId,
-      executionSchedule: Timestamp.fromDate(new Date(schedule)),
-      status: "قيد المعالجة"
-    });
-
-    alert("✅ تم تحديث الطلب");
-    loadOrders();
-  };
-
-  window.goToDetails = function (id, clientName) {
-    const encodedName = encodeURIComponent(clientName);
-    window.location.href = `order-details.html?id=${id}&client=${encodedName}`;
-  };
-
-  window.filterOrders = function (status) {
-    if (status === "الكل") {
+      updateStatusCounts();
       renderOrders(allOrders);
-    } else {
-      const filtered = allOrders.filter(order => (order.status || "مبدئي") === status);
-      renderOrders(filtered);
     }
-  };
 
-  loadOrders();
-</script>
+    function updateStatusCounts() {
+      const counts = {
+        "مبدئي": 0,
+        "قيد المعالجة": 0,
+        "تم الإنجاز": 0,
+        "تم الدفع": 0,
+        "متروك": 0,
+        "محذوف": 0
+      };
+
+      allOrders.forEach(order => {
+        const status = order.status || "مبدئي";
+        if (counts[status] !== undefined) counts[status]++;
+      });
+
+      document.getElementById("count-الكل").innerText = allOrders.length;
+      for (const key in counts) {
+        const el = document.getElementById(`count-${key}`);
+        if (el) el.innerText = counts[key];
+      }
+    }
+
+    function renderOrders(orders) {
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>📋 الطلب</th>
+            <th>👤 الاسم</th>
+            <th>📍 العنوان</th>
+            <th>📞 الهاتف</th>
+            <th>📌 الحالة</th>
+            <th>👷 العمال</th>
+            <th>🗓️ الجدولة</th>
+            <th>⚙️ خيارات</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody = table.querySelector("tbody");
+      const rowTemplate = document.getElementById("orderRowTemplate");
+      const workerTemplate = document.getElementById("workerDetailsTemplate");
+
+      if (orders.length === 0) {
+        const empty = document.getElementById("emptyTableTemplate").content.cloneNode(true);
+        tbody.appendChild(empty);
+      }
+
+      orders.forEach(order => {
+        const row = rowTemplate.content.cloneNode(true);
+        row.querySelector(".order-id").innerText = order.id;
+        row.querySelector(".order-name").innerText = order.name;
+        row.querySelector(".order-address").innerText = order.address;
+        row.querySelector(".order-phone").innerText = order.phone;
+        row.querySelector(".order-status").innerText = order.status || "مبدئي";
+
+        const workerBox = row.querySelector(".worker-info");
+        const workerClone = workerTemplate.content.cloneNode(true);
+        workerClone.querySelector(".worker-name").innerText = order.worker?.name || "غير محدد";
+        workerClone.querySelector(".owner-name").innerText = order.worker?.ownerName || "غير محدد";
+        workerBox.appendChild(workerClone);
+
+        const scheduleBox = row.querySelector(".execution-info");
+        scheduleBox.innerText = order.executionSchedule
+          ? new Date(order.executionSchedule.seconds * 1000).toLocaleString()
+          : "غير مجدول";
+
+        row.querySelector(".view-btn").onclick = () => {
+          const url = `order-details.html?id=${order.id}&worker=${order.worker?.name || ''}&owner=${order.worker?.ownerName || ''}`;
+          window.location.href = url;
+        };
+
+        row.querySelector(".confirm-btn").onclick = async () => {
+          const confirmed = confirm("هل تريد تأكيد هذا الطلب؟");
+          if (confirmed) {
+            await updateDoc(doc(db, "requests", order.id), {
+              status: "قيد المعالجة",
+              executionSchedule: Timestamp.now()
+            });
+            alert("تم التأكيد ✅");
+            loadOrders();
+          }
+        };
+
+        tbody.appendChild(row);
+      });
+
+      ordersContainer.innerHTML = "";
+      ordersContainer.appendChild(table);
+    }
+
+    window.filterOrders = function (status) {
+      if (status === "الكل") {
+        renderOrders(allOrders);
+      } else {
+        const filtered = allOrders.filter(o => (o.status || "مبدئي") === status);
+        renderOrders(filtered);
+      }
+    };
+
+    window.applyDateFilter = function () {
+      const filter = document.getElementById("dateFilter").value;
+      const customDate = document.getElementById("customDate").value;
+      const today = new Date();
+      const filtered = allOrders.filter(order => {
+        if (!order.executionSchedule) return false;
+        const date = new Date(order.executionSchedule.seconds * 1000);
+        const orderDate = date.toISOString().split("T")[0];
+
+        if (filter === "today") return isSameDate(date, today);
+        if (filter === "yesterday") return isSameDate(date, offsetDate(today, -1));
+        if (filter === "tomorrow") return isSameDate(date, offsetDate(today, 1));
+        if (filter === "all") return true;
+        if (customDate) return orderDate === customDate;
+
+        return false;
+      });
+      renderOrders(filtered);
+    };
+
+    function isSameDate(d1, d2) {
+      return d1.toDateString() === d2.toDateString();
+    }
+
+    function offsetDate(date, days) {
+      const result = new Date(date);
+      result.setDate(date.getDate() + days);
+      return result;
+    }
+
+    loadOrders();
+  </script>
 </body>
 </html>
