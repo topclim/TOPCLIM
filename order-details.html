@@ -457,13 +457,10 @@ async function saveSchedule() {
     return;
   }
 
-  // تعطيل الزر لتفادي التكرار السريع
   saveBtn.disabled = true;
-  saveBtn.textContent = "⏳ جاري الحفظ...";
+  saveBtn.textContent = "⏳ جاري التحقق...";
 
   const execDateTime = Timestamp.fromDate(new Date(`${date}T${time}`));
-
-  // التحقق من وجود نفس التاريخ في workDone
   const snap = await getDoc(selectedOrderRef);
   const existingData = snap.data();
   const existingWork = existingData.workDone || [];
@@ -472,11 +469,14 @@ async function saveSchedule() {
     return entry.finishedAt?.seconds === execDateTime.seconds;
   });
 
+  // إذا التاريخ مكرر، نظهر تنبيه ونطلب تأكيد
   if (isDuplicateDate) {
-    alert("⚠️ هذا التاريخ مسجل مسبقًا لهذا الطلب. الرجاء اختيار تاريخ مختلف.");
-    saveBtn.disabled = false;
-    saveBtn.textContent = "💾 حفظ";
-    return;
+    const proceed = confirm("⚠️ تم تسجيل نفس هذا التاريخ مسبقًا لهذا الطلب.\nهل تريد إضافة الجدولة الجديدة أيضًا؟\n\n- اختر 'موافق' لـ: ✅ نعم، أضف الجدولة الجديدة\n- اختر 'إلغاء' لـ: ❌ لا، سأغيّر التاريخ");
+    if (!proceed) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "💾 حفظ";
+      return;
+    }
   }
 
   const workLog = {
@@ -499,7 +499,7 @@ async function saveSchedule() {
     workDone: arrayUnion(workLog)
   });
 
-  alert("✅ تم حفظ الجدولة بنجاح");
+  alert("✅ تم حفظ الجدولة بنجاح.");
   closeModal();
   loadOrder();
 
