@@ -458,24 +458,24 @@ async function saveSchedule() {
   }
 
   saveBtn.disabled = true;
-  saveBtn.textContent = "⏳ جاري التحقق...";
+  saveBtn.textContent = "⏳ جاري الحفظ...";
 
   const execDateTime = Timestamp.fromDate(new Date(`${date}T${time}`));
+  const newDateStr = new Date(`${date}T${time}`).toISOString().slice(0, 10);
+
   const snap = await getDoc(selectedOrderRef);
   const existingData = snap.data();
   const existingWork = existingData.workDone || [];
 
   const isDuplicateDate = existingWork.some(entry => {
-    const existingDate = entry.finishedAt?.toDate().toISOString().slice(0, 10);
-    const newDate = new Date(`${date}T${time}`).toISOString().slice(0, 10);
-    return existingDate === newDate;
+    const existingDateStr = entry.finishedAt?.toDate().toISOString().slice(0, 10);
+    return existingDateStr === newDateStr;
   });
 
   if (isDuplicateDate) {
-    const proceed = confirm(
-      "⚠️ يوجد بالفعل جدول عمل مسجل في هذا التاريخ.\n\nهل ترغب في إضافة جدول جديد أيضًا في نفس اليوم؟\n\n- اختر 'حسنًا' لـ: ✅ نعم، أضف الجدولة الجديدة\n- اختر 'إلغاء' لـ: ❌ لا، سأغير التاريخ"
-    );
-    if (!proceed) {
+    const confirmContinue = confirm("⚠️ يوجد جدول سابق في نفس التاريخ. هل تريد المتابعة وإضافة واحد جديد؟");
+    if (!confirmContinue) {
+      alert("🚫 تم إلغاء العملية.");
       saveBtn.disabled = false;
       saveBtn.textContent = "💾 حفظ";
       return;
@@ -499,13 +499,12 @@ async function saveSchedule() {
   await updateDoc(selectedOrderRef, {
     assignedTo: workerId,
     executionSchedule: execDateTime,
-    workDone: arrayUnion(workLog) // ✅ دائمًا نضيف خانة جديدة
+    workDone: arrayUnion(workLog)
   });
 
-  alert("✅ تم إضافة الجدولة بنجاح.");
+  alert("✅ تم حفظ الجدولة بنجاح.");
   closeModal();
   loadOrder();
-
   saveBtn.disabled = false;
   saveBtn.textContent = "💾 حفظ";
 }
