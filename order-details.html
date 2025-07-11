@@ -401,7 +401,6 @@ async function loadOrder() {
       <a class="call" href="tel:${d.phone}">📞 اتصال</a>
       <a class="whatsapp" href="https://wa.me/${phoneNo}" target="_blank">💬 واتساب</a>
       <a class="map-btn" href="#" id="scheduleBtn">🗓️ جدولة التنفيذ</a>
-      <a class="map-btn" href="#" id="autoStatusBtn">🔁 تغيير الحالة أوتوماتيكياً</a>
       <a class="map-btn" href="#" id="openMapAppBtn">🗺️ فتح تطبيق الخريطة</a>
     `;
     actionBox.style.display = "flex";
@@ -451,13 +450,35 @@ async function saveSchedule() {
   const time = document.getElementById("execTime").value;
   const workerId = document.getElementById("assistantSelect").value;
   const adminId = document.getElementById("adminSelect").value;
+  const saveBtn = document.querySelector('#scheduleModal button[onclick="saveSchedule()"]');
 
   if (!date || !time || !workerId || !adminId) {
     alert("❌ يرجى تعبئة جميع الحقول.");
     return;
   }
 
+  // تعطيل الزر لتفادي التكرار السريع
+  saveBtn.disabled = true;
+  saveBtn.textContent = "⏳ جاري الحفظ...";
+
   const execDateTime = Timestamp.fromDate(new Date(`${date}T${time}`));
+
+  // التحقق من وجود نفس التاريخ في workDone
+  const snap = await getDoc(selectedOrderRef);
+  const existingData = snap.data();
+  const existingWork = existingData.workDone || [];
+
+  const isDuplicateDate = existingWork.some(entry => {
+    return entry.finishedAt?.seconds === execDateTime.seconds;
+  });
+
+  if (isDuplicateDate) {
+    alert("⚠️ هذا التاريخ مسجل مسبقًا لهذا الطلب. الرجاء اختيار تاريخ مختلف.");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "💾 حفظ";
+    return;
+  }
+
   const workLog = {
     adminId,
     finishedAt: execDateTime,
@@ -469,19 +490,21 @@ async function saveSchedule() {
     photo: "",
     opportunityNote: "",
     privateNotes: "",
-    publicNotes: "",
+    publicNotes: ""
   };
 
   await updateDoc(selectedOrderRef, {
     assignedTo: workerId,
     executionSchedule: execDateTime,
-    workDone: arrayUnion(workLog),
-    status: "تم الجدولة"  // تحديث الحالة مباشرة
+    workDone: arrayUnion(workLog)
   });
 
-  alert("✅ تم حفظ الجدولة وتحديث الحالة بنجاح");
+  alert("✅ تم حفظ الجدولة بنجاح");
   closeModal();
   loadOrder();
+
+  saveBtn.disabled = false;
+  saveBtn.textContent = "💾 حفظ";
 }
 
 // الدالة لتغيير الحالة أوتوماتيكياً (تغير الحالة مثلاً إلى "قيد التنفيذ")
