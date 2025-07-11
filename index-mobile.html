@@ -1,0 +1,442 @@
+<!DOCTYPE html><html lang="ar" dir="rtl">
+<head>
+  <!-- الأساسيات -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="theme-color" content="#6c63ff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="تطبيق إدارة خدمات الغسيل وتأكيد الدفع">
+  <meta name="keywords" content="تنظيف مكيفات, إدارة الطلبات, تأكيد الدفع, تطبيق عمال">
+  <meta name="author" content="TopClim Devs">  <!-- العنوان والأيقونات -->  <title>📲 إدارة الطلبات والدفع | TopClim</title>
+  <link rel="shortcut icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.json">  <!-- الخطوط -->  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">  <!-- Bootstrap + أيقونات -->  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">  <!-- ستايل مخصص للتطبيق -->  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f4f4f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #6c63ff;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .main-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    .btn-primary {
+      background-color: #6c63ff;
+      border-color: #6c63ff;
+    }
+
+    .btn-primary:hover {
+      background-color: #554bcb;
+    }
+
+    .form-label {
+      font-weight: 500;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #6c63ff;
+      margin-bottom: 10px;
+    }
+
+    .profile-section {
+      background-color: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .profile-section p {
+      margin: 6px 0;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 13px;
+      color: #aaa;
+      padding: 15px;
+    }
+
+    /* الوضع الليلي */
+    .dark-mode {
+      background: #1e1e2f;
+      color: #eee;
+    }
+    .dark-mode header {
+      background: #2c2c3f;
+    }
+    .dark-mode .card, .dark-mode .profile-section {
+      background: #2c2c3f;
+      color: #ddd;
+    }
+    .dark-mode .btn-primary {
+      background-color: #7c5bfc;
+    }
+
+    /* تحميل مخصص */
+    #loader {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: rgba(255,255,255,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    #loader div {
+      width: 30px;
+      height: 30px;
+      border: 3px solid #6c63ff;
+      border-radius: 50%;
+      border-top: 3px solid transparent;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* شريط تنقل سفلي مع زر + مركزي */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      background: white;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 10px 0;
+      z-index: 1000;
+    }
+
+    .bottom-bar div {
+      text-align: center;
+      font-size: 12px;
+      color: #6c63ff;
+      cursor: pointer;
+    }
+
+    .bottom-bar div.active {
+      font-weight: bold;
+      color: #554bcb;
+    }
+
+    .bottom-bar .add-button {
+      background-color: #6c63ff;
+      color: white;
+      font-size: 24px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: relative;
+      top: -30px;
+      border: none;
+      outline: none;
+    }
+
+    .toast-message {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #6c63ff;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      z-index: 1001;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+  </style>
+  </head>
+<body>
+  <!-- 🔄 شاشة التحميل -->
+  <div id="loader">
+    <div></div>
+  </div>  <!-- 🔝 الرأس -->  <header>
+    <span class="main-title">📋 لوحة التحكم</span>
+    <button id="logoutBtn" class="btn btn-light btn-sm">تسجيل الخروج</button>
+  </header>  <!-- 🏠 الصفحة الرئيسية -->  <main id="mainPage" class="container">
+    <div class="section-title">👋 مرحباً بك في تطبيق العمال</div>
+    <div class="row gy-3">
+      <div class="col-6">
+        <div class="card p-3 text-center">
+          <i class="bi bi-person-plus fs-3 text-primary"></i>
+          <div class="fw-bold mt-2">طلبات جديدة</div>
+          <span class="text-muted" id="newCount">0</span>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="card p-3 text-center">
+          <i class="bi bi-cash-coin fs-3 text-success"></i>
+          <div class="fw-bold mt-2">دفعات معلقة</div>
+          <span class="text-muted" id="pendingPayments">0</span>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="card p-3 text-center">
+          <i class="bi bi-check-circle fs-3 text-success"></i>
+          <div class="fw-bold mt-2">مدفوع</div>
+          <span class="text-muted" id="paidCount">0</span>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="card p-3 text-center">
+          <i class="bi bi-calendar-check fs-3 text-warning"></i>
+          <div class="fw-bold mt-2">مواعيد الغد</div>
+          <span class="text-muted" id="tomorrowJobs">0</span>
+        </div>
+      </div>
+    </div>
+  </main>  <!-- 📦 صفحة الطلبات -->  <main id="ordersPage" class="container d-none">
+    <div class="section-title">📦 الطلبات</div>
+    <div id="ordersList"></div>
+  </main>  <!-- 💳 صفحة تأكيد الدفع -->  <main id="paymentsPage" class="container d-none">
+    <div class="section-title">💳 تأكيد الدفع</div>
+    <div id="paymentsList">
+      <div class="card p-3 mb-3">
+        <div class="d-flex justify-content-between">
+          <strong>فاتورة رقم 1023</strong>
+          <span class="text-success">مدفوعة</span>
+        </div>
+        <div>الزبون: ياسين</div>
+        <div>الخدمة: غسيل مكيف</div>
+        <div>المبلغ: 2500 دج</div>
+        <div class="mt-2">
+          <button class="btn btn-outline-primary btn-sm">عرض التفاصيل</button>
+        </div>
+      </div>
+      <!-- المزيد سيتم تحميله ديناميكياً -->
+    </div>
+  </main>  <!-- 👤 صفحة الملف الشخصي -->  <main id="profilePage" class="container d-none">
+    <div class="section-title">👤 الملف الشخصي</div>
+    <div class="profile-section">
+      <p><strong>الاسم:</strong> <span id="workerName">—</span></p>
+      <p><strong>رقم الهاتف:</strong> <span id="workerPhone">—</span></p>
+      <p><strong>العنوان:</strong> <span id="workerLocation">—</span></p>
+      <hr>
+      <button id="signOut" class="btn btn-outline-danger w-100">🔒 تسجيل الخروج</button>
+    </div>
+  </main>  <!-- ➕ زر الإضافة المركزي -->  <div class="position-fixed" style="bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 1001;">
+    <button class="add-button" onclick="openAddOrderForm()">➕</button>
+  </div>  <!-- 🚦 شريط التنقل السفلي -->  <nav class="bottom-bar">
+    <div onclick="showPage('mainPage')" class="active">
+      <i class="bi bi-house-door"></i><br>الرئيسية
+    </div>
+    <div onclick="showPage('ordersPage')">
+      <i class="bi bi-bag-check"></i><br>الطلبات
+    </div>
+    <div onclick="showPage('paymentsPage')">
+      <i class="bi bi-wallet2"></i><br>الدفع
+    </div>
+    <div onclick="showPage('profilePage')">
+      <i class="bi bi-person"></i><br>الحساب
+    </div>
+  </nav>  <!-- 📝 نافذة إضافة الطلب -->  <div id="addOrderModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">➕ إضافة طلب جديد</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="newOrderForm">
+            <div class="mb-3">
+              <label class="form-label">اسم الزبون</label>
+              <input type="text" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">رقم الهاتف</label>
+              <input type="tel" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">العنوان</label>
+              <textarea class="form-control" rows="2" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">التاريخ</label>
+              <input type="date" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">المبلغ</label>
+              <input type="number" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">💾 حفظ الطلب</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>  <!-- 📢 إشعار سريع -->  <div id="toast" class="toast-message d-none">✅ تم الحفظ بنجاح</div>
+<script type="module">
+// ✅ استيراد Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  deleteDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ✅ إعداد Firebase
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ✅ إخفاء اللودر بعد التحميل
+window.addEventListener("load", () => {
+  document.getElementById("loader").style.display = "none";
+});
+
+// ✅ التنقل بين الصفحات
+const pages = ["mainPage", "ordersPage", "paymentsPage", "profilePage"];
+function showPage(pageId) {
+  pages.forEach(id => {
+    document.getElementById(id).classList.add("d-none");
+  });
+  document.getElementById(pageId).classList.remove("d-none");
+
+  // تغيير الحالة في الشريط السفلي
+  document.querySelectorAll(".bottom-bar div").forEach(div => div.classList.remove("active"));
+  const index = pages.indexOf(pageId);
+  document.querySelectorAll(".bottom-bar div")[index].classList.add("active");
+}
+
+// ✅ عرض إشعار بسيط
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.remove("d-none");
+  setTimeout(() => toast.classList.add("d-none"), 3000);
+}
+
+// ✅ تحميل الطلبات من Firestore
+async function loadOrders() {
+  const snapshot = await getDocs(collection(db, "requests"));
+  const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+  // تحديث العدادات
+  document.getElementById("newCount").textContent = orders.length;
+  document.getElementById("ordersList").innerHTML = orders.map(order => `
+    <div class="card p-3 mb-2">
+      <div class="d-flex justify-content-between">
+        <strong>📌 ${order.name || "—"}</strong>
+        <span class="badge bg-primary">${order.date || "—"}</span>
+      </div>
+      <div>📞 ${order.phone}</div>
+      <div>📍 ${order.address}</div>
+      <div>💰 ${order.amount} دج</div>
+      <div class="mt-2 text-end">
+        <button class="btn btn-outline-danger btn-sm" onclick="deleteOrder('${order.id}')">🗑 حذف</button>
+      </div>
+    </div>`).join("");
+}
+
+// ✅ حذف الطلب
+window.deleteOrder = async function(id) {
+  if (confirm("هل تريد حذف هذا الطلب؟")) {
+    await deleteDoc(doc(db, "requests", id));
+    loadOrders();
+    showToast("🚫 تم الحذف");
+  }
+}
+
+// ✅ حفظ طلب جديد
+const newOrderForm = document.getElementById("newOrderForm");
+newOrderForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const inputs = newOrderForm.querySelectorAll("input, textarea");
+
+  const newOrder = {
+    name: inputs[0].value,
+    phone: inputs[1].value,
+    address: inputs[2].value,
+    date: inputs[3].value,
+    amount: parseFloat(inputs[4].value)
+  };
+
+  await addDoc(collection(db, "requests"), newOrder);
+  newOrderForm.reset();
+  const modal = bootstrap.Modal.getInstance(document.getElementById("addOrderModal"));
+  modal.hide();
+  showToast("✅ تم إضافة الطلب بنجاح");
+  loadOrders();
+});
+
+// ✅ فتح نافذة إضافة الطلب
+window.openAddOrderForm = function() {
+  const modal = new bootstrap.Modal(document.getElementById("addOrderModal"));
+  modal.show();
+};
+
+// ✅ صفحة الملف الشخصي
+const workerData = {
+  name: "أحمد",
+  phone: "0555-123456",
+  location: "الجزائر العاصمة"
+};
+
+document.getElementById("workerName").textContent = workerData.name;
+document.getElementById("workerPhone").textContent = workerData.phone;
+document.getElementById("workerLocation").textContent = workerData.location;
+
+// ✅ تسجيل الخروج
+const logoutBtn = document.getElementById("logoutBtn");
+const signOutBtn = document.getElementById("signOut");
+[logoutBtn, signOutBtn].forEach(btn => {
+  btn.addEventListener("click", () => {
+    alert("🚪 تم تسجيل الخروج");
+    // يمكنك هنا تنفيذ redirect أو clear session
+  });
+});
+
+// ✅ تحميل أولي للبيانات
+loadOrders();
+</script>
+</body>
+</html>
