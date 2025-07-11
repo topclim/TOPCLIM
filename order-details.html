@@ -466,12 +466,15 @@ async function saveSchedule() {
   const existingWork = existingData.workDone || [];
 
   const isDuplicateDate = existingWork.some(entry => {
-    return entry.finishedAt?.seconds === execDateTime.seconds;
+    const existingDate = entry.finishedAt?.toDate().toISOString().slice(0, 10);
+    const newDate = new Date(`${date}T${time}`).toISOString().slice(0, 10);
+    return existingDate === newDate;
   });
 
-  // إذا التاريخ مكرر، نظهر تنبيه ونطلب تأكيد
   if (isDuplicateDate) {
-    const proceed = confirm("⚠️ تم تسجيل نفس هذا التاريخ مسبقًا لهذا الطلب.\nهل تريد إضافة الجدولة الجديدة أيضًا؟\n\n- اختر 'موافق' لـ: ✅ نعم، أضف الجدولة الجديدة\n- اختر 'إلغاء' لـ: ❌ لا، سأغيّر التاريخ");
+    const proceed = confirm(
+      "⚠️ يوجد بالفعل جدول عمل مسجل في هذا التاريخ.\n\nهل ترغب في إضافة جدول جديد أيضًا في نفس اليوم؟\n\n- اختر 'حسنًا' لـ: ✅ نعم، أضف الجدولة الجديدة\n- اختر 'إلغاء' لـ: ❌ لا، سأغير التاريخ"
+    );
     if (!proceed) {
       saveBtn.disabled = false;
       saveBtn.textContent = "💾 حفظ";
@@ -496,10 +499,10 @@ async function saveSchedule() {
   await updateDoc(selectedOrderRef, {
     assignedTo: workerId,
     executionSchedule: execDateTime,
-    workDone: arrayUnion(workLog)
+    workDone: arrayUnion(workLog) // ✅ دائمًا نضيف خانة جديدة
   });
 
-  alert("✅ تم حفظ الجدولة بنجاح.");
+  alert("✅ تم إضافة الجدولة بنجاح.");
   closeModal();
   loadOrder();
 
