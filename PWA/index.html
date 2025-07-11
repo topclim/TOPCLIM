@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#6a1b9a">
+  <meta name="description" content="PWA لعرض الرصيد والطلبات وإضافة عناصر جديدة بسهولة">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="MyPWA">
+  <meta name="application-name" content="MyPWA">
+  <meta name="msapplication-TileColor" content="#6a1b9a">
+  <meta name="msapplication-tap-highlight" content="no">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/navbar.css" />
+  
+  <title>رصيد الطلبات – PWA</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+
+    :root {
+      --main-purple: #6a1b9a;
+      --danger-red: #f44336;
+      --success-green: #009688;
+      --highlight-yellow: #fbc02d;
+      --icon-black: #000000;
+      --light-gray: #f7f7f7;
+      --font-family: 'Cairo', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--light-gray);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #fff;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      color: var(--main-purple);
+      border-bottom: 1px solid #ddd;
+    }
+
+    .balance, .pending {
+      text-align: center;
+    }
+
+    .balance span, .pending span {
+      display: block;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .balance span {
+      color: var(--success-green);
+    }
+
+    .pending span {
+      color: var(--danger-red);
+    }
+
+    main {
+      flex-grow: 1;
+      padding: 20px;
+      background-color: #fff;
+    }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #fff;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 10px 0;
+      box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    nav .icon {
+      font-size: 24px;
+      color: var(--icon-black);
+    }
+
+    nav .icon.active {
+      color: var(--highlight-yellow);
+    }
+
+    .fab {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+      background-color: #9c27b0;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 32px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      z-index: 10;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        font-size: 12px;
+      }
+
+      .fab {
+        width: 50px;
+        height: 50px;
+        font-size: 28px;
+      }
+
+      nav .icon {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ✅ الشريط العلوي -->
+  <header class="top-bar">
+    <div class="pending">
+      <p>مستحق الدفع</p>
+      <span>0 طلب</span>
+    </div>
+    <div class="balance">
+      <p>الرصيد</p>
+      <span>103 طلب</span>
+    </div>
+  </header>
+
+  <!-- ✅ المنطقة الرئيسية التي تتغير -->
+  <main id="main-content">
+    <section class="page" id="home-page">
+      <h2>مرحبًا بك 👋</h2>
+      <p>هذه هي الصفحة الرئيسية.</p>
+      <div class="cards">
+        <div class="card">📦 الطلب 1</div>
+        <div class="card">📦 الطلب 2</div>
+        <div class="card">📦 الطلب 3</div>
+        <div class="card">📦 الطلب 4</div>
+        <div class="card">📦 الطلب 5</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ✅ زر الإضافة المركزي -->
+  <button class="fab" id="add-button" aria-label="إضافة طلب جديد">+</button>
+
+  <!-- ✅ شريط التنقل السفلي -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-page="home-page">
+      <img src="assets/icons/home.svg" class="nav-icon" alt="الرئيسية">
+    </div>
+    <div class="nav-item" data-page="orders-page">
+      <img src="assets/icons/orders.svg" class="nav-icon" alt="الطلبات">
+    </div>
+    <div class="nav-item center-space"></div>
+    <div class="nav-item" data-page="store-page">
+      <img src="assets/icons/shop.svg" class="nav-icon" alt="المتجر">
+    </div>
+    <div class="nav-item" data-page="profile-page">
+      <img src="assets/icons/user.svg" class="nav-icon" alt="الحساب">
+    </div>
+  </nav>
+
+  <!-- ✅ صفحات أخرى جاهزة للتحميل -->
+  <template id="orders-page">
+    <section class="page">
+      <h2>الطلبات</h2>
+      <ul class="order-list">
+        <li>طلب رقم 1001</li>
+        <li>طلب رقم 1002</li>
+        <li>طلب رقم 1003</li>
+        <li>طلب رقم 1004</li>
+        <li>طلب رقم 1005</li>
+      </ul>
+    </section>
+  </template>
+
+  <template id="add-page">
+    <section class="page">
+      <h2>إضافة طلب جديد</h2>
+      <form id="add-form">
+        <label>اسم العميل:</label>
+        <input type="text" name="customerName" required>
+
+        <label>المنتج:</label>
+        <input type="text" name="product" required>
+
+        <label>الكمية:</label>
+        <input type="number" name="quantity" min="1" required>
+
+        <button type="submit">إرسال الطلب</button>
+      </form>
+    </section>
+  </template>
+
+  <template id="store-page">
+    <section class="page">
+      <h2>المتجر</h2>
+      <div class="store-items">
+        <div class="item">🛒 منتج 1</div>
+        <div class="item">🛒 منتج 2</div>
+        <div class="item">🛒 منتج 3</div>
+        <div class="item">🛒 منتج 4</div>
+      </div>
+    </section>
+  </template>
+
+  <template id="profile-page">
+    <section class="page">
+      <h2>الملف الشخصي</h2>
+      <p>اسم المستخدم: علي</p>
+      <p>البريد الإلكتروني: ali@example.com</p>
+      <button>تسجيل الخروج</button>
+    </section>
+  </template>
+
+  <!-- ✅ سكربت التحميل لاحقًا -->
+  <script src="js/main.js" defer></script>
+</body>
+
+</html>

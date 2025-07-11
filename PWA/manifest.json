@@ -1,0 +1,108 @@
+{
+  "name": "رصيد الطلبات | إدارة النقود",
+  "short_name": "رصيدي",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#6a1b9a",
+  "description": "تطبيق ويب تقدمي (PWA) لعرض الرصيد وتتبع الطلبات وإدارة عمليات الدفع اليومية بكل احترافية وسهولة.",
+  "categories": [
+    "finance",
+    "productivity",
+    "business",
+    "utilities"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "assets/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshots/screen1.png",
+      "sizes": "540x960",
+      "type": "image/png",
+      "label": "الواجهة الرئيسية"
+    },
+    {
+      "src": "assets/screenshots/screen2.png",
+      "sizes": "540x960",
+      "type": "image/png",
+      "label": "قائمة الطلبات"
+    },
+    {
+      "src": "assets/screenshots/screen3.png",
+      "sizes": "540x960",
+      "type": "image/png",
+      "label": "إضافة طلب جديد"
+    }
+  ],
+  "related_applications": [],
+  "iarc_rating_id": "e10y-l2o5-1293-28ff",
+  "shortcuts": [
+    {
+      "name": "الرئيسية",
+      "short_name": "الرئيسية",
+      "description": "الرجوع إلى الشاشة الرئيسية",
+      "url": "/index.html",
+      "icons": [{ "src": "assets/icons/home.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "إضافة طلب جديد",
+      "short_name": "إضافة",
+      "description": "إدخال طلب جديد بسرعة",
+      "url": "/index.html#add",
+      "icons": [{ "src": "assets/icons/plus.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "الطلبات",
+      "short_name": "الطلبات",
+      "description": "عرض كل الطلبات",
+      "url": "/index.html#orders",
+      "icons": [{ "src": "assets/icons/orders.svg", "sizes": "96x96" }]
+    }
+  ]
+}
