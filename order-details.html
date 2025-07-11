@@ -208,6 +208,25 @@
         font-size: 20px;
       }
     }
+
+    .actions {
+  display: flex !important;
+  flex-wrap: wrap !important;  /* السماح بتقسيم الأزرار إلى أكثر من صف */
+  gap: 10px;                  /* مسافة بين الأزرار */
+  justify-content: center;    /* توسيط */
+}
+
+.actions a {
+  flex: 1 1 120px;           /* السماح للزر بأخذ عرض مرن مع حد أدنى */
+  text-align: center;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  text-decoration: none;
+  white-space: nowrap;       /* منع التفاف النص داخل الزر */
+  box-sizing: border-box;
+}
+
   </style>
 
   <!-- Leaflet JS -->
@@ -323,13 +342,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// الحصول على رقم الطلب من الرابط
 const orderId = new URLSearchParams(window.location.search).get("id");
 const orderBox = document.getElementById("orderDetails");
 const actionBox = document.getElementById("actionLinks");
 let selectedOrderRef = null;
 
-// تحميل تفاصيل الطلب
 async function loadOrder() {
   if (!orderId) return (orderBox.innerHTML = "❌ لم يتم تحديد الطلب.");
   selectedOrderRef = doc(db, "requests", orderId);
@@ -360,12 +377,12 @@ async function loadOrder() {
 
   orderBox.innerHTML = html;
 
-  // عرض صورة
+  // عرض صورة المكيف إن وجدت
   if (d.imageUrl) {
     document.getElementById("imagePreview").innerHTML = `<img src="${d.imageUrl}" alt="صورة المكيف" />`;
   }
 
-  // عرض الموقع على الخريطة
+  // عرض الخريطة
   if (d.location) {
     const lat = d.location.lat;
     const lng = d.location.lng;
@@ -377,18 +394,35 @@ async function loadOrder() {
     document.getElementById("map").style.display = "block";
   }
 
-  // روابط الاتصال
+  // روابط الاتصال وزر السر (الدخول المباشر للخريطة)
   if (d.phone) {
     const phoneNo = d.phone.replace(/^0/, "213");
     actionBox.innerHTML = `
       <a class="call" href="tel:${d.phone}">📞 اتصال</a>
       <a class="whatsapp" href="https://wa.me/${phoneNo}" target="_blank">💬 واتساب</a>
-      <a class="map-btn" href="#" onclick="openModal()">🗓️ جدولة التنفيذ</a>
-      <a class="map-btn" href="#" onclick="openStatusModal()">🔁 تغيير الحالة</a>
-      <a class="map-btn" href="#" onclick="openNoteModal()">🗒️ ملاحظات عامة</a>
+      <a class="map-btn" href="#" id="scheduleBtn">🗓️ جدولة التنفيذ</a>
+      <a class="map-btn" href="#" id="autoStatusBtn">🔁 تغيير الحالة أوتوماتيكياً</a>
+      <a class="map-btn" href="#" id="openMapAppBtn">🗺️ فتح تطبيق الخريطة</a>
     `;
-    actionBox.style.display = "block";
+    actionBox.style.display = "flex";
+    actionBox.style.flexWrap = "wrap";  // يمنع تداخل الأزرار في الهواتف
   }
+
+  // إضافة مستمعين للأحداث بدلًا من onclick
+  document.getElementById("scheduleBtn").addEventListener("click", (e) => {
+    e.preventDefault();
+    openModal();
+  });
+
+  document.getElementById("autoStatusBtn").addEventListener("click", async (e) => {
+    e.preventDefault();
+    await autoChangeStatus();
+  });
+
+  document.getElementById("openMapAppBtn").addEventListener("click", (e) => {
+    e.preventDefault();
+    openMapApp(d.location);
+  });
 }
 
 async function loadWorkers() {
@@ -411,7 +445,7 @@ async function loadAdmins() {
   });
 }
 
-// حفظ الجدولة
+// حفظ الجدولة مع تغيير الحالة أوتوماتيكياً
 async function saveSchedule() {
   const date = document.getElementById("execDate").value;
   const time = document.getElementById("execTime").value;
@@ -442,39 +476,39 @@ async function saveSchedule() {
     assignedTo: workerId,
     executionSchedule: execDateTime,
     workDone: arrayUnion(workLog),
-    status: "تم الجدولة"
+    status: "تم الجدولة"  // تحديث الحالة مباشرة
   });
 
-  alert("✅ تم حفظ الجدولة بنجاح");
+  alert("✅ تم حفظ الجدولة وتحديث الحالة بنجاح");
   closeModal();
   loadOrder();
 }
 
-// تغيير الحالة
-async function updateStatus() {
-  const newStatus = document.getElementById("statusSelect").value;
-  if (!newStatus) return alert("❌ اختر حالة جديدة.");
-  await updateDoc(selectedOrderRef, {
-    status: newStatus
-  });
-  alert("✅ تم تحديث الحالة.");
-  closeStatusModal();
-  loadOrder();
+// الدالة لتغيير الحالة أوتوماتيكياً (تغير الحالة مثلاً إلى "قيد التنفيذ")
+async function autoChangeStatus() {
+  if (!selectedOrderRef) return alert("❌ لم يتم تحميل الطلب بعد.");
+  try {
+    await updateDoc(selectedOrderRef, {
+      status: "قيد التنفيذ"
+    });
+    alert("✅ تم تغيير الحالة إلى 'قيد التنفيذ' تلقائياً.");
+    loadOrder();
+  } catch (e) {
+    alert("❌ فشل في تغيير الحالة: " + e.message);
+  }
 }
 
-// ملاحظة عامة
-async function submitPublicNote() {
-  const note = document.getElementById("publicNoteInput").value;
-  if (!note) return alert("❌ اكتب الملاحظة أولا.");
-  await updateDoc(selectedOrderRef, {
-    publicNotes: note
-  });
-  alert("✅ تم حفظ الملاحظة العامة.");
-  closeNoteModal();
-  loadOrder();
+// فتح تطبيق الخريطة مع الإحداثيات مباشرة
+function openMapApp(location) {
+  if (!location || !location.lat || !location.lng) {
+    return alert("❌ لا يوجد موقع محدد للعرض.");
+  }
+  // رابط Google Maps مع الاحداثيات
+  const url = `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
+  window.open(url, "_blank");
 }
 
-// فتح/إغلاق المودالات
+// مودالات
 window.openModal = function () {
   document.getElementById("scheduleModal").style.display = "flex";
 };
@@ -500,11 +534,16 @@ window.closeWorkImages = function () {
   document.getElementById("workImagesModal").style.display = "none";
 };
 
-// تشغيل كل شيء
+// تحميل أولي
 loadOrder();
 loadWorkers();
 loadAdmins();
+
+// تعريف دوال في النطاق العام لتفادي الخطأ updateStatus
+window.updateStatus = autoChangeStatus;
+window.saveSchedule = saveSchedule;
 </script>
+
 
 </body>
 </html>
