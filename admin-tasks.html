@@ -3,217 +3,448 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📋 اختيار العمل – لصاحب المشروع</title>
+  <title>📋 جدول أعمال المشرف</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f1f1f1;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      background-color: #f2f2f2;
+      color: #333;
       direction: rtl;
     }
 
     .container {
-      max-width: 800px;
+      max-width: 1100px;
       margin: auto;
-      background: #fff;
       padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
     h2 {
       text-align: center;
-      color: #007BFF;
-      margin-bottom: 20px;
+      color: #2c3e50;
+      font-size: 28px;
+      margin-bottom: 25px;
     }
 
+    /* ✅ قائمة المشرفين */
+    .admin-selector {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 25px;
+    }
+
+    .admin-selector select {
+      width: 100%;
+      max-width: 300px;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+      appearance: none;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .admin-selector select:focus {
+      border-color: #007bff;
+    }
+
+    /* ✅ فلتر التاريخ */
     .filters {
       display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 20px;
+      justify-content: center;
+      gap: 15px;
       flex-wrap: wrap;
+      margin-bottom: 20px;
     }
 
     .filter-box {
-      flex: 1;
-      text-align: center;
-      background: #e9ecef;
-      padding: 10px;
-      border-radius: 8px;
+      padding: 10px 20px;
+      background-color: #e0e0e0;
+      border-radius: 6px;
       cursor: pointer;
-      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      border: 1px solid transparent;
+      font-weight: bold;
+    }
+
+    .filter-box:hover {
+      background-color: #d5d5d5;
     }
 
     .filter-box.active {
-      background: #007BFF;
-      color: white;
+      background-color: #007bff;
+      color: #fff;
       border-color: #0056b3;
     }
 
+    /* ✅ تاريخ مخصص */
+    .date-picker {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .date-picker input[type="date"] {
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    .date-picker input[type="date"]:focus {
+      border-color: #007bff;
+    }
+
+    /* ✅ المهام */
+    #tasksList {
+      margin-top: 30px;
+    }
+
     .task {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
       border: 1px solid #ddd;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      background-color: #fafafa;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .task:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .task h3 {
-      margin: 0 0 10px;
+      margin: 0;
+      color: #34495e;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .task p {
+      margin: 4px 0;
+      color: #555;
     }
 
     .task a {
-      background-color: #28a745;
-      color: white;
-      text-decoration: none;
-      padding: 8px 15px;
-      border-radius: 5px;
       display: inline-block;
       margin-top: 10px;
-      transition: background-color 0.3s;
+      padding: 10px 15px;
+      background-color: #28a745;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
     }
 
     .task a:hover {
       background-color: #218838;
     }
 
-    .date-picker {
-      margin-top: 10px;
+    /* ✅ رسائل الحالة */
+    .loader,
+    .error {
       text-align: center;
+      padding: 40px 10px;
+      font-size: 18px;
     }
 
-    .date-picker input {
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+    .loader {
+      color: #555;
+    }
+
+    .error {
+      color: red;
+    }
+
+    /* ✅ موبايل */
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .admin-selector select {
+        max-width: 100%;
+      }
+
+      .task {
+        padding: 15px;
+      }
+    }
+
+    /* ✅ تحسين مظهر السلكت */
+    select::-ms-expand {
+      display: none;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20fill%3D'%23007bff'%20height%3D'24'%20viewBox%3D'0%200%2024%2024'%20width%3D'24'%20xmlns%3D'http://www.w3.org/2000/svg'%3E%3Cpath%20d%3D'M7%2010l5%205%205-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position-x: 98%;
+      background-position-y: center;
+      background-size: 16px 16px;
     }
   </style>
 </head>
+
+
+
 <body>
   <div class="container">
-    <h2>📋 الأعمال المجدولة</h2>
+    <!-- ✅ عنوان الصفحة -->
+    <h2>📋 لوحة أعمال المشرف اليومية</h2>
 
+    <!-- ✅ قائمة اختيار المشرف -->
+    <div class="admin-selector">
+      <select id="adminSelector" aria-label="اختر صاحب العمل">
+        <option value="">⏳ جاري تحميل المشرفين...</option>
+      </select>
+    </div>
+
+    <!-- ✅ خيارات التاريخ (اليوم، البارحة، الغد) -->
     <div class="filters">
       <div class="filter-box" id="yesterdayBox">📅 البارحة</div>
       <div class="filter-box active" id="todayBox">📆 اليوم</div>
       <div class="filter-box" id="tomorrowBox">📅 الغد</div>
     </div>
 
+    <!-- ✅ اختيار تاريخ مخصص -->
     <div class="date-picker">
-      <input type="date" id="customDate">
+      <input type="date" id="customDate" />
     </div>
 
+    <!-- ✅ قائمة المهام -->
     <div id="tasksList">
-      <p>🔄 جاري تحميل الأعمال...</p>
+      <div class="loader">⏳ جاري تحميل المهام...</div>
+    </div>
+
+    <!-- ✅ مكون إضافي مستقبلي: ملخص إحصائي -->
+    <div class="summary" id="summaryContainer" style="display:none; margin-top: 40px;">
+      <h3 style="text-align:center; margin-bottom:15px;">📊 ملخص اليوم</h3>
+      <ul style="list-style:none; padding:0; display:flex; justify-content:space-around;">
+        <li><strong>✅ تم:</strong> <span id="doneCount">0</span></li>
+        <li><strong>🕒 قادم:</strong> <span id="upcomingCount">0</span></li>
+        <li><strong>📦 عدد الطلبات:</strong> <span id="totalCount">0</span></li>
+      </ul>
+    </div>
+
+    <!-- ✅ مكون إضافي: عند عدم وجود أعمال -->
+    <div id="emptyState" style="display:none; text-align:center; padding:30px; color:gray;">
+      🚫 لا توجد أعمال مجدولة لهذا التاريخ أو المشرف.
+    </div>
+
+    <!-- ✅ مكون إضافي: رسالة خطأ -->
+    <div id="errorState" style="display:none; text-align:center; color:red; padding:30px;">
+      ❌ حدث خطأ أثناء تحميل البيانات. يرجى المحاولة لاحقًا.
+    </div>
+
+    <!-- ✅ مكون اختياري: زر تحديث -->
+    <div style="text-align:center; margin-top:40px;">
+      <button onclick="loadTasks()" style="
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+      ">
+        🔄 إعادة تحميل المهام
+      </button>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      where,
-      getDocs,
-      Timestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <!-- ✅ قسم مستقبلية: شريط سفلي أو Footer -->
+  <footer style="text-align:center; padding:20px 10px; font-size:14px; color:#aaa;">
+    TopClim © 2025 – كل الحقوق محفوظة.
+  </footer>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-      authDomain: "topclim-3edfa.firebaseapp.com",
-      projectId: "topclim-3edfa"
-    };
+<script type="module">
+  // ✅ تحميل Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  Timestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+// ✅ إعداد Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+  authDomain: "topclim-3edfa.firebaseapp.com",
+  projectId: "topclim-3edfa"
+};
 
-    const tasksList = document.getElementById("tasksList");
-    const todayInput = document.getElementById("customDate");
-    const boxes = {
-      yesterday: document.getElementById("yesterdayBox"),
-      today: document.getElementById("todayBox"),
-      tomorrow: document.getElementById("tomorrowBox")
-    };
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    function dateString(offsetDays = 0) {
-      const d = new Date();
-      d.setDate(d.getDate() + offsetDays);
-      return d.toISOString().split("T")[0];
-    }
+// ✅ عناصر DOM
+const adminSelector = document.getElementById("adminSelector");
+const tasksList = document.getElementById("tasksList");
+const todayInput = document.getElementById("customDate");
+const summary = {
+  done: document.getElementById("doneCount"),
+  upcoming: document.getElementById("upcomingCount"),
+  total: document.getElementById("totalCount")
+};
+const summaryContainer = document.getElementById("summaryContainer");
+const emptyState = document.getElementById("emptyState");
+const errorState = document.getElementById("errorState");
 
-    let selectedDate = dateString();
+// ✅ أزرار الفلترة
+const boxes = {
+  yesterday: document.getElementById("yesterdayBox"),
+  today: document.getElementById("todayBox"),
+  tomorrow: document.getElementById("tomorrowBox")
+};
 
-    function setActive(key) {
-      Object.values(boxes).forEach(b => b.classList.remove("active"));
-      boxes[key].classList.add("active");
+let selectedDate = getDateString();
+let selectedAdminId = "";
 
-      selectedDate = dateString(
-        key === "yesterday" ? -1 : key === "tomorrow" ? 1 : 0
-      );
-      todayInput.value = selectedDate;
-      loadTasks();
-    }
+// ✅ تاريخ اليوم بشكل YYYY-MM-DD
+function getDateString(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().split("T")[0];
+}
 
-    boxes.yesterday.onclick = () => setActive("yesterday");
-    boxes.today.onclick = () => setActive("today");
-    boxes.tomorrow.onclick = () => setActive("tomorrow");
+// ✅ تفعيل زر التاريخ
+function setActiveDate(boxKey) {
+  Object.values(boxes).forEach(b => b.classList.remove("active"));
+  boxes[boxKey].classList.add("active");
+  selectedDate = getDateString(
+    boxKey === "yesterday" ? -1 : boxKey === "tomorrow" ? 1 : 0
+  );
+  todayInput.value = selectedDate;
+  loadTasks();
+}
 
-    todayInput.value = selectedDate;
-    todayInput.onchange = e => {
-      Object.values(boxes).forEach(b => b.classList.remove("active"));
-      selectedDate = e.target.value;
-      loadTasks();
-    };
+// ✅ حدث تغيير التاريخ
+boxes.yesterday.onclick = () => setActiveDate("yesterday");
+boxes.today.onclick = () => setActiveDate("today");
+boxes.tomorrow.onclick = () => setActiveDate("tomorrow");
 
-    async function loadTasks() {
-      tasksList.innerHTML = "⏳ جاري تحميل الأعمال...";
+todayInput.value = selectedDate;
+todayInput.onchange = e => {
+  Object.values(boxes).forEach(b => b.classList.remove("active"));
+  selectedDate = e.target.value;
+  loadTasks();
+};
 
-      try {
-        const startDate = new Date(`${selectedDate}T00:00:00`);
-        const endDate = new Date(`${selectedDate}T23:59:59`);
+// ✅ تحميل أصحاب العمل إلى القائمة المنسدلة
+async function loadAdmins() {
+  const snap = await getDocs(collection(db, "admins"));
+  adminSelector.innerHTML = "<option value=''>👤 اختر صاحب العمل</option>";
 
-        const q = query(
-          collection(db, "requests"),
-          where("executionSchedule", ">=", Timestamp.fromDate(startDate)),
-          where("executionSchedule", "<=", Timestamp.fromDate(endDate))
-        );
+  snap.forEach(doc => {
+    const data = doc.data();
+    const opt = document.createElement("option");
+    opt.value = doc.id;
+    opt.textContent = `${data.name} – ${data.phone}`;
+    adminSelector.appendChild(opt);
+  });
 
-        const snap = await getDocs(q);
-
-        if (snap.empty) {
-          tasksList.innerHTML = "<p>🚫 لا توجد أعمال في هذا التاريخ.</p>";
-          return;
-        }
-
-        tasksList.innerHTML = "";
-        snap.forEach(docSnap => {
-          const d = docSnap.data();
-          const execDate = d.executionSchedule?.toDate?.();
-          const dateStr = execDate?.toLocaleDateString("ar-DZ") || "";
-          const timeStr = execDate?.toLocaleTimeString("ar-DZ", { hour: "2-digit", minute: "2-digit" }) || "";
-
-          const el = document.createElement("div");
-          el.className = "task";
-          el.innerHTML = `
-            <h3>👤 ${d.name || "زبون"}</h3>
-            <p>📍 العنوان: ${d.address || "غير محدد"}</p>
-            <p>🕒 ${dateStr} – ${timeStr}</p>
-            <a href="admin-task-details.html?id=${docSnap.id}">📋 مراجعة</a>
-          `;
-          tasksList.appendChild(el);
-        });
-
-      } catch (error) {
-        console.error(error);
-        tasksList.innerHTML = "<p>❌ حدث خطأ أثناء تحميل الأعمال.</p>";
-      }
-    }
-
+  const savedId = sessionStorage.getItem("adminId");
+  if (savedId) {
+    adminSelector.value = savedId;
+    selectedAdminId = savedId;
     loadTasks();
-  </script>
+  }
+}
 
+// ✅ حدث تغيير صاحب العمل
+adminSelector.onchange = e => {
+  selectedAdminId = e.target.value;
+  sessionStorage.setItem("adminId", selectedAdminId);
+  loadTasks();
+};
+
+// ✅ تحميل المهام
+async function loadTasks() {
+  tasksList.innerHTML = "<div class='loader'>⏳ جاري التحميل...</div>";
+  emptyState.style.display = "none";
+  errorState.style.display = "none";
+  summaryContainer.style.display = "none";
+
+  if (!selectedAdminId || !selectedDate) return;
+
+  try {
+    const start = new Date(`${selectedDate}T00:00:00`);
+    const end = new Date(`${selectedDate}T23:59:59`);
+
+    const q = query(
+      collection(db, "requests"),
+      where("executionSchedule", ">=", Timestamp.fromDate(start)),
+      where("executionSchedule", "<=", Timestamp.fromDate(end))
+    );
+
+    const snap = await getDocs(q);
+
+    const results = [];
+    let countDone = 0;
+    let countUpcoming = 0;
+
+    snap.forEach(doc => {
+      const data = doc.data();
+      const list = data.workDone || [];
+      const match = list.find(w => w.adminId === selectedAdminId);
+      if (match) {
+        results.push({ id: doc.id, data });
+        if (data.status === "تم الإنجاز") countDone++;
+        else countUpcoming++;
+      }
+    });
+
+    if (results.length === 0) {
+      tasksList.innerHTML = "";
+      emptyState.style.display = "block";
+      return;
+    }
+
+    summary.total.textContent = results.length;
+    summary.done.textContent = countDone;
+    summary.upcoming.textContent = countUpcoming;
+    summaryContainer.style.display = "block";
+
+    tasksList.innerHTML = "";
+    results.forEach(({ id, data }) => {
+      const exec = data.executionSchedule?.toDate?.();
+      const dateStr = exec?.toLocaleDateString("ar-DZ") || "";
+      const timeStr = exec?.toLocaleTimeString("ar-DZ", { hour: "2-digit", minute: "2-digit" }) || "";
+
+      const div = document.createElement("div");
+      div.className = "task";
+      div.innerHTML = `
+        <h3>👤 ${data.name || "عميل"}</h3>
+        <p>📞 الهاتف: ${data.phone || "—"}</p>
+        <p>📍 العنوان: ${data.address || "غير محدد"}</p>
+        <p>🕒 ${dateStr} – ${timeStr}</p>
+        <a href="admin-task-details.html?id=${id}">📋 مراجعة التفاصيل</a>
+      `;
+      tasksList.appendChild(div);
+    });
+  } catch (err) {
+    console.error("❌ خطأ أثناء جلب الأعمال:", err);
+    errorState.style.display = "block";
+    tasksList.innerHTML = "";
+  }
+}
+
+// ✅ بدء التحميل
+loadAdmins();
+
+</script>
 </body>
 </html>

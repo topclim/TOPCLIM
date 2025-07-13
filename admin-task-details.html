@@ -2,52 +2,78 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#007BFF" />
   <title>تأكيد تنفيذ العمل – TopClim</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="assets/favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
-    * {
-      box-sizing: border-box;
+    :root {
+      --main-color: #007BFF;
+      --success-color: #28a745;
+      --danger-color: #dc3545;
+      --warning-color: #ffc107;
+      --bg-color: #f9f9f9;
+      --text-color: #333;
+      --border-radius: 10px;
     }
 
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #f5f5f5;
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: var(--bg-color);
+      padding: 15px;
+      color: var(--text-color);
+    }
+
     .container {
-      max-width: 750px;
-      margin: 30px auto;
-      background: #fff;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background-color: #fff;
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      margin: auto;
     }
 
     h2 {
       text-align: center;
-      color: #007BFF;
+      color: var(--main-color);
+      margin-bottom: 20px;
     }
 
     label {
-      font-weight: bold;
       display: block;
-      margin-top: 15px;
+      margin: 15px 0 5px;
+      font-weight: 600;
+      font-size: 1.05rem;
     }
 
     input[type="number"],
     textarea {
       width: 100%;
-      padding: 10px;
-      font-size: 1.1rem;
+      padding: 10px 12px;
+      font-size: 1.05rem;
       border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 15px;
-      background: #fafafa;
+      border-radius: 8px;
+      background-color: #fdfdfd;
+      transition: 0.2s;
+    }
+
+    input[type="number"]:focus,
+    textarea:focus {
+      border-color: var(--main-color);
+      outline: none;
+      background-color: #fff;
     }
 
     textarea {
+      resize: vertical;
       min-height: 80px;
     }
 
@@ -58,16 +84,17 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      transition: background-color 0.3s;
       margin-top: 10px;
     }
 
     #openCalcBtn {
-      background-color: #007BFF;
+      background-color: var(--main-color);
       color: white;
     }
 
     #saveBtn {
-      background-color: #28a745;
+      background-color: var(--success-color);
       color: white;
     }
 
@@ -76,24 +103,22 @@
     }
 
     #saveBtn:hover {
-      background-color: #218838;
+      background-color: #1e7e34;
     }
 
     .warning {
-      color: red;
+      color: var(--danger-color);
+      font-weight: bold;
       text-align: center;
       margin-top: 10px;
     }
 
-    /* الحاسبة كنافذة وسط الشاشة */
+    /* آلة حاسبة منبثقة */
     .popup {
       display: none;
       position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      background-color: rgba(0,0,0,0.5);
+      inset: 0;
+      background-color: rgba(0,0,0,0.6);
       z-index: 9999;
       justify-content: center;
       align-items: center;
@@ -105,26 +130,25 @@
 
     .calculator {
       background: #fff;
+      border-radius: var(--border-radius);
       padding: 20px;
-      border-radius: 16px;
-      width: 340px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      width: 90%;
+      max-width: 360px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.25);
       display: flex;
       flex-direction: column;
       align-items: center;
-      max-width: 95%;
     }
 
     .calc-display {
       width: 100%;
-      height: 60px;
-      font-size: 2rem;
+      padding: 12px;
+      font-size: 1.8rem;
       text-align: left;
-      margin-bottom: 20px;
-      padding: 10px;
+      background-color: #f0f0f0;
       border: 2px solid #ccc;
-      border-radius: 10px;
-      background-color: #f5f5f5;
+      border-radius: 8px;
+      margin-bottom: 15px;
     }
 
     .calc-buttons {
@@ -135,179 +159,293 @@
     }
 
     .calc-buttons button {
-      font-size: 1.5rem;
-      padding: 20px;
-      border: none;
-      border-radius: 10px;
-      background: #007BFF;
+      padding: 15px;
+      font-size: 1.4rem;
+      background-color: var(--main-color);
       color: white;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
+      transition: background-color 0.2s;
     }
 
     .calc-buttons button:hover {
-      background: #0056b3;
+      background-color: #0056b3;
     }
 
-    .calc-buttons button.large {
+    .calc-buttons .large {
       grid-column: span 2;
     }
 
-    @media (max-width: 500px) {
-      .calculator {
-        width: 95%;
+    .calc-buttons .warning {
+      background-color: var(--warning-color);
+      color: black;
+    }
+
+    .calc-buttons .danger {
+      background-color: var(--danger-color);
+    }
+
+    @media (max-width: 400px) {
+      h2 {
+        font-size: 1.3rem;
       }
 
-      .calc-buttons button {
-        font-size: 1.4rem;
-        padding: 15px;
+      input[type="number"],
+      textarea,
+      button {
+        font-size: 1rem;
       }
 
       .calc-display {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
+      }
+
+      .calc-buttons button {
+        font-size: 1.2rem;
+        padding: 12px;
       }
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h2>📋 تأكيد تنفيذ العمل</h2>
 
-<div class="container">
-  <h2>💼 تأكيد تنفيذ العمل</h2>
+    <!-- معلومات العمل -->
+    <div class="info-section">
+      <p><strong>اسم الزبون:</strong> <span id="clientName">⏳</span></p>
+      <p><strong>📞 الهاتف:</strong> <span id="clientPhone">⏳</span></p>
+      <p><strong>📍 العنوان:</strong> <span id="clientAddress">⏳</span></p>
+      <p><strong>🕒 الوقت:</strong> <span id="scheduleTime">⏳</span></p>
+    </div>
 
-  <label>عدد المكيفات الداخلية:</label>
-  <input type="number" id="indoorCount"/>
+    <!-- عدد المكيفات -->
+    <label for="indoorCount">❄️ عدد المكيفات الداخلية:</label>
+    <input type="number" id="indoorCount" min="0" />
 
-  <label>عدد المكيفات الخارجية:</label>
-  <input type="number" id="outdoorCount"/>
+    <label for="outdoorCount">🔥 عدد المكيفات الخارجية:</label>
+    <input type="number" id="outdoorCount" min="0" />
 
-  <label>عدد الصيانات:</label>
-  <input type="number" id="maintenanceCount"/>
+    <label for="maintenanceCount">🧰 عدد الصيانات:</label>
+    <input type="number" id="maintenanceCount" min="0" />
 
-  <label>💰 الفاتورة:</label>
-  <input type="number" id="finalPrice" readonly/>
-  <button id="openCalcBtn">🧮 فتح الآلة الحاسبة</button>
+    <!-- ملاحظات وتأكيد -->
+    <label for="ownerNotes">📝 ملاحظات الزبون:</label>
+    <textarea id="ownerNotes" placeholder="أدخل ملاحظاتك هنا..."></textarea>
 
-  <label>ملاحظات:</label>
-  <textarea id="ownerNotes" placeholder="ملاحظاتك..."></textarea>
+    <!-- السعر النهائي -->
+    <label for="finalPrice">💰 السعر النهائي:</label>
+    <input type="number" id="finalPrice" placeholder="مبلغ الفاتورة" readonly />
 
-  <div class="warning" id="warningMsg"></div>
-  <button id="saveBtn" onclick="submitConfirmation()">✅ حفظ البيانات</button>
-</div>
+    <!-- أزرار -->
+    <button id="openCalcBtn">🧮 فتح الآلة الحاسبة</button>
+    <div class="warning" id="warningMsg"></div>
+    <button id="saveBtn" onclick="submitConfirmation()">✅ حفظ البيانات</button>
 
-<!-- آلة حاسبة منبثقة -->
-<div id="calculatorPopup" class="popup" onclick="closeCalculator()">
-  <div class="calculator" onclick="event.stopPropagation();">
-    <input id="calcDisplay" class="calc-display" readonly />
-    <div class="calc-buttons">
-      <button onclick="appendCalc('7')">7</button>
-      <button onclick="appendCalc('8')">8</button>
-      <button onclick="appendCalc('9')">9</button>
-      <button onclick="appendCalc('/')">÷</button>
+  </div>
 
-      <button onclick="appendCalc('4')">4</button>
-      <button onclick="appendCalc('5')">5</button>
-      <button onclick="appendCalc('6')">6</button>
-      <button onclick="appendCalc('*')">×</button>
+  <!-- آلة حاسبة منبثقة -->
+  <div id="calculatorPopup" class="popup" onclick="closeCalculator()">
+    <div class="calculator" onclick="event.stopPropagation();">
+      <input id="calcDisplay" class="calc-display" readonly />
+      <div class="calc-buttons">
+        <button onclick="appendCalc('7')">7</button>
+        <button onclick="appendCalc('8')">8</button>
+        <button onclick="appendCalc('9')">9</button>
+        <button onclick="appendCalc('/')">÷</button>
 
-      <button onclick="appendCalc('1')">1</button>
-      <button onclick="appendCalc('2')">2</button>
-      <button onclick="appendCalc('3')">3</button>
-      <button onclick="appendCalc('-')">−</button>
+        <button onclick="appendCalc('4')">4</button>
+        <button onclick="appendCalc('5')">5</button>
+        <button onclick="appendCalc('6')">6</button>
+        <button onclick="appendCalc('*')">×</button>
 
-      <button onclick="appendCalc('0')">0</button>
-      <button onclick="appendCalc('.')">.</button>
-      <button onclick="calculateResult()">=</button>
-      <button onclick="appendCalc('+')">+</button>
+        <button onclick="appendCalc('1')">1</button>
+        <button onclick="appendCalc('2')">2</button>
+        <button onclick="appendCalc('3')">3</button>
+        <button onclick="appendCalc('-')">−</button>
 
-      <button class="large" onclick="deleteLast()" style="background:#ffc107">⌫ مسح</button>
-      <button class="large" onclick="closeCalculator()" style="background:#dc3545">❌ إلغاء</button>
+        <button onclick="appendCalc('0')">0</button>
+        <button onclick="appendCalc('.')">.</button>
+        <button onclick="calculateResult()">=</button>
+        <button onclick="appendCalc('+')">+</button>
+
+        <button class="large warning" onclick="deleteLast()">⌫ مسح</button>
+        <button class="large danger" onclick="closeCalculator()">❌ إلغاء</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    updateDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <!-- عرض العناصر المؤكدة من العمل السابق -->
+  <div class="container" style="margin-top: 30px;">
+    <h2>📜 تفاصيل التنفيذ السابق</h2>
+    <div id="workHistoryList">
+      <p>🔄 جاري تحميل السجل...</p>
+    </div>
+  </div>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
-    authDomain: "topclim-3edfa.firebaseapp.com",
-    projectId: "topclim-3edfa"
-  };
+  <!-- زر الرجوع -->
+  <div style="text-align:center; margin: 20px auto;">
+    <a href="admin.html" style="color:#007BFF; text-decoration: underline;">🔙 الرجوع إلى الصفحة الرئيسية</a>
+  </div>
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  <script type="module">
+    // ✅ تحميل Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  Timestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const params = new URLSearchParams(window.location.search);
-  const requestId = params.get("id");
+const firebaseConfig = {
+  apiKey: "AIzaSyBjbzbSd1XM9eyXrgKaVj6xnZgIJuQmbRI",
+  authDomain: "topclim-3edfa.firebaseapp.com",
+  projectId: "topclim-3edfa"
+};
 
-  async function loadCounts() {
-    const snap = await getDoc(doc(db, "requests", requestId));
-    if (snap.exists()) {
-      const data = snap.data().workDone || {};
-      document.getElementById("indoorCount").value = data.indoor || 0;
-      document.getElementById("outdoorCount").value = data.outdoor || 0;
-      document.getElementById("maintenanceCount").value = data.maintenance || 0;
-    }
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const params = new URLSearchParams(window.location.search);
+const requestId = params.get("id");
+
+let latestIndex = -1;
+
+// ✅ تحميل بيانات العمل وعرضها
+async function loadRequestData() {
+  const snap = await getDoc(doc(db, "requests", requestId));
+  if (!snap.exists()) return;
+  const data = snap.data();
+
+  document.getElementById("clientName").textContent = data.name || "—";
+  document.getElementById("clientPhone").textContent = data.phone || "—";
+  document.getElementById("clientAddress").textContent = data.address || "—";
+  document.getElementById("scheduleTime").textContent = data.schedule || "—";
+
+  const workDone = data.workDone || [];
+  if (workDone.length === 0) return;
+
+  const sorted = workDone.map((w, index) => ({ ...w, index }))
+    .sort((a, b) => b.finishedAt?.seconds - a.finishedAt?.seconds);
+
+  const latest = sorted[0];
+  latestIndex = latest.index;
+
+  document.getElementById("indoorCount").value = latest.indoor || 0;
+  document.getElementById("outdoorCount").value = latest.outdoor || 0;
+  document.getElementById("maintenanceCount").value = latest.maintenance || 0;
+
+  renderWorkHistory(sorted);
+}
+
+// ✅ عرض سجل العمل كاملاً
+function renderWorkHistory(items) {
+  const container = document.getElementById("workHistoryList");
+  container.innerHTML = "";
+  if (items.length === 0) {
+    container.innerHTML = "<p>🚫 لا يوجد سجل عمل.</p>";
+    return;
   }
 
-  window.submitConfirmation = async () => {
-    const indoor = parseInt(document.getElementById("indoorCount").value || 0);
-    const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
-    const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
-    const price = parseFloat(document.getElementById("finalPrice").value || 0);
-    const notes = document.getElementById("ownerNotes").value;
+  items.forEach((item, i) => {
+    const div = document.createElement("div");
+    div.style.border = "1px solid #ccc";
+    div.style.borderRadius = "8px";
+    div.style.padding = "10px";
+    div.style.marginBottom = "10px";
+    div.style.backgroundColor = latestIndex === item.index ? "#e9f7ef" : "#fff";
 
-    await updateDoc(doc(db, "requests", requestId), {
-      ownerConfirmation: {
-        indoor, outdoor, maintenance,
-        price,
-        notes,
-        verifiedAt: new Date()
-      }
-    });
+    const date = item.finishedAt?.toDate?.()?.toLocaleString("ar-DZ") || "—";
 
-    alert("✅ تم حفظ البيانات");
-    window.location.href = "admin.html";
+    div.innerHTML = `
+      <strong>🗓️ التاريخ:</strong> ${date}<br>
+      <strong>❄️ داخلية:</strong> ${item.indoor ?? 0}, 
+      <strong>🔥 خارجية:</strong> ${item.outdoor ?? 0}, 
+      <strong>🧰 صيانة:</strong> ${item.maintenance ?? 0}<br>
+      <strong>💬 ملاحظات:</strong> ${item.ownerNotes || "—"}
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+// ✅ الحفظ
+window.submitConfirmation = async () => {
+  const indoor = parseInt(document.getElementById("indoorCount").value || 0);
+  const outdoor = parseInt(document.getElementById("outdoorCount").value || 0);
+  const maintenance = parseInt(document.getElementById("maintenanceCount").value || 0);
+  const price = parseFloat(document.getElementById("finalPrice").value || 0);
+  const notes = document.getElementById("ownerNotes").value;
+
+  const snap = await getDoc(doc(db, "requests", requestId));
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const workDone = Array.isArray(data.workDone) ? [...data.workDone] : [];
+
+  if (latestIndex === -1) {
+    alert("❌ لا يوجد عنصر لتحديثه داخل workDone.");
+    return;
+  }
+
+  // تحديث آخر عنصر فقط داخل workDone
+  workDone[latestIndex] = {
+    ...workDone[latestIndex],
+    indoor,
+    outdoor,
+    maintenance,
+    ownerPrice: price,
+    privateNotes: notes,
+    updatedByOwner: true,
+    verifiedAt: Timestamp.now()
   };
 
-  // الآلة الحاسبة
-  const display = document.getElementById("calcDisplay");
+  await updateDoc(doc(db, "requests", requestId), {
+    workDone
+  });
 
-  window.appendCalc = val => {
-    display.value += val;
-  };
+  alert("✅ تم حفظ البيانات بنجاح");
+  window.location.href = "admin.html";
+};
 
-  window.calculateResult = () => {
-    try {
-      const result = eval(display.value);
-      display.value = result;
-      document.getElementById("finalPrice").value = result;
-      closeCalculator();
-    } catch {
-      alert("⚠️ صيغة غير صالحة");
-    }
-  };
 
-  window.deleteLast = () => {
-    display.value = display.value.slice(0, -1);
-  };
+// ✅ الآلة الحاسبة
+const display = document.getElementById("calcDisplay");
 
-  window.closeCalculator = () => {
-    document.getElementById("calculatorPopup").classList.remove("active");
-  };
+window.appendCalc = val => {
+  display.value += val;
+};
 
-  document.getElementById("openCalcBtn").onclick = () => {
-    display.value = "";
-    document.getElementById("calculatorPopup").classList.add("active");
-  };
+window.calculateResult = () => {
+  try {
+    const result = eval(display.value);
+    display.value = result;
+    document.getElementById("finalPrice").value = result;
+    closeCalculator();
+  } catch {
+    alert("⚠️ صيغة غير صالحة");
+  }
+};
 
-  loadCounts();
-</script>
+window.deleteLast = () => {
+  display.value = display.value.slice(0, -1);
+};
 
+window.closeCalculator = () => {
+  document.getElementById("calculatorPopup").classList.remove("active");
+};
+
+document.getElementById("openCalcBtn").onclick = () => {
+  display.value = "";
+  document.getElementById("calculatorPopup").classList.add("active");
+};
+
+// تحميل البيانات
+loadRequestData();
+
+  </script>
 </body>
 </html>
