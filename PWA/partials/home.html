@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📊 لوحة التحكم – TopClim</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="assets/icons/icon-192x192.png" type="image/png" />
+  <meta name="theme-color" content="#007bff" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #007bff;
+      --success: #28a745;
+      --warning: #ffc107;
+      --danger: #dc3545;
+      --text: #333;
+      --bg: #f9f9f9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1, h2, h3 {
+      margin: 0 0 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .card p {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .bg-primary { background-color: #e0f0ff; }
+    .bg-success { background-color: #eafbe6; }
+    .bg-warning { background-color: #fff3cd; }
+    .bg-danger  { background-color: #f8d7da; }
+
+    section {
+      padding: 20px;
+    }
+
+    .notification {
+      background: white;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-right: 5px solid var(--primary);
+      border-radius: 6px;
+    }
+
+    .footer-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      background: white;
+      border-top: 1px solid #ccc;
+    }
+
+    .footer-nav button {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 10px;
+      font-size: 16px;
+      color: var(--primary);
+      cursor: pointer;
+    }
+
+    .footer-nav button.active {
+      color: var(--danger);
+      font-weight: bold;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>مرحبا بك 👋</h1>
+    <p id="greeting">جاري التحميل...</p>
+  </header>
+
+  <section>
+    <h2>📦 الإحصائيات السريعة</h2>
+    <div class="grid">
+      <div class="card bg-primary">
+        <h3>الطلبات الجديدة</h3>
+        <p id="newOrders">0</p>
+      </div>
+      <div class="card bg-success">
+        <h3>تم تنفيذها</h3>
+        <p id="completedOrders">0</p>
+      </div>
+      <div class="card bg-warning">
+        <h3>قيد الانتظار</h3>
+        <p id="pendingOrders">0</p>
+      </div>
+      <div class="card bg-danger">
+        <h3>الشكاوى</h3>
+        <p id="complaints">0</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>🔔 آخر التنبيهات</h2>
+    <div class="notification fade-in">🕐 موعد زيارة في تمام 11:00 صباحًا</div>
+    <div class="notification fade-in">📸 تم تحميل صورة جديدة للطلب #23</div>
+    <div class="notification fade-in">✅ تم إنهاء الطلب #19 بنجاح</div>
+  </section>
+
+  <nav class="footer-nav">
+    <button class="active" onclick="navigate('home')">🏠</button>
+    <button onclick="navigate('orders')">📋</button>
+    <button onclick="navigate('add')">➕</button>
+    <button onclick="navigate('store')">🛒</button>
+    <button onclick="navigate('profile')">👤</button>
+  </nav>
+
+  <script type="module">
+    import { countOrdersByStatus } from "./js/db.js";
+
+    const greeting = document.getElementById("greeting");
+    const hour = new Date().getHours();
+    if (hour < 12) greeting.textContent = "☀️ صباح الخير!";
+    else if (hour < 18) greeting.textContent = "🌤️ مساء الخير!";
+    else greeting.textContent = "🌙 مساء الخير!";
+
+    async function loadStats() {
+      try {
+        const stats = await countOrdersByStatus();
+        document.getElementById("newOrders").textContent = stats.new || 0;
+        document.getElementById("completedOrders").textContent = stats.done || 0;
+        document.getElementById("pendingOrders").textContent = stats.in_progress || 0;
+        document.getElementById("complaints").textContent = Math.floor(Math.random() * 3); // مؤقتًا
+      } catch (e) {
+        console.error("❌ خطأ أثناء تحميل الإحصائيات:", e);
+      }
+    }
+
+    loadStats();
+
+    function navigate(section) {
+      alert("فتح: " + section);
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').then(() => {
+        console.log("✅ Service Worker Registered");
+      });
+    }
+  </script>
+  <script type="module" src="/js/routes/home.js"></script>
+
+</body>
+</html>

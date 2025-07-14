@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#6a1b9a" />
+  <title>تسجيل الدخول – TopClim</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" />
+
+  <style>
+    :root {
+      --main-color: #6a1b9a;
+      --accent-color: #fbc02d;
+      --error-color: #f44336;
+      --success-color: #009688;
+      --light-bg: #f9f9f9;
+      --text-color: #333;
+      --font: 'Cairo', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--light-bg);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      color: var(--main-color);
+    }
+
+    .login-container {
+      width: 95%;
+      max-width: 400px;
+      background: white;
+      border-radius: 12px;
+      padding: 25px 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text-color);
+      font-weight: bold;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .password-toggle {
+      margin-top: 5px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--main-color);
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .checkbox-container input {
+      margin-left: 10px;
+    }
+
+    #loginBtn {
+      width: 100%;
+      background: var(--main-color);
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #loginBtn:hover:not(:disabled) {
+      background: #4a1371;
+    }
+
+    #loginBtn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      color: var(--error-color);
+      background: #ffebee;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      display: none;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .success-message {
+      color: var(--success-color);
+      background: #e0f2f1;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #777;
+      text-align: center;
+    }
+
+    .greeting {
+      text-align: center;
+      font-size: 18px;
+      color: var(--main-color);
+      margin-top: 15px;
+    }
+
+    @media screen and (max-width: 480px) {
+      header h1 {
+        font-size: 22px;
+      }
+
+      .login-container {
+        padding: 20px 15px;
+      }
+
+      input[type="email"],
+      input[type="password"] {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      #loginBtn {
+        font-size: 14px;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ✅ عنوان التطبيق -->
+  <header>
+    <h1>تسجيل الدخول إلى TopClim</h1>
+    <p id="greeting" class="greeting">👋</p>
+  </header>
+
+  <!-- ✅ نموذج تسجيل الدخول -->
+  <div class="login-container">
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">📧 البريد الإلكتروني</label>
+        <input type="email" id="email" name="email" placeholder="admin@topclim.com" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">🔒 كلمة المرور</label>
+        <input type="password" id="password" name="password" placeholder="******" required />
+        <div id="togglePassword" class="password-toggle">👁️ إظهار كلمة المرور</div>
+      </div>
+
+      <div class="checkbox-container">
+        <label for="rememberMe">تذكرني</label>
+        <input type="checkbox" id="rememberMe" />
+      </div>
+
+      <button id="loginBtn" type="submit">تسجيل الدخول</button>
+      <div id="loginError" class="error-message">❌ خطأ في البيانات</div>
+    </form>
+  </div>
+
+  <!-- ✅ حقوق النشر -->
+  <footer>
+    <p>جميع الحقوق محفوظة © TopClim 2025</p>
+  </footer>
+
+  <!-- ✅ سكربت الاتصال -->
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>
